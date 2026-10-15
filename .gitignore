@@ -1,0 +1,60 @@
+# 环境变量与密钥（严禁入库）
+.env
+*.env
+!.env.example
+*.key
+*.pem
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ---- Node（前端若引入构建工具时）----
+node_modules/
+.next/
+.cache/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json
+
+# ---- 数据库（含个人数据）----
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- 体检报告与上传文件 ----
+# 含姓名/身份证/体检号等敏感信息,绝不能进 Public 仓库
+样例报告/
+sample_reports/
+uploads/
+static/uploads/
+data/uploads/
+*.pdf
+
+# ---- 运行时产物 ----
+logs/
+*.log
+.DS_Store
+Thumbs.db
+
+# ---- 编辑器 ----
+.idea/
+.vscode/
+*.swp
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- 测试缓存 ----
+.pytest_cache/
+.coverage
+htmlcov/
