@@ -91,6 +91,11 @@
 
 ### 3.2 四步启动
 
+> **Windows 用户更省事的办法**：仓库根目录有个 **`启动.bat`**，**双击即可**——
+> 它会自动启动服务并打开浏览器，不用敲任何命令。要停止就直接关掉那个黑窗口。
+>
+> 下面四步是手动方式，供 macOS / Linux 用户或有自定义需求时使用。
+
 ```bash
 # 1. 克隆
 git clone https://github.com/hoanhkhai1hk-wq/chuanzhibei.git
