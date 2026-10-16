@@ -196,6 +196,107 @@ def field_recall(parsed: list[dict], expect: list[dict]) -> dict[str, float]:
 # ==============================================================================
 
 
+def normalize_ocr_text(text: str) -> str:
+    """OCR 输出的通用后处理：修掉字符之间被插入的多余空格。
+
+    ============================================================================
+    为什么要这一步（实测依据）
+    ============================================================================
+    本地引擎实测输出里大量出现这类情况：
+
+        5.41        →  "5. 41"
+        mmol/L      →  "mmol / L"
+        1.04-1.55   →  "1. 04-1. 55"
+
+    这不是识别错误，而是 OCR 把紧密排版的字符在间隔处切开了。
+    若不修正，解析器会把 "5. 41" 的 value 截成 "5"，
+    unit 变成 ". 41 mmol /L"——于是**格式问题被误记成识别失败**。
+
+    这三条规则是**所有 provider 通病**，对所有引擎一视同仁地应用，
+    因此不会破坏横向对比的公平性。
+
+    注意：这里只修「空格」，**不修真正的识别错误**
+    （如上标 ⁹ 被认成 °、字母 l 被认成 1）——那些要留给
+    Day 6-9 的指标字典去纠正，也正是评测要暴露出来的东西。
+    """
+    text = re.sub(r"(\d)\s*\.\s*(\d)", r"\1.\2", text)      # 小数点
+    text = re.sub(r"(\d)\s*-\s*(\d)", r"\1-\2", text)       # 区间连字符
+    text = re.sub(r"\s*/\s*", "/", text)                     # 单位斜杠 mmol / L
+    return text
+
+
+def _boxes_to_lines(items: list[tuple[float, float, str]], tol: float = 16.0) -> str:
+    """把 OCR 返回的零散文本框合并成「行」。
+
+    ============================================================================
+    为什么要这一步
+    ============================================================================
+    OCR 输出的是一个个带坐标的文本框，而本项目的解析器是按**行**工作的。
+    不做行合并，解析器拿到的就是一堆碎片，评测结果会严重失真——
+    而且这个失真对所有 provider 一视同仁，最终只会误导选型。
+
+    ============================================================================
+    已知限制：双栏排版（twocol）不在此函数的处理能力内
+    ============================================================================
+    曾尝试按 x 间隙自动「分栏」，结果**全线崩到 0%**：
+    单栏表格里「项目 / 结果 / 单位 / 参考范围」的列间距约 260px，
+    而真实双栏的栏间距约 400px——两者只差一百多像素，
+    任何固定阈值都会误伤。实测 threshold=140 时，
+    「项目」「结果」「单位」被拆成了三行，全部样本归零。
+
+    根本原因：单栏表格里，**跨列才构成一条记录**；
+    而双栏里，**每栏内部就是一串完整记录**。两者结构不同，
+    不是调阈值能解决的，需要真正的版面分析。
+
+    取舍：真实体检报告绝大多数是单栏（或分节单栏），双栏少见。
+    与其引入一个脆弱的启发式，不如**诚实记录这个限制**。
+    若后续真实样本里遇到双栏，再单独处理——那时会有真实数据支撑判断。
+    """
+    items.sort(key=lambda t: (t[0], t[1]))
+    lines: list[str] = []
+    cur: list[tuple[float, str]] = []
+    cur_y: float | None = None
+    for y, x, txt in items:
+        if cur_y is None or abs(y - cur_y) < tol:
+            cur.append((x, txt))
+            cur_y = y if cur_y is None else cur_y
+        else:
+            cur.sort()
+            lines.append("  ".join(t for _, t in cur))
+            cur, cur_y = [(x, txt)], y
+    if cur:
+        cur.sort()
+        lines.append("  ".join(t for _, t in cur))
+    return "\n".join(lines)
+
+
+def ocr_rapidocr(path: Path) -> str:
+    """本地 RapidOCR（PaddleOCR 的 PP-OCR 模型，ONNX 轻量部署）。
+
+    选它做本地基线的理由：
+      1. 用的就是 PaddleOCR 同系列模型，识别质量接近
+      2. 无需 paddlepaddle 那套几百 MB 的重依赖，纯 CPU 即可
+      3. 体积小，最终产品若要内置本地 OCR，这一套更现实
+    """
+    try:
+        from rapidocr_onnxruntime import RapidOCR  # type: ignore
+    except ImportError:
+        raise RuntimeError(
+            "未安装 rapidocr-onnxruntime。执行: "
+            "pip install rapidocr-onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple"
+        )
+    engine = RapidOCR()
+    result, _ = engine(str(path))
+    if not result:
+        return ""
+    items = []
+    for box, text, _score in result:
+        ys = [p[1] for p in box]
+        xs = [p[0] for p in box]
+        items.append((sum(ys) / len(ys), sum(xs) / len(xs), str(text)))
+    return _boxes_to_lines(items)
+
+
 def ocr_paddle(path: Path) -> str:
     """本地 PaddleOCR。零门槛不用申请 key，但对环境要求高。"""
     try:
@@ -250,7 +351,16 @@ def ocr_tencent(path: Path) -> str:
     )
 
 
-PROVIDERS = {"paddle": ocr_paddle, "baidu": ocr_baidu, "tencent": ocr_tencent}
+PROVIDERS = {
+    "rapidocr": ocr_rapidocr,
+    "paddle": ocr_paddle,
+    "baidu": ocr_baidu,
+    "tencent": ocr_tencent,
+}
+
+#: --provider all 时默认只跑已就绪的本地引擎，
+#: 云端引擎需要 key，未配置时会明确报错而不是静默跳过
+DEFAULT_ALL = ["rapidocr"]
 
 
 # ==============================================================================
@@ -317,7 +427,7 @@ def run(provider: str) -> dict:
             continue
         expect = load_expect(sample)
         try:
-            text = fn(sample)
+            text = normalize_ocr_text(fn(sample))
         except Exception as e:  # 单张失败不中断整体评测
             print(f"  [跳过] {sample.name}: {e}", file=sys.stderr)
             continue
