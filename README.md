@@ -160,7 +160,11 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
   给爸妈的话 → 脱敏原文回看。零构建、零 CDN 依赖，双击 `启动.bat` 即可复现。
   演示模式 `/api/demo` 现场合成本地报告，无需真实照片即可体验全流程
   （浏览器地址加 `?demo=1` 可自动跑一遍，演示视频与回归截图都用它）
-- `[ ]` 日常层（菜品库 + 三餐记录 + 周报）、多份报告趋势对比、SQLite 落库
+- `[x]` **日常层已打通（Day 26-29 提前）**：菜品库 316 条（由种子表脚本化转换，
+  含启发式六档标签与诚实边界声明）→ 点选记一餐 → 本地累加 → 对照当前红线即时撞线。
+  SQLite 落库（stdlib sqlite3，WAL，零 ORM）；限酒红线因此新增 `alcohol` 标签档，
+  不再错挂在脂肪上。补铁（boost）方向相反：吃到鸭血/肝脏记「达标」而非「超线」
+- `[ ]` 周报曲线、血压/血糖录入界面、多份报告趋势对比
   （见 [第七章](#七功能清单与实现状态)）
 
 > 大模型的定位是**增强而非依赖**：模板模式下产品已完整可用；
@@ -183,17 +187,23 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 │   │   └── parser.py        # [x] 文本 → 四元组
 │   ├── dict/
 │   │   ├── markers.json     # [x] 指标字典 41 条
+│   │   ├── dishes.json      # [x] 菜品库 316 条（种子表脚本化转换，六档标签）
+│   │   ├── build_dishes.py  # [x] 种子表 → 菜品库转换脚本（可重跑）
 │   │   └── validate.py      # [x] 交叉引用校验
 │   ├── rules/
 │   │   ├── redlines.json    # [x] 红线规则 16 条
 │   │   └── engine.py        # [x] 本地判定引擎（不调用大模型）
+│   ├── daily/
+│   │   └── service.py       # [x] 日常层：点选菜品 → 本地累加 → 红线撞线
+│   ├── data/
+│   │   └── db.py            # [x] SQLite 落库（stdlib，WAL，零 ORM）
 │   └── llm/
 │       └── explainer.py     # [x] 表达层：模板模式（无 Key 可用）+ 大模型模式 + 数字回溯校验
 ├── static/
 │   ├── index.html           # [x] 前端单页（零构建、零 CDN）
 │   ├── style.css            # [x] 设计系统
-│   └── app.js               # [x] 阶段进度 + SSE 流式渲染 + 结果展示
-├── data/                    # SQLite 单文件（日常层开发时启用）
+│   └── app.js               # [x] 阶段进度 + SSE 流式渲染 + 今日记录 Tab
+├── data/                    # SQLite 单文件（已 gitignore：健康数据不入 git）
 ├── docs/
 │   └── prompt-log/          # ≥3 段核心 Prompt 链快照
 ├── 参考数据/                 # MIT 种子表（见第十一章）
@@ -201,6 +211,7 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
     ├── test_rules.py        # [x] 规则引擎 41 项断言
     ├── test_e2e.py          # [x] 端到端 177 项断言（12 份合成样本）
     ├── test_llm.py          # [x] 表达层 33 项断言（含幻觉抓取验证）
+    ├── test_daily.py        # [x] 日常层 20 项断言（撞线方向 / medium 不打扰）
     └── ocr_bench/           # [x] OCR 选型评测 + 合成报告生成器
 ```
 
@@ -289,9 +300,9 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 | P0 | 上传报告 → OCR → 异常项高亮 | `[x]` 档案层 + 前端结果页已上线 |
 | P0 | **生成「你的三条红线」**（本项目核心新增） | `[x]` 本地规则引擎 + 红线卡片 |
 | P0 | **「给爸妈说的话」** | `[x]` 模板生成，一键复制 |
-| P0 | 日常饮食记录：点选菜品 → 即时显示碰了几条红线 | `[ ]` 菜品库数据待录入 |
-| P0 | 今日提示 + 一周周报曲线 | `[ ]` |
-| P1 | 血压 / 血糖记录（复用同一数据结构） | `[ ]` |
+| P0 | 日常饮食记录：点选菜品 → 即时显示碰了几条红线 | `[x]` 菜品库 316 条 + 即时对照 |
+| P0 | 今日提示 + 一周周报曲线 | `[ ]` 今日对照已上线，周报待做 |
+| P1 | 血压 / 血糖记录（复用同一数据结构） | `[ ]` 表已建好，界面待做 |
 | P1 | 指标卡片（正常区间条 + 你的位置标记） | `[ ]` |
 | P1 | 导出图片 / PDF | `[ ]` |
 | P2 | 拍照识别菜品（识别失败自动退回点选） | `[ ]` |

@@ -168,6 +168,12 @@
         log(`有 ${an.unmatched.length} 项未收录进字典，已标记为待确认`);
       }
 
+      /* 判定结果落库：红线成为「今日记录」页的日常对照依据 */
+      try {
+        await postJson('/api/report', { result: an, sex: state.sex, source: 'upload' });
+        log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
+      } catch { /* 落库失败不阻塞解读展示 */ }
+
       setStage('redline');
       log(an.redlines.length
         ? `命中 ${an.redlines.length} 条日常红线`
@@ -216,6 +222,11 @@
       state.analysis = an;
       completeStage('judge');
       log(`判定完成：${an.matched} 项命中字典，${an.abnormal_count} 项不在参考区间内`);
+
+      try {
+        await postJson('/api/report', { result: an, sex: state.sex, source: 'demo' });
+        log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
+      } catch { /* 落库失败不阻塞演示 */ }
 
       setStage('redline');
       log(an.redlines.length ? `命中 ${an.redlines.length} 条日常红线` : '未触发日常红线');
@@ -493,9 +504,190 @@
     });
   }
 
-  /* ─── 启动 ─── */
+  /* ══════════════════ 今日记录（日常层） ══════════════════ */
+
+  const daily = {
+    picked: new Set(),
+    mealType: 'lunch',
+    searchTimer: null,
+  };
+
+  const MEAL_TEXT = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
+  const KEY_TEXT = {
+    purine: '嘌呤', sugar: '糖', sodium: '钠', fat: '脂肪', alcohol: '酒', iron: '铁',
+  };
+
+  function setTab(name) {
+    $('#tab-report').classList.toggle('is-active', name === 'report');
+    $('#tab-daily').classList.toggle('is-active', name === 'daily');
+    ['home', 'progress', 'result'].forEach(v =>
+      $('#view-' + v).classList.toggle('is-hidden', name !== 'report'));
+    $('#view-daily').classList.toggle('is-hidden', name !== 'daily');
+    if (name === 'daily') loadDaily();
+  }
+
+  async function loadDaily() {
+    $('#daily-date').textContent = new Date().toLocaleDateString('zh-CN',
+      { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    try {
+      const [rl, today] = await Promise.all([
+        fetch('/api/contract/active-redlines').then(r => r.json()),
+        fetch('/api/today').then(r => r.json()),
+      ]);
+      renderActiveRedlines(rl.redlines || []);
+      renderToday(today);
+      renderDishList(await fetchDishes(''));
+    } catch (e) {
+      toast('今日记录加载失败：' + e.message);
+    }
+  }
+
+  function renderActiveRedlines(redlines) {
+    const el = $('#active-redlines');
+    if (!redlines.length) {
+      el.innerHTML = '<p class="empty-note">还没有生效的红线。'
+        + '先去「报告解读」上传一份体检报告，解读完成后红线会自动出现在这里。</p>';
+      $('#redline-src-note').textContent = '等待第一份报告';
+      return;
+    }
+    $('#redline-src-note').textContent = `来自最近一次报告 · 共 ${redlines.length} 条`;
+    el.innerHTML = redlines.map(r => {
+      const boost = r.action === 'boost';
+      return `<span class="chip ${boost ? 'is-ok' : 'is-warn'}"
+        style="margin:0 8px 8px 0">${escapeHtml(r.restriction)}
+        <b style="font-size:13px">${boost ? '要补' : '盯住' + (KEY_TEXT[r.nutrient_key] || r.nutrient_key)}</b></span>`;
+    }).join('');
+  }
+
+  async function fetchDishes(q) {
+    const resp = await fetch('/api/dishes?q=' + encodeURIComponent(q));
+    if (!resp.ok) throw new Error('菜品搜索失败');
+    return (await resp.json()).dishes || [];
+  }
+
+  function dishDot(dish) {
+    // 圆点颜色 = 该菜最"危险"的那一档（有 high 就红，否则有 medium 就黄，全低则绿）
+    const tags = dish.tags || {};
+    if (Object.values(tags).includes('high')) return 'dot-high';
+    if (Object.values(tags).includes('medium')) return 'dot-med';
+    return 'dot-low';
+  }
+
+  function renderDishList(dishes) {
+    const el = $('#dish-list');
+    el.innerHTML = dishes.length
+      ? dishes.map(d => `
+        <button type="button" class="dish-chip ${daily.picked.has(d.name) ? 'is-picked' : ''}"
+                data-name="${escapeHtml(d.name)}" title="${dishTip(d)}">
+          <span class="dot ${dishDot(d)}"></span>${escapeHtml(d.name)}
+        </button>`).join('')
+      : '<p class="empty-note">没有找到，换个关键词试试（例如：火锅 / 奶茶 / 鱼）</p>';
+    $$('.dish-chip', el).forEach(chip => {
+      chip.addEventListener('click', () => togglePick(chip.dataset.name));
+    });
+  }
+
+  function dishTip(dish) {
+    const tags = dish.tags || {};
+    const highs = Object.entries(tags).filter(([, v]) => v === 'high')
+      .map(([k]) => KEY_TEXT[k] || k);
+    return highs.length ? `${dish.category} · 注意${highs.join('、')}` : dish.category;
+  }
+
+  function togglePick(name) {
+    if (daily.picked.has(name)) daily.picked.delete(name);
+    else daily.picked.add(name);
+    $$('.dish-chip').forEach(chip => {
+      if (chip.dataset.name === name) chip.classList.toggle('is-picked');
+    });
+    renderPicked();
+  }
+
+  function renderPicked() {
+    const n = daily.picked.size;
+    $('#picked-dishes').textContent =
+      n ? [...daily.picked].join('、') : '还没选，点上面的菜名';
+    $('#btn-meal').disabled = n === 0;
+  }
+
+  function renderToday(s) {
+    $('#today-kcal').textContent =
+      `已记 ${s.meal_count} 餐 · 估算 ${s.calories} 千卡` + (s.meal_count ? '' : '（还没记录）');
+
+    const el = $('#today-hits');
+    if (!s.redlines_active) {
+      el.innerHTML = '<p class="empty-note">没有生效的红线，记录仍会保存。</p>';
+    } else if (!s.hits.length) {
+      el.innerHTML = `<div class="all-clear">今天 ${s.redlines_active} 条红线一条都没碰到，继续保持 👍</div>`;
+    } else {
+      el.innerHTML = '<div class="hit-list">' + s.hits.map(h => {
+        const boost = h.action === 'boost';
+        return `
+          <div class="hit-item ${boost ? 'is-boost-hit' : 'is-hit'}">
+            <div>
+              <div class="hit-name">${escapeHtml(h.restriction)}</div>
+              <div class="hit-meta">${boost ? '补铁达标' : '今天碰了线'} · 来源：${escapeHtml(h.marker)}</div>
+              ${h.foods.length ? `<div class="hit-foods">${escapeHtml(h.foods.join('、'))}</div>` : ''}
+            </div>
+            <span class="hit-count">${h.hit_count} 次</span>
+          </div>`;
+      }).join('') + '</div>';
+    }
+
+    const mealsEl = $('#today-meals');
+    mealsEl.innerHTML = (s.meals || []).length
+      ? '<ul>' + s.meals.map(m =>
+          `<li><span class="meal-tag">${MEAL_TEXT[m.meal_type] || m.meal_type}</span>${escapeHtml((m.dishes || []).join('、'))}</li>`
+        ).join('') + '</ul>'
+      : '';
+  }
+
+  function bindDaily() {
+    $('#tab-report').addEventListener('click', () => setTab('report'));
+    $('#tab-daily').addEventListener('click', () => setTab('daily'));
+
+    $$('#meal-seg .seg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('#meal-seg .seg').forEach(b => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-checked', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-checked', 'true');
+        daily.mealType = btn.dataset.meal;
+      });
+    });
+
+    $('#dish-q').addEventListener('input', e => {
+      clearTimeout(daily.searchTimer);
+      const q = e.target.value;
+      daily.searchTimer = setTimeout(async () => {
+        try { renderDishList(await fetchDishes(q)); } catch { /* 搜索失败不打断 */ }
+      }, 250);
+    });
+
+    $('#btn-meal').addEventListener('click', async () => {
+      if (!daily.picked.size) return;
+      try {
+        const summary = await postJson('/api/meals', {
+          meal_type: daily.mealType,
+          dishes: [...daily.picked],
+        });
+        daily.picked.clear();
+        renderPicked();
+        renderToday(summary);
+        toast('已记录，对照结果更新了');
+      } catch (e) {
+        toast('记录失败：' + e.message);
+      }
+    });
+  }
+
+  /* ══════════════════ 启动 ══════════════════ */
+
   async function boot() {
     bindEvents();
+    bindDaily();
     try {
       const info = await (await fetch('/api/about')).json();
       const chip = $('#mode-chip');
@@ -507,8 +699,11 @@
     } catch { /* 顶栏徽标不重要，失败就保持占位 */ }
 
     // ?demo=1 自动跑演示：录演示视频、跑无头回归、评委快速体验都用得上
-    if (new URLSearchParams(location.search).get('demo') === '1') {
+    const params = new URLSearchParams(location.search);
+    if (params.get('demo') === '1') {
       runDemo();
+    } else if (params.get('tab') === 'daily') {
+      setTab('daily');
     }
   }
 

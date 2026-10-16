@@ -1,0 +1,5065 @@
+{
+ "version": "0.1.0",
+ "updated": "2026-10-17",
+ "count": 316,
+ "source_primary": "参考数据/中国品牌食品营养_种子表.md（产品包装与公开平台数据）",
+ "honesty_note": "标签为启发式推导：脂肪/碳水有数值依据；嘌呤/钠/酒靠名称关键词。定位是日常对照的粗筛，不是精确营养计算。",
+ "dishes": [
+  {
+   "name": "奶油橘子（正常糖）",
+   "aliases": [
+    "奶油橘子（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 450.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "奶油橘子（少甜）",
+   "aliases": [
+    "奶油橘子（少甜）"
+   ],
+   "category": "饮品",
+   "calories": 380.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "奶油橘子（少甜缓糖）",
+   "aliases": [
+    "奶油橘子（少甜缓糖）"
+   ],
+   "category": "饮品",
+   "calories": 350.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鲜牛乳茶（正常糖）",
+   "aliases": [
+    "鲜牛乳茶（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 350.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "酪酪莓莓（正常糖）",
+   "aliases": [
+    "酪酪莓莓（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 500.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "多肉葡萄（不加芝士）",
+   "aliases": [
+    "多肉葡萄（不加芝士）"
+   ],
+   "category": "饮品",
+   "calories": 280.0,
+   "portion_note": "中杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "多肉葡萄（加芝士）",
+   "aliases": [
+    "多肉葡萄（加芝士）"
+   ],
+   "category": "饮品",
+   "calories": 420.0,
+   "portion_note": "中杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤黑糖波波牛乳",
+   "aliases": [
+    "烤黑糖波波牛乳"
+   ],
+   "category": "饮品",
+   "calories": 450.0,
+   "portion_note": "中杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "芝芝莓莓",
+   "aliases": [
+    "芝芝莓莓"
+   ],
+   "category": "饮品",
+   "calories": 400.0,
+   "portion_note": "中杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "纯绿妍茶后（无糖）",
+   "aliases": [
+    "纯绿妍茶后（无糖）"
+   ],
+   "category": "饮品",
+   "calories": 10.0,
+   "portion_note": "中杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "伯牙绝弦（正常糖）",
+   "aliases": [
+    "伯牙绝弦（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 400.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "伯牙绝弦（少糖）",
+   "aliases": [
+    "伯牙绝弦（少糖）"
+   ],
+   "category": "饮品",
+   "calories": 320.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "花田乌龙（少糖）",
+   "aliases": [
+    "花田乌龙（少糖）"
+   ],
+   "category": "饮品",
+   "calories": 250.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "medium",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "万里木兰（正常糖）",
+   "aliases": [
+    "万里木兰（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 370.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "medium",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "桂馥兰香（少糖）",
+   "aliases": [
+    "桂馥兰香（少糖）"
+   ],
+   "category": "饮品",
+   "calories": 280.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "medium",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "生椰拿铁",
+   "aliases": [
+    "生椰拿铁"
+   ],
+   "category": "饮品",
+   "calories": 260.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "厚乳拿铁",
+   "aliases": [
+    "厚乳拿铁"
+   ],
+   "category": "饮品",
+   "calories": 350.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "美式",
+   "aliases": [
+    "美式"
+   ],
+   "category": "饮品",
+   "calories": 10.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "丝绒拿铁",
+   "aliases": [
+    "丝绒拿铁"
+   ],
+   "category": "饮品",
+   "calories": 300.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "橙C美式",
+   "aliases": [
+    "橙C美式"
+   ],
+   "category": "饮品",
+   "calories": 80.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "拿铁（全脂）",
+   "aliases": [
+    "拿铁（全脂）"
+   ],
+   "category": "饮品",
+   "calories": 220.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "medium",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "拿铁（脱脂）",
+   "aliases": [
+    "拿铁（脱脂）"
+   ],
+   "category": "饮品",
+   "calories": 150.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "medium",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "摩卡（全脂）",
+   "aliases": [
+    "摩卡（全脂）"
+   ],
+   "category": "饮品",
+   "calories": 400.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "馥芮白",
+   "aliases": [
+    "馥芮白"
+   ],
+   "category": "饮品",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "霸气芝士草莓",
+   "aliases": [
+    "霸气芝士草莓"
+   ],
+   "category": "饮品",
+   "calories": 450.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鲜果茶（无糖）",
+   "aliases": [
+    "鲜果茶（无糖）"
+   ],
+   "category": "饮品",
+   "calories": 120.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "宝藏茶（正常糖）",
+   "aliases": [
+    "宝藏茶（正常糖）"
+   ],
+   "category": "饮品",
+   "calories": 480.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "杨枝甘露",
+   "aliases": [
+    "杨枝甘露"
+   ],
+   "category": "饮品",
+   "calories": 380.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "西瓜啵啵",
+   "aliases": [
+    "西瓜啵啵"
+   ],
+   "category": "饮品",
+   "calories": 300.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "medium",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "招牌芋圆奶茶",
+   "aliases": [
+    "招牌芋圆奶茶"
+   ],
+   "category": "饮品",
+   "calories": 450.0,
+   "portion_note": "大杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红心苹果米酒",
+   "aliases": [
+    "红心苹果米酒"
+   ],
+   "category": "酒类",
+   "calories": 45.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "桂花米酒",
+   "aliases": [
+    "桂花米酒"
+   ],
+   "category": "酒类",
+   "calories": 50.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "青梅酒",
+   "aliases": [
+    "青梅酒"
+   ],
+   "category": "酒类",
+   "calories": 70.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "杨梅酒",
+   "aliases": [
+    "杨梅酒"
+   ],
+   "category": "酒类",
+   "calories": 75.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "青岛经典",
+   "aliases": [
+    "青岛经典"
+   ],
+   "category": "酒类",
+   "calories": 200.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "百威",
+   "aliases": [
+    "百威"
+   ],
+   "category": "酒类",
+   "calories": 140.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "乌苏",
+   "aliases": [
+    "乌苏"
+   ],
+   "category": "酒类",
+   "calories": 280.0,
+   "portion_note": "620ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "1664白啤",
+   "aliases": [
+    "1664白啤"
+   ],
+   "category": "酒类",
+   "calories": 180.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "科罗娜",
+   "aliases": [
+    "科罗娜"
+   ],
+   "category": "酒类",
+   "calories": 150.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "福佳白",
+   "aliases": [
+    "福佳白"
+   ],
+   "category": "酒类",
+   "calories": 165.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "三得利啤酒",
+   "aliases": [
+    "三得利啤酒"
+   ],
+   "category": "酒类",
+   "calories": 175.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "喜力",
+   "aliases": [
+    "喜力"
+   ],
+   "category": "酒类",
+   "calories": 140.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "杰克丹尼",
+   "aliases": [
+    "杰克丹尼"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "百龄坛",
+   "aliases": [
+    "百龄坛"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "山崎/白州/响",
+   "aliases": [
+    "山崎/白州/响"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "威士忌+可乐",
+   "aliases": [
+    "威士忌+可乐"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "威士忌+苏打水",
+   "aliases": [
+    "威士忌+苏打水"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "通用伏特加（纯饮）",
+   "aliases": [
+    "通用伏特加（纯饮）"
+   ],
+   "category": "酒类",
+   "calories": 100.0,
+   "portion_note": "45ml(1shot)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "绝对伏特加",
+   "aliases": [
+    "绝对伏特加"
+   ],
+   "category": "酒类",
+   "calories": 100.0,
+   "portion_note": "45ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "灰雁",
+   "aliases": [
+    "灰雁"
+   ],
+   "category": "酒类",
+   "calories": 100.0,
+   "portion_note": "45ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "伏特加+橙汁",
+   "aliases": [
+    "伏特加+橙汁"
+   ],
+   "category": "酒类",
+   "calories": 250.0,
+   "portion_note": "1杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "伏特加+苏打+柠檬",
+   "aliases": [
+    "伏特加+苏打+柠檬"
+   ],
+   "category": "酒类",
+   "calories": 100.0,
+   "portion_note": "1杯",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "茅台飞天",
+   "aliases": [
+    "茅台飞天"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "五粮液",
+   "aliases": [
+    "五粮液"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "泸州老窖",
+   "aliases": [
+    "泸州老窖"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "白酒通用（低度）",
+   "aliases": [
+    "白酒通用（低度）"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "江小白",
+   "aliases": [
+    "江小白"
+   ],
+   "category": "酒类",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "干红（通用）",
+   "aliases": [
+    "干红（通用）"
+   ],
+   "category": "酒类",
+   "calories": 125.0,
+   "portion_note": "150ml(1杯)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "干白（通用）",
+   "aliases": [
+    "干白（通用）"
+   ],
+   "category": "酒类",
+   "calories": 120.0,
+   "portion_note": "150ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "甜白/莫斯卡托",
+   "aliases": [
+    "甜白/莫斯卡托"
+   ],
+   "category": "酒类",
+   "calories": 160.0,
+   "portion_note": "150ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "起泡酒/香槟",
+   "aliases": [
+    "起泡酒/香槟"
+   ],
+   "category": "酒类",
+   "calories": 130.0,
+   "portion_note": "150ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "high"
+   }
+  },
+  {
+   "name": "草莓糖葫芦",
+   "aliases": [
+    "草莓糖葫芦"
+   ],
+   "category": "甜品",
+   "calories": 50.0,
+   "portion_note": "1颗",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "山楂糖葫芦",
+   "aliases": [
+    "山楂糖葫芦"
+   ],
+   "category": "甜品",
+   "calories": 45.0,
+   "portion_note": "1颗",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "葡萄糖葫芦",
+   "aliases": [
+    "葡萄糖葫芦"
+   ],
+   "category": "甜品",
+   "calories": 55.0,
+   "portion_note": "1颗",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "橘子糖葫芦",
+   "aliases": [
+    "橘子糖葫芦"
+   ],
+   "category": "甜品",
+   "calories": 60.0,
+   "portion_note": "1颗",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "盒马原味贝果",
+   "aliases": [
+    "盒马原味贝果"
+   ],
+   "category": "主食",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "盒马全麦吐司(1片)",
+   "aliases": [
+    "盒马全麦吐司(1片)"
+   ],
+   "category": "主食",
+   "calories": 80.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "好利来半熟芝士(1个)",
+   "aliases": [
+    "好利来半熟芝士(1个)"
+   ],
+   "category": "主食",
+   "calories": 180.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鲍师傅肉松小贝(1个)",
+   "aliases": [
+    "鲍师傅肉松小贝(1个)"
+   ],
+   "category": "主食",
+   "calories": 220.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "泸溪河桃酥(1块)",
+   "aliases": [
+    "泸溪河桃酥(1块)"
+   ],
+   "category": "主食",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡胸肉饭团",
+   "aliases": [
+    "鸡胸肉饭团"
+   ],
+   "category": "便利店",
+   "calories": 220.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三明治（火腿蛋）",
+   "aliases": [
+    "三明治（火腿蛋）"
+   ],
+   "category": "便利店",
+   "calories": 280.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "关东煮萝卜",
+   "aliases": [
+    "关东煮萝卜"
+   ],
+   "category": "便利店",
+   "calories": 15.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "关东煮鱼丸（2个）",
+   "aliases": [
+    "关东煮鱼丸（2个）"
+   ],
+   "category": "便利店",
+   "calories": 80.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "茶叶蛋",
+   "aliases": [
+    "茶叶蛋"
+   ],
+   "category": "便利店",
+   "calories": 70.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "好炖鸡蛋",
+   "aliases": [
+    "好炖鸡蛋"
+   ],
+   "category": "便利店",
+   "calories": 70.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "寿司组合（6个）",
+   "aliases": [
+    "寿司组合（6个）"
+   ],
+   "category": "便利店",
+   "calories": 280.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三角饭团",
+   "aliases": [
+    "三角饭团"
+   ],
+   "category": "便利店",
+   "calories": 180.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "热餐鸡胸肉",
+   "aliases": [
+    "热餐鸡胸肉"
+   ],
+   "category": "便利店",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "热餐西兰花",
+   "aliases": [
+    "热餐西兰花"
+   ],
+   "category": "便利店",
+   "calories": 40.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蛋白棒",
+   "aliases": [
+    "蛋白棒"
+   ],
+   "category": "便利店",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "巨无霸",
+   "aliases": [
+    "巨无霸"
+   ],
+   "category": "快餐",
+   "calories": 530.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "麦辣鸡腿堡",
+   "aliases": [
+    "麦辣鸡腿堡"
+   ],
+   "category": "快餐",
+   "calories": 520.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "薯条（中）",
+   "aliases": [
+    "薯条（中）"
+   ],
+   "category": "快餐",
+   "calories": 340.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "板烧鸡腿堡",
+   "aliases": [
+    "板烧鸡腿堡"
+   ],
+   "category": "快餐",
+   "calories": 390.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡排",
+   "aliases": [
+    "鸡排"
+   ],
+   "category": "快餐",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "双层吉士汉堡",
+   "aliases": [
+    "双层吉士汉堡"
+   ],
+   "category": "快餐",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "麦香鱼",
+   "aliases": [
+    "麦香鱼"
+   ],
+   "category": "快餐",
+   "calories": 340.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "早餐猪柳蛋堡",
+   "aliases": [
+    "早餐猪柳蛋堡"
+   ],
+   "category": "快餐",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡蛋麦满分",
+   "aliases": [
+    "鸡蛋麦满分"
+   ],
+   "category": "快餐",
+   "calories": 290.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "吮指原味鸡（1块）",
+   "aliases": [
+    "吮指原味鸡（1块）"
+   ],
+   "category": "快餐",
+   "calories": 280.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "香辣鸡腿堡",
+   "aliases": [
+    "香辣鸡腿堡"
+   ],
+   "category": "快餐",
+   "calories": 480.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "老北京鸡肉卷",
+   "aliases": [
+    "老北京鸡肉卷"
+   ],
+   "category": "快餐",
+   "calories": 380.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "玉米棒",
+   "aliases": [
+    "玉米棒"
+   ],
+   "category": "快餐",
+   "calories": 100.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "嫩牛五方",
+   "aliases": [
+    "嫩牛五方"
+   ],
+   "category": "快餐",
+   "calories": 340.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "新奥尔良烤翅（2只）",
+   "aliases": [
+    "新奥尔良烤翅（2只）"
+   ],
+   "category": "快餐",
+   "calories": 220.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "黄金鸡块（5块）",
+   "aliases": [
+    "黄金鸡块（5块）"
+   ],
+   "category": "快餐",
+   "calories": 230.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "小皇堡",
+   "aliases": [
+    "小皇堡"
+   ],
+   "category": "快餐",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "果木香风鸡腿堡",
+   "aliases": [
+    "果木香风鸡腿堡"
+   ],
+   "category": "快餐",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "洋葱圈（中）",
+   "aliases": [
+    "洋葱圈（中）"
+   ],
+   "category": "快餐",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤鸡胸6寸",
+   "aliases": [
+    "烤鸡胸6寸"
+   ],
+   "category": "快餐",
+   "calories": 320.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "意式BMT 6寸",
+   "aliases": [
+    "意式BMT 6寸"
+   ],
+   "category": "快餐",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蔬菜6寸",
+   "aliases": [
+    "蔬菜6寸"
+   ],
+   "category": "快餐",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "超级至尊（铁盘，1片）",
+   "aliases": [
+    "超级至尊（铁盘，1片）"
+   ],
+   "category": "快餐",
+   "calories": 300.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "玛格丽特（薄底，1片）",
+   "aliases": [
+    "玛格丽特（薄底，1片）"
+   ],
+   "category": "快餐",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤鸡沙拉",
+   "aliases": [
+    "烤鸡沙拉"
+   ],
+   "category": "快餐",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉饭（中）",
+   "aliases": [
+    "牛肉饭（中）"
+   ],
+   "category": "快餐",
+   "calories": 650.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡肉饭（中）",
+   "aliases": [
+    "鸡肉饭（中）"
+   ],
+   "category": "快餐",
+   "calories": 550.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "味增汤",
+   "aliases": [
+    "味增汤"
+   ],
+   "category": "快餐",
+   "calories": 40.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "冬菇鸡腿饭",
+   "aliases": [
+    "冬菇鸡腿饭"
+   ],
+   "category": "快餐",
+   "calories": 520.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "香汁排骨饭",
+   "aliases": [
+    "香汁排骨饭"
+   ],
+   "category": "快餐",
+   "calories": 580.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白灼时蔬",
+   "aliases": [
+    "白灼时蔬"
+   ],
+   "category": "快餐",
+   "calories": 50.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "宫保鸡丁",
+   "aliases": [
+    "宫保鸡丁"
+   ],
+   "category": "家常菜",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "番茄炒蛋",
+   "aliases": [
+    "番茄炒蛋"
+   ],
+   "category": "家常菜",
+   "calories": 300.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "清蒸鱼",
+   "aliases": [
+    "清蒸鱼"
+   ],
+   "category": "家常菜",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "水煮肉片",
+   "aliases": [
+    "水煮肉片"
+   ],
+   "category": "家常菜",
+   "calories": 600.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "麻婆豆腐",
+   "aliases": [
+    "麻婆豆腐"
+   ],
+   "category": "家常菜",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蒜蓉西兰花",
+   "aliases": [
+    "蒜蓉西兰花"
+   ],
+   "category": "家常菜",
+   "calories": 100.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红烧排骨",
+   "aliases": [
+    "红烧排骨"
+   ],
+   "category": "家常菜",
+   "calories": 550.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白切鸡（半只）",
+   "aliases": [
+    "白切鸡（半只）"
+   ],
+   "category": "家常菜",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蛋炒饭",
+   "aliases": [
+    "蛋炒饭"
+   ],
+   "category": "家常菜",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "皮蛋瘦肉粥",
+   "aliases": [
+    "皮蛋瘦肉粥"
+   ],
+   "category": "家常菜",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "黄焖鸡米饭",
+   "aliases": [
+    "黄焖鸡米饭"
+   ],
+   "category": "家常菜",
+   "calories": 650.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "沙县拌面",
+   "aliases": [
+    "沙县拌面"
+   ],
+   "category": "家常菜",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "兰州牛肉面",
+   "aliases": [
+    "兰州牛肉面"
+   ],
+   "category": "家常菜",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "回锅肉",
+   "aliases": [
+    "回锅肉"
+   ],
+   "category": "家常菜",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鱼香肉丝",
+   "aliases": [
+    "鱼香肉丝"
+   ],
+   "category": "家常菜",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "青椒肉丝",
+   "aliases": [
+    "青椒肉丝"
+   ],
+   "category": "家常菜",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "酸菜鱼",
+   "aliases": [
+    "酸菜鱼"
+   ],
+   "category": "家常菜",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红烧肉",
+   "aliases": [
+    "红烧肉"
+   ],
+   "category": "家常菜",
+   "calories": 600.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "地三鲜",
+   "aliases": [
+    "地三鲜"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "干煸四季豆",
+   "aliases": [
+    "干煸四季豆"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "西红柿牛腩",
+   "aliases": [
+    "西红柿牛腩"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蒸蛋",
+   "aliases": [
+    "蒸蛋"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "凉拌黄瓜",
+   "aliases": [
+    "凉拌黄瓜"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "拍黄瓜",
+   "aliases": [
+    "拍黄瓜"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白灼虾",
+   "aliases": [
+    "白灼虾"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蒜蓉粉丝蒸虾",
+   "aliases": [
+    "蒜蓉粉丝蒸虾"
+   ],
+   "category": "家常菜",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白粥",
+   "aliases": [
+    "白粥"
+   ],
+   "category": "主食",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "桂林米粉",
+   "aliases": [
+    "桂林米粉"
+   ],
+   "category": "主食",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "重庆小面",
+   "aliases": [
+    "重庆小面"
+   ],
+   "category": "主食",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "热干面",
+   "aliases": [
+    "热干面"
+   ],
+   "category": "主食",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "刀削面",
+   "aliases": [
+    "刀削面"
+   ],
+   "category": "主食",
+   "calories": 420.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "酸辣粉",
+   "aliases": [
+    "酸辣粉"
+   ],
+   "category": "主食",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "云南米线",
+   "aliases": [
+    "云南米线"
+   ],
+   "category": "主食",
+   "calories": 380.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "担担面",
+   "aliases": [
+    "担担面"
+   ],
+   "category": "主食",
+   "calories": 480.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡腿饭套餐",
+   "aliases": [
+    "鸡腿饭套餐"
+   ],
+   "category": "快餐",
+   "calories": 700.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "卤肉饭",
+   "aliases": [
+    "卤肉饭"
+   ],
+   "category": "快餐",
+   "calories": 600.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉盖饭",
+   "aliases": [
+    "牛肉盖饭"
+   ],
+   "category": "快餐",
+   "calories": 650.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鳗鱼饭",
+   "aliases": [
+    "鳗鱼饭"
+   ],
+   "category": "快餐",
+   "calories": 600.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "麻辣香锅（1人份）",
+   "aliases": [
+    "麻辣香锅（1人份）"
+   ],
+   "category": "快餐",
+   "calories": 800.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "冒菜（1人份）",
+   "aliases": [
+    "冒菜（1人份）"
+   ],
+   "category": "快餐",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "减脂餐/轻食",
+   "aliases": [
+    "减脂餐/轻食"
+   ],
+   "category": "快餐",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉卷",
+   "aliases": [
+    "牛肉卷"
+   ],
+   "category": "火锅",
+   "calories": 160.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "羊肉卷",
+   "aliases": [
+    "羊肉卷"
+   ],
+   "category": "火锅",
+   "calories": 200.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "虾滑",
+   "aliases": [
+    "虾滑"
+   ],
+   "category": "火锅",
+   "calories": 120.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鱼片",
+   "aliases": [
+    "鱼片"
+   ],
+   "category": "火锅",
+   "calories": 100.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "豆腐",
+   "aliases": [
+    "豆腐"
+   ],
+   "category": "火锅",
+   "calories": 75.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "冻豆腐",
+   "aliases": [
+    "冻豆腐"
+   ],
+   "category": "火锅",
+   "calories": 80.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鱼豆腐",
+   "aliases": [
+    "鱼豆腐"
+   ],
+   "category": "火锅",
+   "calories": 140.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "午餐肉",
+   "aliases": [
+    "午餐肉"
+   ],
+   "category": "火锅",
+   "calories": 220.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "毛肚",
+   "aliases": [
+    "毛肚"
+   ],
+   "category": "火锅",
+   "calories": 80.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸭血",
+   "aliases": [
+    "鸭血"
+   ],
+   "category": "火锅",
+   "calories": 55.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鹌鹑蛋(5个)",
+   "aliases": [
+    "鹌鹑蛋(5个)"
+   ],
+   "category": "火锅",
+   "calories": 80.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "土豆片",
+   "aliases": [
+    "土豆片"
+   ],
+   "category": "火锅",
+   "calories": 80.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红薯",
+   "aliases": [
+    "红薯"
+   ],
+   "category": "火锅",
+   "calories": 90.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "粉丝/粉条",
+   "aliases": [
+    "粉丝/粉条"
+   ],
+   "category": "火锅",
+   "calories": 110.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "金针菇",
+   "aliases": [
+    "金针菇"
+   ],
+   "category": "火锅",
+   "calories": 30.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "海带",
+   "aliases": [
+    "海带"
+   ],
+   "category": "火锅",
+   "calories": 15.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白菜/生菜",
+   "aliases": [
+    "白菜/生菜"
+   ],
+   "category": "火锅",
+   "calories": 15.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "冬瓜",
+   "aliases": [
+    "冬瓜"
+   ],
+   "category": "火锅",
+   "calories": 12.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "藕片",
+   "aliases": [
+    "藕片"
+   ],
+   "category": "火锅",
+   "calories": 70.0,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "沙茶酱",
+   "aliases": [
+    "沙茶酱"
+   ],
+   "category": "火锅",
+   "calories": null,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "油碟（香油+蒜泥）",
+   "aliases": [
+    "油碟（香油+蒜泥）"
+   ],
+   "category": "火锅",
+   "calories": null,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "醋+蒜泥+小米辣",
+   "aliases": [
+    "醋+蒜泥+小米辣"
+   ],
+   "category": "火锅",
+   "calories": null,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "酱油+葱花",
+   "aliases": [
+    "酱油+葱花"
+   ],
+   "category": "火锅",
+   "calories": null,
+   "portion_note": "每100g",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "羊肉串(1串)",
+   "aliases": [
+    "羊肉串(1串)"
+   ],
+   "category": "烧烤",
+   "calories": 60.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉串(1串)",
+   "aliases": [
+    "牛肉串(1串)"
+   ],
+   "category": "烧烤",
+   "calories": 55.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡翅(1个)",
+   "aliases": [
+    "鸡翅(1个)"
+   ],
+   "category": "烧烤",
+   "calories": 120.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤韭菜(1份)",
+   "aliases": [
+    "烤韭菜(1份)"
+   ],
+   "category": "烧烤",
+   "calories": 80.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤茄子(1个)",
+   "aliases": [
+    "烤茄子(1个)"
+   ],
+   "category": "烧烤",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤金针菇(1份)",
+   "aliases": [
+    "烤金针菇(1份)"
+   ],
+   "category": "烧烤",
+   "calories": 60.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤鱿鱼(1串)",
+   "aliases": [
+    "烤鱿鱼(1串)"
+   ],
+   "category": "烧烤",
+   "calories": 50.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤生蚝(1个)",
+   "aliases": [
+    "烤生蚝(1个)"
+   ],
+   "category": "烧烤",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "面筋(1串)",
+   "aliases": [
+    "面筋(1串)"
+   ],
+   "category": "烧烤",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "馒头片(2片)",
+   "aliases": [
+    "馒头片(2片)"
+   ],
+   "category": "烧烤",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "煎饼果子",
+   "aliases": [
+    "煎饼果子"
+   ],
+   "category": "早餐",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "油条(1根)",
+   "aliases": [
+    "油条(1根)"
+   ],
+   "category": "早餐",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "豆浆（无糖，300ml）",
+   "aliases": [
+    "豆浆（无糖，300ml）"
+   ],
+   "category": "早餐",
+   "calories": 60.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "豆浆（甜，300ml）",
+   "aliases": [
+    "豆浆（甜，300ml）"
+   ],
+   "category": "早餐",
+   "calories": 120.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "小笼包(6个)",
+   "aliases": [
+    "小笼包(6个)"
+   ],
+   "category": "早餐",
+   "calories": 300.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "肉包子(1个)",
+   "aliases": [
+    "肉包子(1个)"
+   ],
+   "category": "早餐",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "菜包子(1个)",
+   "aliases": [
+    "菜包子(1个)"
+   ],
+   "category": "早餐",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蒸饺(6个)",
+   "aliases": [
+    "蒸饺(6个)"
+   ],
+   "category": "早餐",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "粢饭团(1个)",
+   "aliases": [
+    "粢饭团(1个)"
+   ],
+   "category": "早餐",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烧饼夹肉",
+   "aliases": [
+    "烧饼夹肉"
+   ],
+   "category": "早餐",
+   "calories": 400.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡蛋灌饼",
+   "aliases": [
+    "鸡蛋灌饼"
+   ],
+   "category": "早餐",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "手抓饼",
+   "aliases": [
+    "手抓饼"
+   ],
+   "category": "早餐",
+   "calories": 300.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "葱油饼",
+   "aliases": [
+    "葱油饼"
+   ],
+   "category": "早餐",
+   "calories": 280.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "双皮奶(1碗)",
+   "aliases": [
+    "双皮奶(1碗)"
+   ],
+   "category": "甜品",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "杨枝甘露(1碗)",
+   "aliases": [
+    "杨枝甘露(1碗)"
+   ],
+   "category": "甜品",
+   "calories": 250.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红豆沙(1碗)",
+   "aliases": [
+    "红豆沙(1碗)"
+   ],
+   "category": "甜品",
+   "calories": 200.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "芒果班戟(1个)",
+   "aliases": [
+    "芒果班戟(1个)"
+   ],
+   "category": "甜品",
+   "calories": 180.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蛋挞(1个)",
+   "aliases": [
+    "蛋挞(1个)"
+   ],
+   "category": "甜品",
+   "calories": 180.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "绿豆汤（甜，1碗）",
+   "aliases": [
+    "绿豆汤（甜，1碗）"
+   ],
+   "category": "甜品",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "冰粉(1碗)",
+   "aliases": [
+    "冰粉(1碗)"
+   ],
+   "category": "甜品",
+   "calories": 120.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "凉虾(1碗)",
+   "aliases": [
+    "凉虾(1碗)"
+   ],
+   "category": "甜品",
+   "calories": 150.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "日日鲜鲜牛奶",
+   "aliases": [
+    "日日鲜鲜牛奶"
+   ],
+   "category": "超市",
+   "calories": 165.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "有机豆腐",
+   "aliases": [
+    "有机豆腐"
+   ],
+   "category": "超市",
+   "calories": 200.0,
+   "portion_note": "300g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "原味贝果",
+   "aliases": [
+    "原味贝果"
+   ],
+   "category": "超市",
+   "calories": 250.0,
+   "portion_note": "1个",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "全麦吐司(1片)",
+   "aliases": [
+    "全麦吐司(1片)"
+   ],
+   "category": "超市",
+   "calories": 80.0,
+   "portion_note": "~35g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "即食鸡胸肉",
+   "aliases": [
+    "即食鸡胸肉"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "即食虾仁",
+   "aliases": [
+    "即食虾仁"
+   ],
+   "category": "超市",
+   "calories": 90.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三文鱼刺身",
+   "aliases": [
+    "三文鱼刺身"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "北极甜虾",
+   "aliases": [
+    "北极甜虾"
+   ],
+   "category": "超市",
+   "calories": 70.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "希腊酸奶（无糖）",
+   "aliases": [
+    "希腊酸奶（无糖）"
+   ],
+   "category": "超市",
+   "calories": 75.0,
+   "portion_note": "120g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鲜切水果沙拉",
+   "aliases": [
+    "鲜切水果沙拉"
+   ],
+   "category": "超市",
+   "calories": 80.0,
+   "portion_note": "200g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤鸡（整只）",
+   "aliases": [
+    "烤鸡（整只）"
+   ],
+   "category": "超市",
+   "calories": 1700.0,
+   "portion_note": "~1.3kg",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "烤鸡（1/4只）",
+   "aliases": [
+    "烤鸡（1/4只）"
+   ],
+   "category": "超市",
+   "calories": 425.0,
+   "portion_note": "~325g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "热狗+汽水套餐",
+   "aliases": [
+    "热狗+汽水套餐"
+   ],
+   "category": "超市",
+   "calories": 550.0,
+   "portion_note": "1份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "Kirkland坚果",
+   "aliases": [
+    "Kirkland坚果"
+   ],
+   "category": "超市",
+   "calories": 185.0,
+   "portion_note": "30g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "Kirkland希腊酸奶",
+   "aliases": [
+    "Kirkland希腊酸奶"
+   ],
+   "category": "超市",
+   "calories": 100.0,
+   "portion_note": "150g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡胸肉（冷冻）",
+   "aliases": [
+    "鸡胸肉（冷冻）"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛排（Choice级）",
+   "aliases": [
+    "牛排（Choice级）"
+   ],
+   "category": "超市",
+   "calories": 220.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "麻薯面包（1个）",
+   "aliases": [
+    "麻薯面包（1个）"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "~60g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "瑞士卷（1片）",
+   "aliases": [
+    "瑞士卷（1片）"
+   ],
+   "category": "超市",
+   "calories": 280.0,
+   "portion_note": "~80g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "伯爵红茶蛋糕（1片）",
+   "aliases": [
+    "伯爵红茶蛋糕（1片）"
+   ],
+   "category": "超市",
+   "calories": 320.0,
+   "portion_note": "~100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉卷（1个）",
+   "aliases": [
+    "牛肉卷（1个）"
+   ],
+   "category": "超市",
+   "calories": 200.0,
+   "portion_note": "~120g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "原味贝果（1个）",
+   "aliases": [
+    "原味贝果（1个）"
+   ],
+   "category": "超市",
+   "calories": 260.0,
+   "portion_note": "~100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "high",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "羊角面包（1个）",
+   "aliases": [
+    "羊角面包（1个）"
+   ],
+   "category": "超市",
+   "calories": 280.0,
+   "portion_note": "~70g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "榴莲千层（1片）",
+   "aliases": [
+    "榴莲千层（1片）"
+   ],
+   "category": "超市",
+   "calories": 350.0,
+   "portion_note": "~120g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "披萨（1片）",
+   "aliases": [
+    "披萨（1片）"
+   ],
+   "category": "超市",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "medium",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "谷饲牛排（西冷）",
+   "aliases": [
+    "谷饲牛排（西冷）"
+   ],
+   "category": "超市",
+   "calories": 200.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "谷饲牛排（眼肉）",
+   "aliases": [
+    "谷饲牛排（眼肉）"
+   ],
+   "category": "超市",
+   "calories": 250.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡胸肉",
+   "aliases": [
+    "鸡胸肉"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三文鱼",
+   "aliases": [
+    "三文鱼"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "虾仁",
+   "aliases": [
+    "虾仁"
+   ],
+   "category": "超市",
+   "calories": 85.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉饼",
+   "aliases": [
+    "牛肉饼"
+   ],
+   "category": "超市",
+   "calories": 280.0,
+   "portion_note": "1个(~130g)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡翅（空气炸）",
+   "aliases": [
+    "鸡翅（空气炸）"
+   ],
+   "category": "超市",
+   "calories": 220.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蔓越莓干",
+   "aliases": [
+    "蔓越莓干"
+   ],
+   "category": "超市",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛奶（鲜）",
+   "aliases": [
+    "牛奶（鲜）"
+   ],
+   "category": "超市",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "Member's Mark希腊酸奶",
+   "aliases": [
+    "Member's Mark希腊酸奶"
+   ],
+   "category": "超市",
+   "calories": null,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "优形鸡胸肉",
+   "aliases": [
+    "优形鸡胸肉"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鲨鱼菲特鸡胸肉",
+   "aliases": [
+    "鲨鱼菲特鸡胸肉"
+   ],
+   "category": "超市",
+   "calories": 105.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "良品铺子牛肉干",
+   "aliases": [
+    "良品铺子牛肉干"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "50g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三只松鼠牛肉粒",
+   "aliases": [
+    "三只松鼠牛肉粒"
+   ],
+   "category": "超市",
+   "calories": 140.0,
+   "portion_note": "50g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "盒马即食虾仁",
+   "aliases": [
+    "盒马即食虾仁"
+   ],
+   "category": "超市",
+   "calories": 90.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白米饭",
+   "aliases": [
+    "白米饭"
+   ],
+   "category": "超市",
+   "calories": 130.0,
+   "portion_note": "100g(熟)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "糙米饭",
+   "aliases": [
+    "糙米饭"
+   ],
+   "category": "超市",
+   "calories": 125.0,
+   "portion_note": "100g(熟)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "全麦面包(1片)",
+   "aliases": [
+    "全麦面包(1片)"
+   ],
+   "category": "超市",
+   "calories": 80.0,
+   "portion_note": "~35g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "玉米(1根)",
+   "aliases": [
+    "玉米(1根)"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "~200g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "燕麦片",
+   "aliases": [
+    "燕麦片"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "40g(干)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "荞麦面",
+   "aliases": [
+    "荞麦面"
+   ],
+   "category": "超市",
+   "calories": 340.0,
+   "portion_note": "100g(干)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "康师傅红烧牛肉面",
+   "aliases": [
+    "康师傅红烧牛肉面"
+   ],
+   "category": "超市",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "汤达人（非油炸）",
+   "aliases": [
+    "汤达人（非油炸）"
+   ],
+   "category": "超市",
+   "calories": 350.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "自嗨锅（麻辣火锅）",
+   "aliases": [
+    "自嗨锅（麻辣火锅）"
+   ],
+   "category": "超市",
+   "calories": 550.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "螺蛳粉（好欢螺）",
+   "aliases": [
+    "螺蛳粉（好欢螺）"
+   ],
+   "category": "超市",
+   "calories": 450.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "螺蛳粉（李子柒）",
+   "aliases": [
+    "螺蛳粉（李子柒）"
+   ],
+   "category": "超市",
+   "calories": 430.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "拉面说（豚骨）",
+   "aliases": [
+    "拉面说（豚骨）"
+   ],
+   "category": "超市",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "high",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "日清合味道",
+   "aliases": [
+    "日清合味道"
+   ],
+   "category": "超市",
+   "calories": 300.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "统一老坛酸菜面",
+   "aliases": [
+    "统一老坛酸菜面"
+   ],
+   "category": "超市",
+   "calories": 430.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "high",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "白象大骨面",
+   "aliases": [
+    "白象大骨面"
+   ],
+   "category": "超市",
+   "calories": 420.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "海底捞自热火锅",
+   "aliases": [
+    "海底捞自热火锅"
+   ],
+   "category": "超市",
+   "calories": 600.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "莫小仙自热米饭",
+   "aliases": [
+    "莫小仙自热米饭"
+   ],
+   "category": "超市",
+   "calories": 500.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉干",
+   "aliases": [
+    "牛肉干"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "50g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "猪肉脯",
+   "aliases": [
+    "猪肉脯"
+   ],
+   "category": "超市",
+   "calories": 160.0,
+   "portion_note": "50g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "手撕面包",
+   "aliases": [
+    "手撕面包"
+   ],
+   "category": "超市",
+   "calories": 280.0,
+   "portion_note": "1个(~75g)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "每日坚果",
+   "aliases": [
+    "每日坚果"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "25g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "鸡胸肉肠",
+   "aliases": [
+    "鸡胸肉肠"
+   ],
+   "category": "超市",
+   "calories": 40.0,
+   "portion_note": "1根(~32g)",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "牛肉粒",
+   "aliases": [
+    "牛肉粒"
+   ],
+   "category": "超市",
+   "calories": 140.0,
+   "portion_note": "50g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "medium",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "碧根果",
+   "aliases": [
+    "碧根果"
+   ],
+   "category": "超市",
+   "calories": 200.0,
+   "portion_note": "30g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "夏威夷果",
+   "aliases": [
+    "夏威夷果"
+   ],
+   "category": "超市",
+   "calories": 210.0,
+   "portion_note": "30g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "芒果干",
+   "aliases": [
+    "芒果干"
+   ],
+   "category": "超市",
+   "calories": 100.0,
+   "portion_note": "30g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "抱抱果（枣夹核桃）",
+   "aliases": [
+    "抱抱果（枣夹核桃）"
+   ],
+   "category": "超市",
+   "calories": 130.0,
+   "portion_note": "30g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "可口可乐",
+   "aliases": [
+    "可口可乐"
+   ],
+   "category": "超市",
+   "calories": 140.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "可口可乐（零度/无糖）",
+   "aliases": [
+    "可口可乐（零度/无糖）"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "百事可乐",
+   "aliases": [
+    "百事可乐"
+   ],
+   "category": "超市",
+   "calories": 140.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "百事（无糖）",
+   "aliases": [
+    "百事（无糖）"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "雪碧",
+   "aliases": [
+    "雪碧"
+   ],
+   "category": "超市",
+   "calories": 130.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "雪碧（纤维+）",
+   "aliases": [
+    "雪碧（纤维+）"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "芬达",
+   "aliases": [
+    "芬达"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "元气森林气泡水",
+   "aliases": [
+    "元气森林气泡水"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "480ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "北冰洋桔汁",
+   "aliases": [
+    "北冰洋桔汁"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "农夫山泉NFC橙汁",
+   "aliases": [
+    "农夫山泉NFC橙汁"
+   ],
+   "category": "超市",
+   "calories": 135.0,
+   "portion_note": "300ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "味全每日C橙汁",
+   "aliases": [
+    "味全每日C橙汁"
+   ],
+   "category": "超市",
+   "calories": 130.0,
+   "portion_note": "300ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "汇源100%橙汁",
+   "aliases": [
+    "汇源100%橙汁"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "东方树叶（无糖）",
+   "aliases": [
+    "东方树叶（无糖）"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三得利乌龙茶（无糖）",
+   "aliases": [
+    "三得利乌龙茶（无糖）"
+   ],
+   "category": "超市",
+   "calories": 0.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "康师傅绿茶",
+   "aliases": [
+    "康师傅绿茶"
+   ],
+   "category": "超市",
+   "calories": 180.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "统一冰红茶",
+   "aliases": [
+    "统一冰红茶"
+   ],
+   "category": "超市",
+   "calories": 190.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "high",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "王老吉",
+   "aliases": [
+    "王老吉"
+   ],
+   "category": "超市",
+   "calories": 160.0,
+   "portion_note": "310ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "维他柠檬茶",
+   "aliases": [
+    "维他柠檬茶"
+   ],
+   "category": "超市",
+   "calories": 110.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "椰树椰汁",
+   "aliases": [
+    "椰树椰汁"
+   ],
+   "category": "超市",
+   "calories": 140.0,
+   "portion_note": "245ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "红牛（中国版）",
+   "aliases": [
+    "红牛（中国版）"
+   ],
+   "category": "超市",
+   "calories": 170.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "外星人电解质水",
+   "aliases": [
+    "外星人电解质水"
+   ],
+   "category": "超市",
+   "calories": 60.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "佳得乐",
+   "aliases": [
+    "佳得乐"
+   ],
+   "category": "超市",
+   "calories": 150.0,
+   "portion_note": "600ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "脉动",
+   "aliases": [
+    "脉动"
+   ],
+   "category": "超市",
+   "calories": 120.0,
+   "portion_note": "600ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "魔爪Monster",
+   "aliases": [
+    "魔爪Monster"
+   ],
+   "category": "超市",
+   "calories": 120.0,
+   "portion_note": "330ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "东鹏特饮",
+   "aliases": [
+    "东鹏特饮"
+   ],
+   "category": "超市",
+   "calories": 200.0,
+   "portion_note": "500ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "湾仔码头水饺(10个)",
+   "aliases": [
+    "湾仔码头水饺(10个)"
+   ],
+   "category": "超市",
+   "calories": 400.0,
+   "portion_note": "~200g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "三全灌汤水饺(10个)",
+   "aliases": [
+    "三全灌汤水饺(10个)"
+   ],
+   "category": "超市",
+   "calories": 380.0,
+   "portion_note": "~200g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "思念汤圆(6个)",
+   "aliases": [
+    "思念汤圆(6个)"
+   ],
+   "category": "超市",
+   "calories": 250.0,
+   "portion_note": "~120g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "蒙牛纯牛奶",
+   "aliases": [
+    "蒙牛纯牛奶"
+   ],
+   "category": "乳制品",
+   "calories": 170.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "伊利纯牛奶",
+   "aliases": [
+    "伊利纯牛奶"
+   ],
+   "category": "乳制品",
+   "calories": 170.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "特仑苏",
+   "aliases": [
+    "特仑苏"
+   ],
+   "category": "乳制品",
+   "calories": 185.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "Oatly燕麦奶",
+   "aliases": [
+    "Oatly燕麦奶"
+   ],
+   "category": "乳制品",
+   "calories": 120.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "维他奶",
+   "aliases": [
+    "维他奶"
+   ],
+   "category": "乳制品",
+   "calories": 130.0,
+   "portion_note": "250ml",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "伊利安慕希",
+   "aliases": [
+    "伊利安慕希"
+   ],
+   "category": "乳制品",
+   "calories": 180.0,
+   "portion_note": "205g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "光明如实（无糖）",
+   "aliases": [
+    "光明如实（无糖）"
+   ],
+   "category": "乳制品",
+   "calories": 90.0,
+   "portion_note": "135g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "乐纯希腊酸奶",
+   "aliases": [
+    "乐纯希腊酸奶"
+   ],
+   "category": "乳制品",
+   "calories": 95.0,
+   "portion_note": "135g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "简爱0%蔗糖",
+   "aliases": [
+    "简爱0%蔗糖"
+   ],
+   "category": "乳制品",
+   "calories": 75.0,
+   "portion_note": "135g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "卡士原味酸奶",
+   "aliases": [
+    "卡士原味酸奶"
+   ],
+   "category": "乳制品",
+   "calories": 80.0,
+   "portion_note": "100g",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "ON 金标乳清",
+   "aliases": [
+    "ON 金标乳清"
+   ],
+   "category": "主食",
+   "calories": 120.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "MyProtein 浓缩乳清",
+   "aliases": [
+    "MyProtein 浓缩乳清"
+   ],
+   "category": "主食",
+   "calories": 105.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "汤臣倍健乳清蛋白",
+   "aliases": [
+    "汤臣倍健乳清蛋白"
+   ],
+   "category": "主食",
+   "calories": 115.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  },
+  {
+   "name": "康比特乳清蛋白",
+   "aliases": [
+    "康比特乳清蛋白"
+   ],
+   "category": "主食",
+   "calories": 120.0,
+   "portion_note": "一份",
+   "tags": {
+    "sodium": "low",
+    "sugar": "low",
+    "purine": "low",
+    "fat": "low",
+    "alcohol": "low"
+   }
+  }
+ ]
+}

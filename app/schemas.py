@@ -179,16 +179,19 @@ class LabReport(_Strict):
 
 
 class NutrientTag(_Strict):
-    """一道菜的四档标签。
+    """一道菜的六档标签。
 
     `purine`（嘌呤）与 `gi`（升糖指数）在中国食物成分表中**没有**，
     需要单独整理，见 README 第六章的数据缺口说明。
+    `alcohol` 单独成档而不是挂在脂肪上：限酒是七条红线之一，
+    啤酒的脂肪含量是 0，挂在脂肪上既不符合事实、也会误触限脂肪红线。
     """
 
     sodium: Literal["low", "medium", "high"] = "low"
     sugar: Literal["low", "medium", "high"] = "low"
     purine: Literal["low", "medium", "high"] = "low"
     fat: Literal["low", "medium", "high"] = "low"
+    alcohol: Literal["low", "medium", "high"] = "low"
 
 
 class Dish(_Strict):
@@ -216,7 +219,7 @@ class RedlineRule(_Strict):
     #: 注意补铁这一档：它不是「限制某物」而是「建议补充」，
     #: 与其余四档性质不同，所以单独用 action 字段区分，
     #: 否则产品逻辑会把「补铁」误处理成「少吃含铁食物」——方向完全反了。
-    nutrient_key: Literal["sodium", "sugar", "purine", "fat", "iron"] = Field(
+    nutrient_key: Literal["sodium", "sugar", "purine", "fat", "iron", "alcohol"] = Field(
         ..., description="对应到 Dish.tags 的哪一档；iron 为建议补充，非限制"
     )
     action: Literal["limit", "boost"] = Field(

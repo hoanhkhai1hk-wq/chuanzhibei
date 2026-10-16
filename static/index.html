@@ -15,6 +15,10 @@
       <span class="brand-mark">体检之后</span>
       <span class="brand-sub">After&nbsp;the&nbsp;Checkup</span>
     </div>
+    <nav class="topnav">
+      <button type="button" class="nav-tab is-active" id="tab-report" data-tab="report">报告解读</button>
+      <button type="button" class="nav-tab" id="tab-daily" data-tab="daily">今日记录</button>
+    </nav>
     <div class="topbar-right">
       <span class="mode-chip" id="mode-chip" title="表达层当前工作模式">…</span>
       <a class="topbar-link" href="/docs" target="_blank" rel="noopener">API 文档</a>
@@ -221,6 +225,59 @@
   </details>
 
   <p class="disclaimer" id="disclaimer"></p>
+</main>
+
+<!-- ══════════════════════════ 视图四：今日记录（日常层） ══════════════════════════ -->
+<main id="view-daily" class="view is-hidden">
+
+  <div class="result-head">
+    <h2 class="result-title">今日记录</h2>
+    <span class="card-note" id="daily-date"></span>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>当前红线</h3>
+      <span class="card-note" id="redline-src-note">来自最近一次报告</span>
+    </div>
+    <div id="active-redlines"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>记一餐</h3>
+      <div class="segmented" id="meal-seg" role="radiogroup" aria-label="餐次">
+        <button type="button" class="seg" data-meal="breakfast" role="radio" aria-checked="false">早</button>
+        <button type="button" class="seg is-active" data-meal="lunch" role="radio" aria-checked="true">午</button>
+        <button type="button" class="seg" data-meal="dinner" role="radio" aria-checked="false">晚</button>
+        <button type="button" class="seg" data-meal="snack" role="radio" aria-checked="false">加餐</button>
+      </div>
+    </div>
+    <input type="search" class="dish-search" id="dish-q"
+           placeholder="搜索菜品，如：火锅、奶茶、红烧肉…" autocomplete="off">
+    <div class="dish-grid" id="dish-list"></div>
+    <div class="picked-row" id="picked-row">
+      <span class="picked-label">已选</span>
+      <span id="picked-dishes" class="picked-dishes">还没选，点上面的菜名</span>
+    </div>
+    <div class="upload-actions">
+      <button type="button" class="btn btn-primary" id="btn-meal" disabled>记录这一餐</button>
+      <span class="field-hint">标签是粗筛：high 档才撞线，medium 不打扰</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>今日对照</h3>
+      <span class="card-note" id="today-kcal"></span>
+    </div>
+    <div id="today-hits"></div>
+    <div id="today-meals" class="today-meals"></div>
+  </section>
+
+  <p class="disclaimer">
+    热量与标签为估算值，用于日常对照参考，不构成营养处方。如有特殊饮食要求，请遵医嘱。
+  </p>
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

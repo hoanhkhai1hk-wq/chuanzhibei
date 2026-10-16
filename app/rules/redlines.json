@@ -94,7 +94,7 @@
     {
       "rule_id": "R06_ALT_HIGH",
       "marker": "谷丙转氨酶", "marker_id": "alt", "flag": "high",
-      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "restriction": "限酒精", "nutrient_key": "alcohol", "action": "limit",
       "trigger_foods": ["各类酒精饮品", "油炸食品", "高糖饮料"],
       "advice_template": "你的谷丙转氨酶偏高，这段时间先别喝酒，少吃油腻，保证休息。",
       "enabled": true
@@ -102,7 +102,7 @@
     {
       "rule_id": "R06_AST_HIGH",
       "marker": "谷草转氨酶", "marker_id": "ast", "flag": "high",
-      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "restriction": "限酒精", "nutrient_key": "alcohol", "action": "limit",
       "trigger_foods": ["各类酒精饮品", "油炸食品"],
       "advice_template": "你的谷草转氨酶偏高，建议先戒酒、少吃油腻，过段时间复查。",
       "enabled": true
@@ -110,7 +110,7 @@
     {
       "rule_id": "R06_GGT_HIGH",
       "marker": "谷氨酰转肽酶", "marker_id": "ggt", "flag": "high",
-      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "restriction": "限酒精", "nutrient_key": "alcohol", "action": "limit",
       "trigger_foods": ["各类酒精饮品"],
       "advice_template": "你的谷氨酰转肽酶偏高，这项对饮酒尤其敏感，建议这段时间完全戒酒。",
       "enabled": true

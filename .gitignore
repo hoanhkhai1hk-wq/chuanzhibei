@@ -63,3 +63,9 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# SQLite 本地数据（健康记录属隐私，绝不入库 git）
+data/
+*.db
+*.db-wal
+*.db-shm

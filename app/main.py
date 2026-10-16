@@ -289,6 +289,78 @@ def explain_stream(payload: dict) -> StreamingResponse:
     )
 
 
+# ==============================================================================
+# 日常层接口
+# ==============================================================================
+# 档案层与日常层在这里接上：
+#   POST /api/report  存一次解读，并把红线设为「当前生效」
+#   POST /api/meals   记一餐 → 立即返回当日对照结果
+#   GET  /api/today   当日汇总（红线撞线情况）
+# 两层之间没有模型参与：红线说"盯住嘌呤"，菜品标签说"嘌呤高"，
+# 匹配是本地字符串比对。
+
+from app.data import db as store                       # noqa: E402
+from app.daily import service as daily                 # noqa: E402
+
+store.init_db()
+
+
+def _today() -> str:
+    """服务端本地日期。日期默认值必须在服务端定：
+    若落库成空串，当天的汇总查询就再也找不到这一餐。"""
+    from datetime import date as _d
+    return _d.today().isoformat()
+
+
+@app.get("/api/dishes", summary="菜品库搜索")
+def list_dishes(q: str = "") -> dict:
+    """点选式记录的数据源。空 q 返回常用分类的默认列表。"""
+    return {"dishes": daily.search_dishes(q)}
+
+
+@app.post("/api/report", summary="保存解读结果并激活红线")
+def save_report(payload: dict) -> dict:
+    """把一次解读的判定结果落库，其中的红线成为日常对照的依据。
+
+    为什么单独一个接口而不是在 /api/analyze 里顺手保存：
+    analyze 是纯计算，应该保持无副作用——能否复现、能否重跑都不碰库。
+    「保存」是用户显式确认后的动作，职责分开，回滚也容易。
+    """
+    result = payload.get("result") or {}
+    if not result.get("judged"):
+        raise HTTPException(status_code=400, detail="result.judged 不能为空")
+    rid = store.save_report(result, source=payload.get("source", ""),
+                            sex=payload.get("sex", "unknown"))
+    return {"saved": True, "report_id": rid,
+            "redlines_active": len(result.get("redlines", []))}
+
+
+@app.post("/api/meals", summary="记录一餐 → 返回当日对照")
+def add_meal(payload: dict) -> dict:
+    """点选菜品记一餐。返回当天的完整汇总（撞线即时可见）。"""
+    dishes = payload.get("dishes") or []
+    if not dishes:
+        raise HTTPException(status_code=400, detail="dishes 不能为空")
+    meal_type = payload.get("meal_type", "lunch")
+    if meal_type not in ("breakfast", "lunch", "dinner", "snack"):
+        raise HTTPException(status_code=400, detail=f"非法餐次：{meal_type}")
+    store.add_meal(payload.get("member_id", "me"),
+                   payload.get("date") or _today(), meal_type, dishes)
+    return daily.today_summary(payload.get("member_id", "me"), payload.get("date") or None)
+
+
+@app.get("/api/today", summary="当日汇总")
+def today(member_id: str = "me", date: str = "") -> dict:
+    """今日已记录的餐次、热量估算与各条红线的撞线情况。"""
+    return daily.today_summary(member_id, date or None)
+
+
+@app.get("/api/contract/active-redlines", summary="当前生效的红线")
+def active_redlines() -> dict:
+    """前端「今日记录」页打开时先取这个，知道该盯住哪几条。"""
+    return {"redlines": store.get_active_redlines()}
+
+
 # 静态资源放在最后挂载：通配路由不能吞掉上面的 API 路径
 if _STATIC.exists():
     app.mount("/static", StaticFiles(directory=_STATIC), name="static")
