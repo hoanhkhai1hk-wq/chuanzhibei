@@ -65,7 +65,7 @@ Thumbs.db
 htmlcov/
 
 # SQLite 本地数据（健康记录属隐私，绝不入库 git）
-data/
+/data/
 *.db
 *.db-wal
 *.db-shm
