@@ -353,7 +353,8 @@ Day 1 = 2026-10-15，共 34 天。
 OCR 是本项目的头号技术风险，抽不准数字，后面全建立在错的基础上。
 
 ```
-python tests/ocr_bench/bench.py --selftest   # 先确认脚本本身正常
+python tests/ocr_bench/bench.py --selftest        # 先确认脚本本身正常
+python tests/ocr_bench/synth.py --count 12 --degraded 4   # 生成合成样本
 python tests/ocr_bench/bench.py --provider all
 ```
 
@@ -363,8 +364,11 @@ python tests/ocr_bench/bench.py --provider all
 选型的判断标准不是总分，而是**最弱的那一项**——
 尤其看 `ref`（参考区间）：区间判错，红线就判错，整套逻辑都会歪。
 
-> 需要准备：10-15 份**脱敏后**的真实报告 + 人工标注。
-> 详见 `tests/ocr_bench/README.md`。样本目录已被 `.gitignore` 排除，不会进仓库。
+> **样本从哪来**：网上能找到的中文体检报告数据集都不满足「免费 + 可商用 + 已脱敏」
+> （数据堂要付费、天池/启智是 CC-BY-NC、ClinOCR-Bench 是英文）。
+> 因此本项目**自己合成**中文报告——中文、可控、合规、ground-truth 100% 精确，
+> 并能模拟拍照退化。真实脱敏报告只需 1-2 份做最终确认。
+> 详见 `tests/ocr_bench/README.md`。样本目录已被 `.gitignore` 排除。
 
 > 本项目最大的风险不是技术，是**范围**。
 > 两套字典 + 两套记录 + 规则引擎 + 大模型 + 前端，任何一环延期都会拖垮全局。

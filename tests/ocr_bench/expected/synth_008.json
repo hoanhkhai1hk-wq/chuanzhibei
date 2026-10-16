@@ -1,0 +1,77 @@
+{
+  "source": "合成样本，排版=header，清晰件",
+  "markers": [
+    {
+      "name": "尿素氮(BUN)",
+      "value": "7.11",
+      "unit": "mmol/L",
+      "ref": "2.90-8.20"
+    },
+    {
+      "name": "血小板计数(PLT)",
+      "value": "185",
+      "unit": "×10⁹/L",
+      "ref": "125-350"
+    },
+    {
+      "name": "白细胞计数(WBC)",
+      "value": "6.27",
+      "unit": "×10⁹/L",
+      "ref": "3.50-9.50"
+    },
+    {
+      "name": "低密度脂蛋白(LDL-C)",
+      "value": "3.90",
+      "unit": "mmol/L",
+      "ref": "1.50-3.40"
+    },
+    {
+      "name": "总胆红素(TBIL)",
+      "value": "17.2",
+      "unit": "μmol/L",
+      "ref": "3.4-20.5"
+    },
+    {
+      "name": "甘油三酯(TG)",
+      "value": "0.37",
+      "unit": "mmol/L",
+      "ref": "0.45-1.70"
+    },
+    {
+      "name": "空腹血糖(GLU)",
+      "value": "7.01",
+      "unit": "mmol/L",
+      "ref": "3.90-6.10"
+    },
+    {
+      "name": "血红蛋白(Hb)",
+      "value": "66",
+      "unit": "g/L",
+      "ref": "115-150"
+    },
+    {
+      "name": "谷丙转氨酶(ALT)",
+      "value": "5.9",
+      "unit": "U/L",
+      "ref": "9.0-50.0"
+    },
+    {
+      "name": "肌酐(Cr)",
+      "value": "163",
+      "unit": "μmol/L",
+      "ref": "44-133"
+    },
+    {
+      "name": "总胆固醇(TC)",
+      "value": "1.99",
+      "unit": "mmol/L",
+      "ref": "3.10-5.20"
+    },
+    {
+      "name": "高密度脂蛋白(HDL-C)",
+      "value": "1.24",
+      "unit": "mmol/L",
+      "ref": "1.04-1.55"
+    }
+  ]
+}

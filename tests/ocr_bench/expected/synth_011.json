@@ -1,0 +1,77 @@
+{
+  "source": "合成样本，排版=twocol，已做拍照退化",
+  "markers": [
+    {
+      "name": "高密度脂蛋白(HDL-C)",
+      "value": "1.28",
+      "unit": "mmol/L",
+      "ref": "1.04-1.55"
+    },
+    {
+      "name": "尿素氮(BUN)",
+      "value": "4.78",
+      "unit": "mmol/L",
+      "ref": "2.90-8.20"
+    },
+    {
+      "name": "空腹血糖(GLU)",
+      "value": "5.62",
+      "unit": "mmol/L",
+      "ref": "3.90-6.10"
+    },
+    {
+      "name": "总胆固醇(TC)",
+      "value": "4.72",
+      "unit": "mmol/L",
+      "ref": "3.10-5.20"
+    },
+    {
+      "name": "尿酸(UA)",
+      "value": "317",
+      "unit": "μmol/L",
+      "ref": "208-428"
+    },
+    {
+      "name": "血红蛋白(Hb)",
+      "value": "178",
+      "unit": "g/L",
+      "ref": "115-150"
+    },
+    {
+      "name": "血小板计数(PLT)",
+      "value": "272",
+      "unit": "×10⁹/L",
+      "ref": "125-350"
+    },
+    {
+      "name": "谷草转氨酶(AST)",
+      "value": "19.2",
+      "unit": "U/L",
+      "ref": "15.0-40.0"
+    },
+    {
+      "name": "肌酐(Cr)",
+      "value": "145",
+      "unit": "μmol/L",
+      "ref": "44-133"
+    },
+    {
+      "name": "低密度脂蛋白(LDL-C)",
+      "value": "2.01",
+      "unit": "mmol/L",
+      "ref": "1.50-3.40"
+    },
+    {
+      "name": "甘油三酯(TG)",
+      "value": "0.31",
+      "unit": "mmol/L",
+      "ref": "0.45-1.70"
+    },
+    {
+      "name": "谷丙转氨酶(ALT)",
+      "value": "71.2",
+      "unit": "U/L",
+      "ref": "9.0-50.0"
+    }
+  ]
+}

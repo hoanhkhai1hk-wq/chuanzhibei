@@ -61,17 +61,30 @@ FIELDS = ["name", "value", "unit", "ref"]
 
 #: 体检报告典型行：尿酸(UA)  512  μmol/L  208-428
 #:
-#: name 的字符类里**绝不能包含空白**，否则它会跨过间隔把后面的数值一起吞掉。
-#: （这是第一版踩到的坑：血红蛋白那行的 name 吃成了「血红蛋白(Hb)  135  g/L」，
-#:   导致 value 取到参考区间的下界 130。自检把它抓了出来。）
+#: ── 这一版正则踩过两个坑，都靠自检抓出来 ──
+#:
+#: 坑 1：name 的字符类里不能含空白，否则会跨过间隔把后面的数值一起吞掉。
+#:        （血红蛋白那行 name 吃成了「血红蛋白(Hb)  135  g/L」，value 取成 130）
+#:
+#: 坑 2：不能用一条正则同时切出 unit 与 ref。
+#:        因为 unit 里有数字（×10⁹/L），一旦允许 unit 含数字，
+#:        遇到没有单位的行（如「尿酸 512 208-428」）它就会把参考区间也吞掉；
+#:        而若不允许含数字，含上标的单位又切不出来。
+#:        解法：正则只负责切出 name/value/箭头/剩余部分，
+#:        再用 REF_TAIL_RE 从剩余部分的**尾部**反推参考区间。
 LINE_RE = re.compile(
-    r"^\s*(?P<name>[^\s\d][\u4e00-\u9fa5A-Za-z0-9（）()·/.]*)"
+    r"^\s*(?P<name>[^\s\d][\u4e00-\u9fa5A-Za-z0-9（）()·/.\-]*)"
     r"\s+"
     r"(?P<value>[<>]?\s*[-+]?\d+(?:[.]\d+)?)"
-    r"\s*(?P<unit>[^\d\s,，]+)?"
-    r"\s*"
-    r"(?P<ref>\d+(?:[.]\d+)?\s*[-~至]\s*\d+(?:[.]\d+)?)?"
-    r"\s*$"
+    r"\s*(?P<arrow>[↑↓*★※]*)\s*"
+    r"(?P<rest>.*)$"
+)
+
+#: 从行尾反推「参考区间」，剩下的部分算作单位。
+#: 必须让 unit 非贪婪，否则它会把区间一起吃掉。
+REF_TAIL_RE = re.compile(
+    r"^(?P<unit>.*?)\s*"
+    r"(?P<ref>\d+(?:[.]\d+)?\s*[-~至]\s*\d+(?:[.]\d+)?)\s*$"
 )
 
 
@@ -93,12 +106,21 @@ def parse_markers(text: str) -> list[dict]:
         name = (m.group("name") or "").strip()
         if not name:
             continue
+        rest = (m.group("rest") or "").strip()
+        unit, ref = "", ""
+        if rest:
+            t = REF_TAIL_RE.match(rest)
+            if t:
+                unit = (t.group("unit") or "").strip()
+                ref = (t.group("ref") or "").replace(" ", "")
+            else:
+                unit = rest
         out.append(
             {
                 "name": name,
                 "value": (m.group("value") or "").replace(" ", ""),
-                "unit": (m.group("unit") or "").strip(),
-                "ref": (m.group("ref") or "").replace(" ", ""),
+                "unit": unit,
+                "ref": ref,
             }
         )
     return out
@@ -235,16 +257,26 @@ PROVIDERS = {"paddle": ocr_paddle, "baidu": ocr_baidu, "tencent": ocr_tencent}
 # 自检（无需样本、无需 key，用来确认脚本本身没写错）
 # ==============================================================================
 
+#: 自检用例。必须覆盖已知的两类「难行」：
+#:   含上标的单位（×10⁹/L）、带箭头的异常值（0.90↓）
+#: 否则解析器悄悄漏行都不会被发现——这类缺陷会把「解析器的错」
+#: 误判成「OCR 很差」，进而选错引擎。
 _SELF_TEXT = """项目               结果        单位        参考范围
 尿酸(UA)            512         μmol/L      208-428
 血红蛋白(Hb)        135         g/L         130-175
 甘油三酯(TG)        2.8         mmol/L      0.45-1.70
+白细胞计数(WBC)     5.37        ×10⁹/L      3.50-9.50
+高密度脂蛋白(HDL-C) 0.90↓       mmol/L      1.04-1.55
+总胆红素(TBIL)      2.5↓        μmol/L      3.4-20.5
 """
 
 _SELF_EXPECT = [
     {"name": "尿酸", "value": "512", "unit": "μmol/L", "ref": "208-428"},
     {"name": "血红蛋白", "value": "135", "unit": "g/L", "ref": "130-175"},
     {"name": "甘油三酯", "value": "2.8", "unit": "mmol/L", "ref": "0.45-1.70"},
+    {"name": "白细胞计数", "value": "5.37", "unit": "×10⁹/L", "ref": "3.50-9.50"},
+    {"name": "高密度脂蛋白", "value": "0.90", "unit": "mmol/L", "ref": "1.04-1.55"},
+    {"name": "总胆红素", "value": "2.5", "unit": "μmol/L", "ref": "3.4-20.5"},
 ]
 
 

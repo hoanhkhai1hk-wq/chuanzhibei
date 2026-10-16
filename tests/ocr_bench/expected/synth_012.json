@@ -1,0 +1,77 @@
+{
+  "source": "合成样本，排版=header，已做拍照退化",
+  "markers": [
+    {
+      "name": "谷草转氨酶(AST)",
+      "value": "23.2",
+      "unit": "U/L",
+      "ref": "15.0-40.0"
+    },
+    {
+      "name": "血红蛋白(Hb)",
+      "value": "127",
+      "unit": "g/L",
+      "ref": "115-150"
+    },
+    {
+      "name": "空腹血糖(GLU)",
+      "value": "7.94",
+      "unit": "mmol/L",
+      "ref": "3.90-6.10"
+    },
+    {
+      "name": "肌酐(Cr)",
+      "value": "24",
+      "unit": "μmol/L",
+      "ref": "44-133"
+    },
+    {
+      "name": "低密度脂蛋白(LDL-C)",
+      "value": "2.04",
+      "unit": "mmol/L",
+      "ref": "1.50-3.40"
+    },
+    {
+      "name": "尿酸(UA)",
+      "value": "287",
+      "unit": "μmol/L",
+      "ref": "208-428"
+    },
+    {
+      "name": "血小板计数(PLT)",
+      "value": "281",
+      "unit": "×10⁹/L",
+      "ref": "125-350"
+    },
+    {
+      "name": "尿素氮(BUN)",
+      "value": "4.94",
+      "unit": "mmol/L",
+      "ref": "2.90-8.20"
+    },
+    {
+      "name": "总胆固醇(TC)",
+      "value": "2.15",
+      "unit": "mmol/L",
+      "ref": "3.10-5.20"
+    },
+    {
+      "name": "高密度脂蛋白(HDL-C)",
+      "value": "1.19",
+      "unit": "mmol/L",
+      "ref": "1.04-1.55"
+    },
+    {
+      "name": "红细胞计数(RBC)",
+      "value": "4.06",
+      "unit": "×10¹²/L",
+      "ref": "3.80-5.10"
+    },
+    {
+      "name": "总胆红素(TBIL)",
+      "value": "8.6",
+      "unit": "μmol/L",
+      "ref": "3.4-20.5"
+    }
+  ]
+}
