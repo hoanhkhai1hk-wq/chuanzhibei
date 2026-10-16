@@ -1,0 +1,143 @@
+{
+  "version": "0.1.0",
+  "updated": "2026-10-16",
+  "note": "红线映射规则：把「指标异常」翻译成「日常饮食约束」。这是本项目最主要的原创资产，没有现成来源可抄。",
+  "design_note": [
+    "每条规则以「指标 + 方向」为键，因为同一指标升高与降低的含义完全不同（如 HDL 偏低与其他血脂项偏高都指向限脂肪）。",
+    "action 字段区分「限制」与「补充」：绝大多数是 limit，只有补铁是 boost——方向搞反会造成完全错误的建议。",
+    "甲状腺相关指标一律不映射，转为问诊提示：碘的边界容易踩雷。"
+  ],
+
+  "rules": [
+    {
+      "rule_id": "R01_UA_HIGH",
+      "marker": "尿酸", "marker_id": "ua", "flag": "high",
+      "restriction": "限嘌呤", "nutrient_key": "purine", "action": "limit",
+      "trigger_foods": ["动物内脏", "浓肉汤", "火锅汤底", "部分海鲜（贝类、沙丁鱼）", "啤酒"],
+      "advice_template": "你的尿酸偏高，这段时间尽量少吃{trigger_foods}这类高嘌呤的食物，多喝水。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R02_GLU_HIGH",
+      "marker": "空腹血糖", "marker_id": "glu", "flag": "high",
+      "restriction": "控精制碳水", "nutrient_key": "sugar", "action": "limit",
+      "trigger_foods": ["白米饭", "白面馒头", "甜饮料", "糕点甜品", "含糖奶茶"],
+      "advice_template": "你的空腹血糖偏高，主食可以粗细搭配，少喝甜饮、少吃糕点。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R02_HBA1C_HIGH",
+      "marker": "糖化血红蛋白", "marker_id": "hba1c", "flag": "high",
+      "restriction": "控精制碳水", "nutrient_key": "sugar", "action": "limit",
+      "trigger_foods": ["白米饭", "甜饮料", "糕点甜品", "含糖奶茶"],
+      "advice_template": "你的糖化血红蛋白偏高，说明近几个月的血糖整体偏高，主食建议粗细搭配。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R02_U_GLU_POS",
+      "marker": "尿糖", "marker_id": "u_glucose", "flag": "high",
+      "restriction": "控精制碳水", "nutrient_key": "sugar", "action": "limit",
+      "trigger_foods": ["甜饮料", "糕点甜品", "含糖奶茶"],
+      "advice_template": "尿糖出现阳性，建议关注血糖，少喝甜饮、控制精制主食。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R03_BP_HIGH",
+      "marker": "血压", "marker_id": "bp_systolic", "flag": "high",
+      "restriction": "限钠", "nutrient_key": "sodium", "action": "limit",
+      "trigger_foods": ["腌制品", "酱料", "加工肉", "咸菜", "方便面调料包"],
+      "advice_template": "你的血压偏高，做菜少放盐和酱油，少吃{trigger_foods}这类偏咸的食物。",
+      "note": "血压是测量值，不来自检验报告，由日常层录入后触发。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R04_TC_HIGH",
+      "marker": "总胆固醇", "marker_id": "tc", "flag": "high",
+      "restriction": "限脂肪", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["动物油", "肥肉", "油炸食品", "奶油蛋糕"],
+      "advice_template": "你的总胆固醇偏高，少吃{trigger_foods}，烹饪少用动物油。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R04_TG_HIGH",
+      "marker": "甘油三酯", "marker_id": "tg", "flag": "high",
+      "restriction": "限脂肪", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["油炸食品", "肥肉", "甜饮", "酒精"],
+      "advice_template": "你的甘油三酯偏高，除了少吃油腻，甜饮和酒精也要控制——它们同样会推高这项指标。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R04_LDL_HIGH",
+      "marker": "低密度脂蛋白胆固醇", "marker_id": "ldl", "flag": "high",
+      "restriction": "限脂肪", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["动物油", "肥肉", "油炸食品", "动物内脏"],
+      "advice_template": "你的低密度脂蛋白偏高，这是心血管风险的重点指标，建议减少{trigger_foods}。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R04_HDL_LOW",
+      "marker": "高密度脂蛋白胆固醇", "marker_id": "hdl", "flag": "low",
+      "restriction": "限脂肪", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["油炸食品", "反式脂肪", "肥肉"],
+      "advice_template": "你的高密度脂蛋白偏低（这项偏低不是好事），建议减少{trigger_foods}，并适当增加运动。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R05_HB_LOW",
+      "marker": "血红蛋白", "marker_id": "hb", "flag": "low",
+      "restriction": "补铁 + 维C", "nutrient_key": "iron", "action": "boost",
+      "trigger_foods": ["红肉", "动物血", "肝脏", "菠菜", "橙子", "猕猴桃"],
+      "advice_template": "你的血红蛋白偏低，可以适当多吃{trigger_foods}；维C 能帮助铁吸收，建议搭配着吃。",
+      "note": "这是唯一一条 boost 规则——方向是「建议补充」，不是「限制」。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R06_ALT_HIGH",
+      "marker": "谷丙转氨酶", "marker_id": "alt", "flag": "high",
+      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["各类酒精饮品", "油炸食品", "高糖饮料"],
+      "advice_template": "你的谷丙转氨酶偏高，这段时间先别喝酒，少吃油腻，保证休息。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R06_AST_HIGH",
+      "marker": "谷草转氨酶", "marker_id": "ast", "flag": "high",
+      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["各类酒精饮品", "油炸食品"],
+      "advice_template": "你的谷草转氨酶偏高，建议先戒酒、少吃油腻，过段时间复查。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R06_GGT_HIGH",
+      "marker": "谷氨酰转肽酶", "marker_id": "ggt", "flag": "high",
+      "restriction": "限酒精", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["各类酒精饮品"],
+      "advice_template": "你的谷氨酰转肽酶偏高，这项对饮酒尤其敏感，建议这段时间完全戒酒。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R07_CR_HIGH",
+      "marker": "肌酐", "marker_id": "cr", "flag": "high",
+      "restriction": "控蛋白总量", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["大量红肉", "蛋白粉", "动物内脏"],
+      "advice_template": "你的肌酐偏高，蛋白质摄入不宜过量，少吃{trigger_foods}，并及时向医生确认。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R07_EGFR_LOW",
+      "marker": "估算肾小球滤过率", "marker_id": "egfr", "flag": "low",
+      "restriction": "控蛋白总量", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["大量红肉", "蛋白粉"],
+      "advice_template": "你的肾小球滤过率偏低，蛋白质摄入需要控制，建议向医生咨询具体限量。",
+      "enabled": true
+    },
+    {
+      "rule_id": "R07_UPRO_POS",
+      "marker": "尿蛋白", "marker_id": "u_protein", "flag": "high",
+      "restriction": "控蛋白总量", "nutrient_key": "fat", "action": "limit",
+      "trigger_foods": ["大量红肉", "蛋白粉", "过咸食物"],
+      "advice_template": "尿蛋白出现阳性，建议复查并控制蛋白质与盐的摄入。",
+      "enabled": true
+    }
+  ]
+}

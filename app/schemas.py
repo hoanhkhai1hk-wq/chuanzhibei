@@ -213,8 +213,14 @@ class RedlineRule(_Strict):
     marker: str = Field(..., description="触发指标的标准名，如「尿酸」")
     flag: Literal["high", "low"] = Field(..., description="触发方向")
     restriction: str = Field(..., description="日常红线名，如「限嘌呤」")
-    nutrient_key: Literal["sodium", "sugar", "purine", "fat"] = Field(
-        ..., description="对应到 Dish.tags 的哪一档"
+    #: 注意补铁这一档：它不是「限制某物」而是「建议补充」，
+    #: 与其余四档性质不同，所以单独用 action 字段区分，
+    #: 否则产品逻辑会把「补铁」误处理成「少吃含铁食物」——方向完全反了。
+    nutrient_key: Literal["sodium", "sugar", "purine", "fat", "iron"] = Field(
+        ..., description="对应到 Dish.tags 的哪一档；iron 为建议补充，非限制"
+    )
+    action: Literal["limit", "boost"] = Field(
+        default="limit", description="limit=限制摄入；boost=建议补充"
     )
     trigger_foods: list[str] = Field(
         default_factory=list, description="典型触发食物，用于解释文案"
