@@ -15,12 +15,18 @@
     拆开之后，文本提取的结果可以本地缓存与人工校正，再单独送去解释。
 """
 
-from fastapi import FastAPI, HTTPException
+import shutil
+import tempfile
+from pathlib import Path
 
+from fastapi import FastAPI, File, HTTPException, UploadFile
+
+from app.ocr.engine import extract_text
+from app.ocr.parser import parse_markers
+from app.pipeline import redact
+from app.rules.engine import RuleEngine
 from app.schemas import (
-    Confidence,
     LabReport,
-    NormalStatus,
     StreamEvent,
 )
 
@@ -97,25 +103,74 @@ def stream_sample() -> list[StreamEvent]:
 
 
 # ==============================================================================
-# 以下接口待实现（Day 3-5 之后）
+# 业务接口
 # ==============================================================================
+# 接口为何分成 extract → analyze → explain 三段：
+#     extract 只做「文件 → 文本」，analyze 只做「本地判定 → 红线」，
+#     explain 才交给大模型「写成一句人话」。
+#
+# 拆开的关键收益：前两段完全是确定性的、可缓存、可人工校正的。
+# 同类项目踩过的坑是把文件直接送给大模型，结果重试时同一份报告被重复计费，
+# 且无法在送模型之前做脱敏与校正。
+
+_ENGINE = RuleEngine()
+_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
 
 
-@app.post("/api/extract", summary="[未实现] 报告文件 → 结构化文本")
-def extract() -> dict:
-    """Day 3-5 完成 OCR 选型评测后实现。"""
-    raise HTTPException(
-        status_code=501,
-        detail="尚未实现。计划在 Day 3-5 完成 OCR 选型评测（百度/腾讯/PaddleOCR）后落地。",
-    )
+@app.post("/api/extract", summary="报告图片 → 脱敏文本 + 四元组")
+async def extract(file: UploadFile = File(...)) -> dict:
+    """上传体检报告图片，返回脱敏后的文本与解析出的四元组。
+
+    隐私：报告文件**不落盘留存**，处理完立即删除临时文件。
+    返回结果中的文本已完成脱敏，可直接送交表达层。
+    """
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix and suffix not in _SUFFIXES:
+        raise HTTPException(status_code=400, detail=f"不支持的文件类型：{suffix}")
+
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix or ".png") as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = Path(tmp.name)
+
+        raw = extract_text(tmp_path)
+        clean, redacted = redact(raw)
+        markers = parse_markers(clean)
+        return {
+            "provider": "rapidocr",
+            "rows": len(markers),
+            "privacy": {"is_clean": True, "redacted_fields": redacted},
+            "markers": markers,
+            "text": clean,
+        }
+    except RuntimeError as e:      # 引擎未安装等，属环境问题，明确回传
+        raise HTTPException(status_code=503, detail=str(e))
+    finally:
+        if tmp_path and tmp_path.exists():
+            tmp_path.unlink()      # 体检报告不留存，这是隐私底线
 
 
-@app.post("/api/explain", summary="[未实现] 结构化文本 → 人话解释")
+@app.post("/api/analyze", summary="四元组 → 本地判定 + 日常红线")
+def analyze(payload: dict) -> dict:
+    """接收 /api/extract 产出的四元组，返回本地判定与红线。
+
+    本接口**不调用大模型**：数值与高低结论全部来自本地字典与规则，
+    每个结论都附带判定依据，可追溯到具体区间数字。
+    """
+    markers = payload.get("markers") or []
+    sex = payload.get("sex", "unknown")
+    if not markers:
+        raise HTTPException(status_code=400, detail="markers 不能为空")
+    return _ENGINE.evaluate(markers, sex)
+
+
+@app.post("/api/explain", summary="[未实现] 判定结果 → 人话解释")
 def explain() -> dict:
     """Day 16-19 完成大模型链路后实现。
 
-    注意：本接口只接收已经提取好的文本，绝不接收原始文件，
-    以避免把同一份报告重复送给大模型。
+    注意：只接收已经判定好的结果，绝不接收原始文件或原始图片——
+    数字在进入本接口之前必须已经由本地链路确定，大模型只负责措辞。
     """
     raise HTTPException(
         status_code=501,

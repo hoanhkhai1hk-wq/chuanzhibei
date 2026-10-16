@@ -141,7 +141,13 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 - `[x]` Python 环境与依赖清单已实测核验（见 `requirements.txt`）
 - `[x]` `app/schemas.py` 数据契约已落地：19 个模型，已通过导入验证与架构铁律自检
 - `[x]` FastAPI 骨架可启动：`/health`、`/docs`、`/api/contract/sample` 已实测可用
+- `[x]` 指标字典 41 条 + 红线规则 16 条，含交叉引用校验
+- `[x]` **端到端链路已跑通**：图片 → OCR → 脱敏 → 解析 → 本地判定 → 红线
+  （12 份合成样本验证，字典命中率 100%，触发 12 条红线）
 - `[ ]` 其余全部功能均待开发（见 [第七章](#七功能清单与实现状态)）
+
+> 当前**尚未接入大模型**——红线结论已能由本地链路独立产出，
+> 大模型只负责后续的措辞（Day 16-19）。这是有意为之，见 [5.3 节](#53-架构铁律数字绝不来自大模型)。
 
 ---
 
@@ -152,8 +158,18 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 .
 ├── app/
-│   ├── main.py              # [x] FastAPI 入口（骨架，业务接口返回 501）
+│   ├── main.py              # [x] FastAPI 入口
 │   ├── schemas.py           # [x] Pydantic 数据契约（含 is_likely_normal / disclaimer）
+│   ├── pipeline.py          # [x] 端到端链路：图片 → 脱敏 → 解析 → 红线
+│   ├── ocr/
+│   │   ├── engine.py        # [x] OCR 适配层（rapidocr 默认，可换 paddle / baidu）
+│   │   └── parser.py        # [x] 文本 → 四元组
+│   ├── dict/
+│   │   ├── markers.json     # [x] 指标字典 41 条
+│   │   └── validate.py      # [x] 交叉引用校验
+│   └── rules/
+│       ├── redlines.json    # [x] 红线规则 16 条
+│       └── engine.py        # [x] 本地判定引擎（不调用大模型）
 │   ├── ocr/                 # OCR 适配层（Day 3-5 选型后定型）
 │   ├── dict/                # 指标字典 JSON + 菜品库 JSON
 │   ├── rules/               # 红线映射规则引擎
@@ -338,7 +354,7 @@ Day 1 = 2026-10-15，共 34 天。
 | **OCR 选型评测** | **3-5** | 用 10-15 份真实报告做字段级评测后选型（**框架已建**，见 `tests/ocr_bench/`） |
 | 指标字典 + 红线规则 | 6-9 | 约 120 项字典 + 10-15 条红线映射 |
 | 菜品库 | 10-12 | 60-100 道菜的四档标签 |
-| **端到端丑链路** | **13-15** | **必须跑通**，界面可以最后再收拾 |
+| **端到端丑链路** | **13-15** | ✅ **已跑通**（12 份合成样本验证，界面仍待开发） |
 | 大模型链路 | 16-19 | Prompt、结构化输出、数字回溯校验 |
 | 前端 | 20-24 | 上传、红线卡、饮食记录、周报 |
 | 亮点功能 | 25-28 | 给爸妈说的话、血压记录、导出 |
