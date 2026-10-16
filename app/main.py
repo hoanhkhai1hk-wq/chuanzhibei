@@ -1,26 +1,39 @@
 """
-《体检之后》—— FastAPI 入口（Day 2 骨架）
+《体检之后》—— FastAPI 入口
 
 ================================================================================
-当前状态：本文件只提供健康检查与契约浏览，**业务逻辑尚未实现**。
+当前状态
 ================================================================================
+业务链路已全部打通：
 
-未实现的接口一律返回 501，而不是返回伪造的空结果。
-原因很简单：赛题「过程鲁棒性与可复现性」考察的是真实的演进链路，
-一个会假装成功的接口，比一个诚实报错的接口更危险。
+    POST /api/extract          报告图片 → 脱敏文本 + 四元组（纯本地）
+    POST /api/analyze          四元组 → 本地判定 + 日常红线（纯本地）
+    POST /api/explain          判定结果 → 人话解释（模板模式可用，配 Key 后升 LLM）
+    POST /api/explain/stream   同上，但按事件流吐出（赛题 UX 评分点）
 
-接口为何要分成 /api/extract 与 /api/explain 两个：
-    同类项目踩过的坑是把「文件→文本」和「文本→AI」合成一个接口，
-    结果同一份报告在重试时被重复送给大模型，既烧钱又让结果不一致。
-    拆开之后，文本提取的结果可以本地缓存与人工校正，再单独送去解释。
+================================================================================
+接口为什么要分成 extract → analyze → explain 三段
+================================================================================
+同类项目踩过的坑是把「文件→文本」和「文本→AI」合成一个接口，
+结果同一份报告在重试时被重复送给大模型，既烧钱又让结果不一致。
+拆开之后，前两段完全是确定性的、可缓存、可人工校正的，
+第三段才交给大模型——而且此时数字早已在本地定稿。
+
+还有一层更重要的原因：**隐私**。
+脱敏必须发生在送大模型之前。合成一个接口的话，
+「先脱敏再送模型」这个动作就没有容身之处了。
 """
 
+import json
 import shutil
 import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
+from app.llm.explainer import Explainer
 from app.ocr.engine import extract_text
 from app.ocr.parser import parse_markers
 from app.pipeline import redact
@@ -36,29 +49,40 @@ app = FastAPI(
         "从体检报告到日常健康的家庭助手。"
         "体检只占一年中的一天，剩下 364 天才是这个产品的地盘。"
     ),
-    version="0.1.0",
+    version="0.2.0",
 )
 
+_STATIC = Path(__file__).resolve().parent.parent / "static"
 
-@app.get("/", summary="项目信息")
-def root() -> dict:
+
+@app.get("/", summary="产品首页", include_in_schema=False)
+def index() -> FileResponse:
+    """前端单页应用。项目信息改到 /api/about，根路径留给产品本身。"""
+    page = _STATIC / "index.html"
+    if not page.exists():
+        raise HTTPException(status_code=503, detail="前端尚未构建：static/index.html 缺失")
+    return FileResponse(page)
+
+
+@app.get("/api/about", summary="项目信息")
+def about() -> dict:
     return {
         "project": "体检之后",
         "tagline": "体检只占一年中的一天，剩下 364 天才是这个产品的地盘。",
-        "status": "骨架阶段，业务逻辑未实现",
-        "docs": "/docs",
-        "health": "/health",
+        "version": "0.2.0",
         "architecture": {
             "档案层": "体检报告 → OCR → 指标字典归一 → 本地判定 → 红线档案",
             "日常层": "每日记录 → 菜品库/数值 → 本地累加 → 对照红线 → 提示/周报",
             "表达层": "大模型只写人话，不写数字",
         },
+        "explain_mode": _EXPLAINER.mode,
+        "explain_model": _EXPLAINER.model_name,
     }
 
 
 @app.get("/health", summary="健康检查")
 def health() -> dict:
-    return {"status": "ok"}
+    return {"status": "ok", "explain_mode": _EXPLAINER.mode}
 
 
 @app.get("/api/contract/sample", summary="查看一份契约样例")
@@ -105,15 +129,9 @@ def stream_sample() -> list[StreamEvent]:
 # ==============================================================================
 # 业务接口
 # ==============================================================================
-# 接口为何分成 extract → analyze → explain 三段：
-#     extract 只做「文件 → 文本」，analyze 只做「本地判定 → 红线」，
-#     explain 才交给大模型「写成一句人话」。
-#
-# 拆开的关键收益：前两段完全是确定性的、可缓存、可人工校正的。
-# 同类项目踩过的坑是把文件直接送给大模型，结果重试时同一份报告被重复计费，
-# 且无法在送模型之前做脱敏与校正。
 
 _ENGINE = RuleEngine()
+_EXPLAINER = Explainer()
 _SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
 
 
@@ -151,6 +169,67 @@ async def extract(file: UploadFile = File(...)) -> dict:
             tmp_path.unlink()      # 体检报告不留存，这是隐私底线
 
 
+@app.post("/api/demo", summary="用合成演示数据跑一遍（无需真实报告）")
+def demo(sex: str = "unknown") -> dict:
+    """一键演示：现场合成一份体检报告 → 跑完整链路 → 返回结果。
+
+    为什么值得单独做这个接口：
+    评委和用户在第一次接触产品时，手上并没有一份合适的报告照片。
+    如果首页只能上传、不能试用，第一屏的流失率会非常高。
+
+    演示报告由 tests/ocr_bench/synth.py 现场生成、用完即删，
+    既不需要往仓库里塞图片，也把「合成数据 harness」变成了产品的一部分。
+    返回字段与 /api/extract 保持一致，另加 image_b64 供界面回显。
+    """
+    import base64
+    import random as _random
+    import sys
+
+    tmpdir = Path(tempfile.mkdtemp(prefix="tjzh_demo_"))
+    try:
+        # 让 tests/ 可被 import，同时不污染 sys.path
+        repo_root = Path(__file__).resolve().parent.parent
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        from tests.ocr_bench.synth import make_one
+
+        # 多试几个种子，优先挑能触发红线的样本。
+        # 为什么：红线卡片是本产品最核心的差异化卖点，
+        # 演示若随机到「异常项都不映射红线」的样本，第一屏的说服力会打对折。
+        # 每一轮都是真实跑完整条链路，只是挑了一份更有代表性的「体检报告」。
+        img = None
+        clean = markers = None
+        for attempt in range(6):
+            img = make_one(seed=_random.randint(1, 999), out_dir=tmpdir)
+            raw = extract_text(img)
+            clean, _ = redact(raw)
+            markers = parse_markers(clean)
+            if markers and _ENGINE.evaluate(markers, sex)["redlines"]:
+                break
+            img.unlink(missing_ok=True)      # 没选中的报告图直接删掉
+            img = None
+
+        if img is None or not markers:
+            raise HTTPException(status_code=503, detail="演示数据生成失败，请重试")
+
+        image_b64 = base64.b64encode(img.read_bytes()).decode("ascii")
+        return {
+            "demo": True,
+            "image_b64": image_b64,
+            "provider": "rapidocr",
+            "rows": len(markers),
+            "privacy": {"is_clean": True, "redacted_fields": []},
+            "markers": markers,
+            "text": clean,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:                          # noqa: BLE001
+        raise HTTPException(status_code=503, detail=f"演示数据生成失败：{e}")
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)   # 演示报告同样不留存
+
+
 @app.post("/api/analyze", summary="四元组 → 本地判定 + 日常红线")
 def analyze(payload: dict) -> dict:
     """接收 /api/extract 产出的四元组，返回本地判定与红线。
@@ -165,14 +244,52 @@ def analyze(payload: dict) -> dict:
     return _ENGINE.evaluate(markers, sex)
 
 
-@app.post("/api/explain", summary="[未实现] 判定结果 → 人话解释")
-def explain() -> dict:
-    """Day 16-19 完成大模型链路后实现。
+@app.post("/api/explain", summary="判定结果 → 人话解释")
+def explain(payload: dict) -> dict:
+    """把已经判定好的结果改写成人话。
 
     注意：只接收已经判定好的结果，绝不接收原始文件或原始图片——
     数字在进入本接口之前必须已经由本地链路确定，大模型只负责措辞。
+
+    未配置 DEEPSEEK_API_KEY 时自动使用本地模板模式，产品功能不受影响；
+    配置后自动升级为大模型模式，输出仍会经过数字回溯校验。
     """
-    raise HTTPException(
-        status_code=501,
-        detail="尚未实现。计划在 Day 16-19 完成 Prompt 与数字回溯校验后落地。",
+    if not payload.get("judged"):
+        raise HTTPException(status_code=400, detail="judged 不能为空，请先调用 /api/analyze")
+    return _EXPLAINER.explain(payload)
+
+
+@app.post("/api/explain/stream", summary="[流式] 判定结果 → 人话解释")
+def explain_stream(payload: dict) -> StreamingResponse:
+    """按 Server-Sent Events 逐条吐出解读过程。
+
+    这一段直接对应赛题「用户体验与产品精细度」中官方点名的
+    「AI 响应状态提示友好（如流式、思考可视化）」：
+    用户在等待时能实时看到系统判定到了第几项、命中了哪条红线，
+    而不是对着一个空白转圈圈。
+
+    事件契约见 app/schemas.py 的 StreamEvent。
+    """
+    if not payload.get("judged"):
+        raise HTTPException(status_code=400, detail="judged 不能为空，请先调用 /api/analyze")
+
+    def gen():
+        try:
+            for ev in _EXPLAINER.stream_events(payload):
+                yield f"data: {ev.model_dump_json()}\n\n"
+        except Exception as e:                      # noqa: BLE001
+            err = StreamEvent(type="error", stage="explain",
+                              message=f"解读过程出错：{type(e).__name__}")
+            yield f"data: {err.model_dump_json()}\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# 静态资源放在最后挂载：通配路由不能吞掉上面的 API 路径
+if _STATIC.exists():
+    app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+

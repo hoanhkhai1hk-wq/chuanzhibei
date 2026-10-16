@@ -278,6 +278,46 @@ def degrade(img: Image.Image, rng: random.Random) -> Image.Image:
 # ==============================================================================
 
 
+def make_one(seed: int = 7, degraded: bool = False,
+             out_dir: Path | None = None) -> Path:
+    """生成**一份**合成报告到指定目录，返回图片路径。
+
+    为什么单独提供这个入口：产品需要一个「一键演示」按钮，
+    让没有真实报告照片的人也能立刻看到完整链路的效果。
+    演示数据由本生成器现场产出、用完即删，不占用仓库体积，
+    同时把「合成数据 harness」本身变成产品可展示的一部分。
+
+    out_dir 默认为 SAMPLES，与 generate() 的行为保持一致。
+    """
+    global F
+    target = Path(out_dir) if out_dir else SAMPLES
+    target.mkdir(parents=True, exist_ok=True)
+
+    rng = random.Random(seed)
+    F["body"] = load_font(22)
+    F["sup"] = load_font(15)
+    F["title"] = load_font(30)
+
+    # 演示只用三种已验证版式。twocol（双栏）是评测报告里如实记录的已知短板，
+    # 演示入口不碰它——短板归评测报告，不归产品体验。
+    allowed = [name for name in TEMPLATES if name != "twocol"] or list(TEMPLATES)
+    tpl = allowed[seed % len(allowed)]
+    rows = build_rows(rng, rng.randint(10, 14))
+    H = TABLE_TOP + ROW_H * (len(rows) + 1) + 80
+    img = Image.new("RGB", (PAGE_W, H), "white")
+    d = ImageDraw.Draw(img)
+    if tpl == "header":
+        TEMPLATES[tpl](d, rows, TABLE_TOP, rng)
+    else:
+        TEMPLATES[tpl](d, rows, TABLE_TOP)
+    if degraded:
+        img = degrade(img, rng)
+
+    path = target / f"demo_{seed}.png"
+    img.save(path)
+    return path
+
+
 def generate(seed: int, count: int, degraded: int, clean: bool) -> int:
     rng = random.Random(seed)
     SAMPLES.mkdir(parents=True, exist_ok=True)

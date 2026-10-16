@@ -21,7 +21,7 @@ if not exist "%PY%" (
 )
 
 echo 正在启动，请稍候...
-echo 浏览器会自动打开 http://127.0.0.1:8000/docs
+echo 浏览器会自动打开 http://127.0.0.1:8000/（产品首页）
 echo.
 echo 提示：如果浏览器打不开，多半是系统代理拦截了本机地址，
 echo       请在浏览器的代理设置里给 127.0.0.1 或 localhost 加一条例外。
@@ -29,7 +29,7 @@ echo.
 echo 要停止服务，直接关闭这个黑窗口即可。
 echo.
 
-start "" http://127.0.0.1:8000/docs
+start "" http://127.0.0.1:8000/
 
 "%PY%" -m uvicorn app.main:app --port 8000
 

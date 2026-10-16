@@ -219,7 +219,24 @@ class RuleEngine:
                 "flag": flag,
             })
 
+        # 把命中的红线信息回填到对应指标上。
+        # 为什么必须回填：表达层生成「给爸妈说的话」时需要知道这条异常
+        # 到底是「要少吃」还是「要多吃」。补铁是唯一一条 boost 规则，
+        # 若这里不带出来，前端只能一刀切写成「限制」，方向就完全反了。
+        rule_by_marker: dict[str, dict] = {}
+        for r in self.rules:
+            if r.get("enabled", True):
+                rule_by_marker[(r.get("marker_id"), r.get("flag"))] = r
+
         redlines = self.match_redlines(judged)
+        for item in judged:
+            rule = rule_by_marker.get((item.get("marker_id"), item.get("flag")))
+            if rule:
+                item["action"] = rule.get("action", "limit")
+                item["restriction"] = rule.get("restriction")
+                item["trigger_foods"] = rule.get("trigger_foods", [])
+                item["rule_id"] = rule.get("rule_id")
+
         abnormal = [j for j in judged if j["flag"] in ("high", "low")]
         return {
             "total": len(extracted),

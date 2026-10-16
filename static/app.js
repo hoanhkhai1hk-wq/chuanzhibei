@@ -1,0 +1,516 @@
+/* =============================================================================
+   《体检之后》前端逻辑
+   =============================================================================
+   调用链与后端三段式接口一一对应：
+
+       POST /api/extract   图片 → 脱敏文本 + 四元组     （纯本地）
+       POST /api/analyze   四元组 → 本地判定 + 红线     （纯本地）
+       POST /api/explain/stream   判定结果 → 人话       （SSE 流式）
+
+   进度条不造假：每个阶段的推进都对应一次真实的接口返回，
+   「思考过程」里每一行都是后端实际报告的事实，不是定时器编出来的动画。
+
+   流式通道不可用时（部分代理会缓冲 SSE）自动退回普通 POST，功能不受影响。
+   ============================================================================= */
+
+(() => {
+  'use strict';
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  const state = {
+    file: null,
+    sex: 'unknown',
+    extract: null,
+    analysis: null,
+    explain: null,
+  };
+
+  /* ─── 阶段定义 ─── */
+  const STAGE_PCT = {
+    upload: 4, extract: 24, redact: 34, parse: 44,
+    judge: 60, redline: 70, explain: 78,
+  };
+  const STAGE_ORDER = ['upload', 'extract', 'redact', 'parse', 'judge', 'redline', 'explain'];
+
+  /* ─── 小工具 ─── */
+  const FLAG_TEXT = { high: '偏高', low: '偏低', normal: '正常', unknown: '待确认' };
+  const FLAG_PILL = { high: 'pill-high', low: 'pill-low', normal: 'pill-normal', unknown: 'pill-unknown' };
+
+  function fmt(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    const n = Number(v);
+    return Number.isFinite(n) ? (Number.isInteger(n) ? String(n) : String(n)) : String(v);
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('is-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-show'), 3200);
+  }
+
+  function showView(name) {
+    $('#view-home').classList.toggle('is-hidden', name !== 'home');
+    $('#view-progress').classList.toggle('is-hidden', name !== 'progress');
+    $('#view-result').classList.toggle('is-hidden', name !== 'result');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── 进度与思考日志 ─── */
+  function resetProgress() {
+    $$('.stage').forEach(s => s.classList.remove('is-active', 'is-done'));
+    $('#thinking-log').innerHTML = '';
+    setProgress(0);
+  }
+
+  function setProgress(pct) {
+    const p = Math.max(0, Math.min(100, Math.round(pct)));
+    $('#progress-bar').style.width = p + '%';
+    $('#progress-pct').textContent = p + '%';
+  }
+
+  function setStage(name) {
+    const idx = STAGE_ORDER.indexOf(name);
+    $$('.stage').forEach(el => {
+      const i = STAGE_ORDER.indexOf(el.dataset.stage);
+      el.classList.toggle('is-done', i < idx);
+      el.classList.toggle('is-active', i === idx);
+    });
+    if (STAGE_PCT[name] !== undefined) setProgress(STAGE_PCT[name]);
+  }
+
+  function completeStage(name) {
+    const el = $(`.stage[data-stage="${name}"]`);
+    if (el) { el.classList.remove('is-active'); el.classList.add('is-done'); }
+  }
+
+  function log(msg) {
+    const ul = $('#thinking-log');
+    const li = document.createElement('li');
+    li.textContent = msg;
+    ul.appendChild(li);
+    ul.scrollTop = ul.scrollHeight;
+  }
+
+  /* ─── 网络 ─── */
+  async function postJson(url, body) {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.detail || `请求失败（${resp.status}）`);
+    return data;
+  }
+
+  async function postExtract(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const resp = await fetch('/api/extract', { method: 'POST', body: fd });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.detail || `识别失败（${resp.status}）`);
+    return data;
+  }
+
+  /* ─── 主流程 ─── */
+  async function runFlow() {
+    if (!state.file) { toast('请先选择一份报告照片'); return; }
+
+    showView('progress');
+    resetProgress();
+    $('#progress-title').textContent = '正在解读…';
+
+    try {
+      /* 1. 上传 + OCR（脱敏与解析在服务端同一次调用内完成） */
+      setStage('upload');
+      log('报告已接收，正在本地处理…');
+      completeStage('upload');
+
+      setStage('extract');
+      log('正在识别图片中的文字…');
+      const ex = await postExtract(state.file);
+      state.extract = ex;
+      completeStage('extract');
+      log(`OCR 完成，提取到 ${ex.rows} 行文本`);
+
+      /* 2. 脱敏与解析的结果由服务端一并返回，此处如实汇报 */
+      setStage('redact');
+      const fields = (ex.privacy && ex.privacy.redacted_fields) || [];
+      log(fields.length
+        ? `已抹除个人信息：${fields.join('、')}`
+        : '未检测到需要抹除的个人信息');
+      completeStage('redact');
+
+      setStage('parse');
+      log(`解析出 ${ex.markers.length} 个指标四元组`);
+      completeStage('parse');
+
+      if (!ex.markers.length) {
+        throw new Error(
+          '没有识别到任何指标。可能是照片不清晰、角度倾斜，或参考区间一列被裁掉了。'
+          + '建议在自然光下把报告放平重拍，并确保右侧参考区间也在画面内。'
+        );
+      }
+
+      /* 3. 本地判定 + 红线匹配 */
+      setStage('judge');
+      log('正在查指标字典、比对参考区间…');
+      const an = await postJson('/api/analyze', { markers: ex.markers, sex: state.sex });
+      state.analysis = an;
+      completeStage('judge');
+      log(`判定完成：${an.matched} 项命中字典，${an.abnormal_count} 项不在参考区间内`);
+      if (an.unmatched && an.unmatched.length) {
+        log(`有 ${an.unmatched.length} 项未收录进字典，已标记为待确认`);
+      }
+
+      setStage('redline');
+      log(an.redlines.length
+        ? `命中 ${an.redlines.length} 条日常红线`
+        : '未触发日常红线');
+      completeStage('redline');
+
+      /* 4. 表达层（流式） */
+      setStage('explain');
+      await streamExplain(an);
+
+    } catch (err) {
+      console.error(err);
+      $('#progress-title').textContent = '出了点问题';
+      log(`✗ ${err.message}`);
+      toast(err.message);
+      setTimeout(() => showView('home'), 2600);
+    }
+  }
+
+  /* ─── 演示数据流程 ─── */
+  async function runDemo() {
+    showView('progress');
+    resetProgress();
+    $('#progress-title').textContent = '正在用演示数据跑一遍…';
+
+    try {
+      setStage('upload');
+      log('正在现场合成一份演示报告…');
+      const ex = await postJson('/api/demo', { sex: state.sex });
+      state.extract = ex;
+      completeStage('upload');
+      completeStage('extract');
+      log(`演示报告已生成，OCR 提取到 ${ex.rows} 行文本`);
+
+      setStage('redact');
+      const fields = (ex.privacy && ex.privacy.redacted_fields) || [];
+      log(fields.length ? `已抹除个人信息：${fields.join('、')}` : '未检测到需要抹除的个人信息');
+      completeStage('redact');
+
+      setStage('parse');
+      log(`解析出 ${ex.markers.length} 个指标四元组`);
+      completeStage('parse');
+
+      setStage('judge');
+      const an = await postJson('/api/analyze', { markers: ex.markers, sex: state.sex });
+      state.analysis = an;
+      completeStage('judge');
+      log(`判定完成：${an.matched} 项命中字典，${an.abnormal_count} 项不在参考区间内`);
+
+      setStage('redline');
+      log(an.redlines.length ? `命中 ${an.redlines.length} 条日常红线` : '未触发日常红线');
+      completeStage('redline');
+
+      setStage('explain');
+      await streamExplain(an);
+    } catch (err) {
+      console.error(err);
+      $('#progress-title').textContent = '出了点问题';
+      log(`✗ ${err.message}`);
+      toast(err.message);
+      setTimeout(() => showView('home'), 2600);
+    }
+  }
+
+  /* ─── 流式解读 ─── */
+  async function streamExplain(analysis) {
+    let payload = null;
+    let streamed = '';
+
+    try {
+      const resp = await fetch('/api/explain/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(analysis),
+      });
+      if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+
+      const reader = resp.body.getReader();
+      // stream: true 很关键——中文是多字节编码，一个汉字可能被拆在两个 chunk 里
+      const decoder = new TextDecoder('utf-8');
+      let buf = '';
+
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buf.indexOf('\n\n')) !== -1) {
+          const frame = buf.slice(0, idx);
+          buf = buf.slice(idx + 2);
+          for (const line of frame.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            let ev;
+            try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+            if (ev.message && ev.type !== 'token') log(ev.message);
+            if (ev.type === 'token' && ev.message) {
+              streamed += ev.message;
+              $('#summary-text').textContent = streamed;
+            }
+            if (typeof ev.progress === 'number') {
+              setProgress(78 + ev.progress * 0.22);
+            }
+            if (ev.type === 'done') payload = ev.payload;
+          }
+        }
+      }
+    } catch (e) {
+      // SSE 被代理缓冲时走这条路，结果一致，只是没有逐字效果
+      log('流式通道不可用，已切换普通请求');
+      payload = await postJson('/api/explain', analysis);
+    }
+
+    if (!payload) throw new Error('没有收到解读结果，请重试');
+    state.explain = payload;
+    renderResult(payload);
+  }
+
+  /* ─── 结果渲染 ─── */
+  function renderResult(data) {
+    const report = data.report || {};
+    const an = state.analysis || {};
+    const judged = an.judged || [];
+    const explainMap = new Map((report.tests || []).map(t => [t.test_name, t]));
+
+    const nTotal = an.matched ?? judged.length;
+    const nOk = judged.filter(j => j.flag === 'normal').length;
+    const nWarn = judged.filter(j => j.flag === 'high' || j.flag === 'low').length;
+    const nUnknown = judged.filter(j => j.flag === 'unknown').length;
+
+    /* 概览 chips */
+    const chips = [
+      { cls: '', label: '共识别', n: nTotal, unit: '项' },
+      { cls: 'is-ok', label: '正常', n: nOk, unit: '项' },
+      { cls: 'is-warn', label: '需注意', n: nWarn, unit: '项' },
+      { cls: 'is-unknown', label: '待确认', n: nUnknown, unit: '项' },
+    ];
+    $('#chips').innerHTML = chips.map(c =>
+      `<span class="chip ${c.cls}">${c.label} <b>${c.n}</b> ${c.unit}</span>`
+    ).join('');
+
+    /* 模式徽标：如实展示当前是本地模板还是大模型 */
+    const isLlm = data.mode === 'llm';
+    const badge = $('#mode-badge');
+    badge.textContent = isLlm ? `AI 解读 · ${data.model}` : '本地模板解读';
+    badge.classList.toggle('is-template', !isLlm);
+    badge.title = isLlm
+      ? '数字由本地链路定稿，大模型只改写措辞，输出经过数字回溯校验'
+      : '未配置大模型密钥，解释由本地模板生成——产品功能不受影响';
+
+    /* 整体解读 */
+    $('#summary-text').textContent = report.summary || '';
+
+    /* 逐项结果 */
+    $('#marker-note').textContent = nWarn
+      ? `点击任意一行可查看判定依据` : '所有指标均在参考区间内';
+    $('#markers').innerHTML = judged.length
+      ? judged.map(j => markerRow(j, explainMap.get(j.standard_name))).join('')
+      : '<li class="empty-note">没有可展示的指标。</li>';
+    $$('#markers .marker-row').forEach(row => {
+      const toggle = () => {
+        const open = row.parentElement.classList.toggle('is-open');
+        row.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+
+    /* 日常红线 */
+    const rl = an.redlines || [];
+    $('#redlines').innerHTML = rl.length
+      ? rl.map(r => redlineCard(r)).join('')
+      : '<p class="empty-note">这份报告没有触发日常饮食红线。'
+      + '三餐记录功能上线后，依然可以在这里看到每天的对照结果。</p>';
+
+    /* 问诊清单 */
+    const qs = report.follow_up_questions || [];
+    $('#questions').innerHTML = qs.length
+      ? qs.map(q => `<li>${escapeHtml(q)}</li>`).join('')
+      : '<li class="empty-note">本次没有需要特别追问的问题。</li>';
+
+    /* 给爸妈说的话 */
+    const fam = data.family_message || {};
+    $('#family-text').textContent = fam.message || '';
+
+    /* 识别原文（演示模式下附上刚才合成的那份报告图） */
+    const ex = state.extract || {};
+    const rawFields = (ex.privacy && ex.privacy.redacted_fields) || [];
+    $('#raw-note').textContent = rawFields.length
+      ? `已抹除：${rawFields.join('、')}` : '未检测到个人信息';
+    $('#raw-text').textContent = ex.text || '';
+    $('#raw-extra').innerHTML = ex.image_b64
+      ? `<img class="raw-image" alt="本次处理的报告图片"
+              src="data:image/png;base64,${ex.image_b64}">`
+      : '';
+
+    /* 免责声明 */
+    $('#disclaimer').textContent =
+      report.disclaimer || '本内容不构成医疗建议，请遵医嘱。';
+
+    showView('result');
+  }
+
+  function markerRow(j, explain) {
+    const flag = j.flag || 'unknown';
+    const ref = (j.ref && j.ref.length === 2)
+      ? `${fmt(j.ref[0])} – ${fmt(j.ref[1])}` : '报告未提供';
+    const unit = j.unit ? ` ${escapeHtml(j.unit)}` : '';
+    const detail = explain || {};
+    return `
+      <li class="marker">
+        <div class="marker-row" role="button" tabindex="0"
+             aria-expanded="false" aria-label="${escapeHtml(j.standard_name || '')} 判定依据">
+          <span class="marker-name">${escapeHtml(j.standard_name || '未知指标')}</span>
+          <span class="marker-value">${escapeHtml(fmt(j.reported_value))}</span>
+          <span class="marker-ref">参考 ${escapeHtml(ref)}${unit}</span>
+          <span class="pill ${FLAG_PILL[flag]}">${FLAG_TEXT[flag] || '待确认'}</span>
+          <span class="marker-caret">▶</span>
+        </div>
+        <div class="marker-detail">
+          ${detail.simple_explanation ? `<p>${escapeHtml(detail.simple_explanation)}</p>` : ''}
+          ${detail.recommended_next_step
+            ? `<p><strong>下一步：</strong>${escapeHtml(detail.recommended_next_step)}</p>` : ''}
+          ${j.reason ? `<div class="why">判定依据：${escapeHtml(j.reason)}</div>` : ''}
+        </div>
+      </li>`;
+  }
+
+  function redlineCard(r) {
+    const boost = r.action === 'boost';
+    const kind = boost ? '建议补充' : '日常限制';
+    const foods = (r.trigger_foods || []).slice(0, 6);
+    return `
+      <div class="redline ${boost ? 'is-boost' : ''}">
+        <div class="redline-head">
+          <span class="redline-name">${escapeHtml(r.restriction || '')}</span>
+          <span class="redline-kind">${kind}</span>
+          <span class="redline-src">${escapeHtml(r.marker || '')} · ${escapeHtml(r.rule_id || '')}</span>
+        </div>
+        <p class="redline-advice">${escapeHtml(r.advice || '')}</p>
+        ${foods.length
+          ? `<div class="redline-foods">${foods.map(f =>
+              `<span class="food-tag">${escapeHtml(f)}</span>`).join('')}</div>`
+          : ''}
+      </div>`;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  /* ─── 文件选择 ─── */
+  function bindFile(picked) {
+    if (!picked) return;
+    if (picked.size > 20 * 1024 * 1024) {
+      toast('文件超过 20MB，请压缩后再试');
+      return;
+    }
+    state.file = picked;
+    $('#chosen-file').textContent = `${picked.name}（${(picked.size / 1024).toFixed(0)} KB）`;
+    $('#btn-start').disabled = false;
+  }
+
+  function bindEvents() {
+    const dz = $('#dropzone');
+    const input = $('#file-input');
+
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+    input.addEventListener('change', e => bindFile(e.target.files[0]));
+
+    ['dragenter', 'dragover'].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('is-drag'); }));
+    ['dragleave', 'drop'].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('is-drag'); }));
+    dz.addEventListener('drop', e => bindFile(e.dataTransfer.files[0]));
+
+    $('#btn-start').addEventListener('click', runFlow);
+    $('#btn-demo').addEventListener('click', runDemo);
+    $('#btn-again').addEventListener('click', () => {
+      state.file = null;
+      state.extract = state.analysis = state.explain = null;
+      $('#file-input').value = '';
+      $('#chosen-file').textContent = '尚未选择文件';
+      $('#btn-start').disabled = true;
+      showView('home');
+    });
+
+    $('#btn-copy').addEventListener('click', async () => {
+      const text = $('#family-text').textContent;
+      if (!text) { toast('还没有可复制的内容'); return; }
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('已复制，可以直接发家庭群了');
+      } catch {
+        // 浏览器禁用剪贴板 API 时退回传统方案
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        toast('已复制，可以直接发家庭群了');
+      }
+    });
+
+    $$('#sex-seg .seg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('#sex-seg .seg').forEach(b => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-checked', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-checked', 'true');
+        state.sex = btn.dataset.sex;
+      });
+    });
+  }
+
+  /* ─── 启动 ─── */
+  async function boot() {
+    bindEvents();
+    try {
+      const info = await (await fetch('/api/about')).json();
+      const chip = $('#mode-chip');
+      const isLlm = info.explain_mode === 'llm';
+      chip.textContent = isLlm ? `AI 解读 · ${info.explain_model}` : '本地模板解读';
+      chip.title = isLlm
+        ? '已配置大模型密钥，数字仍由本地链路定稿'
+        : '未配置大模型密钥，解释由本地模板生成';
+    } catch { /* 顶栏徽标不重要，失败就保持占位 */ }
+
+    // ?demo=1 自动跑演示：录演示视频、跑无头回归、评委快速体验都用得上
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      runDemo();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', boot);
+})();
