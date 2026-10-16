@@ -40,6 +40,11 @@ static/uploads/
 data/uploads/
 *.pdf
 
+# OCR 评测用的真实报告样本（同样是隐私,只留目录结构,不入库内容）
+tests/ocr_bench/samples/*
+!tests/ocr_bench/samples/.gitkeep
+tests/ocr_bench/results/
+
 # ---- 运行时产物 ----
 logs/
 *.log
