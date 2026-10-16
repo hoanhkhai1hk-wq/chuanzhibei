@@ -533,6 +533,25 @@ em { font-style: normal; }
   border-radius: 4px; padding: 1px 7px; margin-right: 8px;
 }
 
+/* 报告对比 */
+.compare-card { border-left: 3px solid #4a6fa5; }
+.verdict {
+  font-size: 12px; font-weight: 600; padding: 2px 9px;
+  border-radius: 999px; white-space: nowrap; margin-left: 10px;
+}
+.verdict-improved   { background: var(--ok-soft); color: var(--ok); }
+.verdict-worsened   { background: var(--warn-soft); color: var(--warn); }
+.verdict-persistent { background: var(--accent-soft); color: var(--accent); }
+.verdict-reversed   { background: var(--unknown-soft); color: var(--unknown); }
+.verdict-new        { background: var(--primary-soft); color: var(--primary-deep); }
+.compare-row {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px;
+}
+.compare-row:last-child { border-bottom: 0; }
+.compare-name { font-weight: 600; }
+.compare-vals { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+
 /* ─── 响应式 ─── */
 @media (max-width: 720px) {
   .view { padding: 24px 16px 56px; }

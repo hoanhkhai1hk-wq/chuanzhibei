@@ -69,3 +69,6 @@ htmlcov/
 *.db
 *.db-wal
 *.db-shm
+
+# 防呆：db.py 路径 bug 曾把库建到这里
+app/data/*.db*

@@ -301,6 +301,7 @@ def explain_stream(payload: dict) -> StreamingResponse:
 
 from app.data import db as store                       # noqa: E402
 from app.daily import service as daily                 # noqa: E402
+from app import history                                # noqa: E402
 
 store.init_db()
 
@@ -325,14 +326,28 @@ def save_report(payload: dict) -> dict:
     为什么单独一个接口而不是在 /api/analyze 里顺手保存：
     analyze 是纯计算，应该保持无副作用——能否复现、能否重跑都不碰库。
     「保存」是用户显式确认后的动作，职责分开，回滚也容易。
+
+    返回里附带与上一份报告的对比（若有）——保存的这一刻正好是
+    "新报告已确认、旧报告还没被覆盖"的唯一时机，对比就地完成，
+    前端不需要再发第二次请求。
     """
     result = payload.get("result") or {}
     if not result.get("judged"):
         raise HTTPException(status_code=400, detail="result.judged 不能为空")
+
+    prev = store.latest_report()      # 必须在插入之前取，插入后"上一份"就变了
     rid = store.save_report(result, source=payload.get("source", ""),
                             sex=payload.get("sex", "unknown"))
+    diff = history.compare(prev, result) if prev else None
     return {"saved": True, "report_id": rid,
-            "redlines_active": len(result.get("redlines", []))}
+            "redlines_active": len(result.get("redlines", [])),
+            "compare": diff}
+
+
+@app.get("/api/reports", summary="历史报告列表")
+def list_reports() -> dict:
+    """已保存的解读记录（新→旧）。趋势对比与档案页的数据源。"""
+    return {"reports": store.list_reports()}
 
 
 @app.post("/api/meals", summary="记录一餐 → 返回当日对照")

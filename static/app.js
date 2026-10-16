@@ -170,7 +170,9 @@
 
       /* 判定结果落库：红线成为「今日记录」页的日常对照依据 */
       try {
-        await postJson('/api/report', { result: an, sex: state.sex, source: 'upload' });
+        const saved = await postJson('/api/report',
+          { result: an, sex: state.sex, source: 'upload' });
+        state.compare = saved.compare;      // 有上一份报告时返回趋势对比
         log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
       } catch { /* 落库失败不阻塞解读展示 */ }
 
@@ -224,7 +226,9 @@
       log(`判定完成：${an.matched} 项命中字典，${an.abnormal_count} 项不在参考区间内`);
 
       try {
-        await postJson('/api/report', { result: an, sex: state.sex, source: 'demo' });
+        const saved = await postJson('/api/report',
+          { result: an, sex: state.sex, source: 'demo' });
+        state.compare = saved.compare;
         log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
       } catch { /* 落库失败不阻塞演示 */ }
 
@@ -296,8 +300,41 @@
     renderResult(payload);
   }
 
+  /* ─── 报告对比 ─── */
+  const FLAG_CN = { high: '偏高', low: '偏低', normal: '正常', unknown: '待确认' };
+
+  function renderCompare(diff) {
+    const card = $('#compare-card');
+    if (!diff) { card.classList.add('is-hidden'); return; }
+    const c = diff.counts;
+    if (!c.improved && !c.worsened && !c.persistent && !c.reversed && !c.new) {
+      card.classList.add('is-hidden');
+      return;
+    }
+    card.classList.remove('is-hidden');
+    const chips = [
+      { cls: 'is-ok', label: '好转', n: c.improved },
+      { cls: 'is-warn', label: '加重', n: c.worsened },
+      { cls: '', label: '持续异常', n: c.persistent },
+      { cls: 'is-unknown', label: '方向反转', n: c.reversed },
+      { cls: 'is-unknown', label: '新增', n: c.new },
+    ].filter(x => x.n > 0);
+    $('#compare-chips').innerHTML = chips.map(x =>
+      `<span class="chip ${x.cls}">${x.label} <b>${x.n}</b> 项</span>`).join('');
+
+    $('#compare-rows').innerHTML = diff.rows.map(r => `
+      <div class="compare-row">
+        <span class="compare-name">${escapeHtml(r.standard_name)}</span>
+        <span class="verdict verdict-${r.verdict}">${escapeHtml(r.verdict_text)}</span>
+        <span class="compare-vals">${
+          r.from_value ? `${escapeHtml(r.from_value)}（${FLAG_CN[r.from_flag] || '—'}）` : '本次首次出现'
+        } → ${escapeHtml(r.to_value)}（${FLAG_CN[r.to_flag] || '—'}）</span>
+      </div>`).join('');
+  }
+
   /* ─── 结果渲染 ─── */
   function renderResult(data) {
+    renderCompare(state.compare);
     const report = data.report || {};
     const an = state.analysis || {};
     const judged = an.judged || [];
@@ -465,7 +502,7 @@
     $('#btn-demo').addEventListener('click', runDemo);
     $('#btn-again').addEventListener('click', () => {
       state.file = null;
-      state.extract = state.analysis = state.explain = null;
+      state.extract = state.analysis = state.explain = state.compare = null;
       $('#file-input').value = '';
       $('#chosen-file').textContent = '尚未选择文件';
       $('#btn-start').disabled = true;

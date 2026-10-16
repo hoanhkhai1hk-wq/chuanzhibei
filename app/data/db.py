@@ -27,8 +27,11 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-APP = Path(__file__).resolve().parent.parent
-DATA_DIR = APP / "data"
+# 本文件在 app/data/ 下，深两层：parent.parent 只到 app/，
+# 必须再往上一层才是仓库根。这个 bug 曾让库文件悄悄建在 app/data/ 里——
+# 表面上"删库重启"了，实际数据一直都在，排查了一圈进程句柄才找到。
+REPO = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO / "data"
 DB_PATH = DATA_DIR / "tjzh.db"
 
 SCHEMA = """
@@ -99,6 +102,20 @@ def _now() -> str:
 
 def save_report(result: dict, source: str = "", sex: str = "unknown") -> int:
     """保存一次完整解读，并把其中触发的红线设为当前生效。"""
+    # 归一化：规则引擎的裸输出没有 counts 键（/api/analyze 直接透传），
+    # 不补齐的话历史列表里的"识别 X 项 / 异常 Y 项"会永远是 0。
+    if "counts" not in result:
+        judged = result.get("judged", [])
+        result = {
+            **result,
+            "counts": {
+                "total": result.get("total", len(judged)),
+                "matched": result.get("matched", len(judged)),
+                "abnormal_count": result.get(
+                    "abnormal_count",
+                    len([j for j in judged if j.get("flag") in ("high", "low")])),
+            },
+        }
     with connect() as conn:
         cur = conn.execute(
             "INSERT INTO reports (created_at, source, sex, result_json) VALUES (?,?,?,?)",
@@ -123,6 +140,28 @@ def latest_report() -> dict | None:
         row = conn.execute(
             "SELECT * FROM reports ORDER BY id DESC LIMIT 1").fetchone()
         return json.loads(row["result_json"]) if row else None
+
+
+def list_reports(limit: int = 20) -> list[dict]:
+    """历史报告列表（新→旧），供趋势对比与档案页使用。"""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT id, created_at, source, sex, result_json "
+            "FROM reports ORDER BY id DESC LIMIT ?", (limit,),
+        ).fetchall()
+        out = []
+        for r in rows:
+            result = json.loads(r["result_json"])
+            out.append({
+                "id": r["id"],
+                "created_at": r["created_at"],
+                "source": r["source"],
+                "sex": r["sex"],
+                "total": result.get("counts", {}).get("matched", 0),
+                "abnormal_count": result.get("counts", {}).get("abnormal_count", 0),
+                "redlines": len(result.get("redlines", [])),
+            })
+        return out
 
 
 # ──────────────────────────── 日常层 ────────────────────────────
