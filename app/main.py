@@ -370,6 +370,38 @@ def today(member_id: str = "me", date: str = "") -> dict:
     return daily.today_summary(member_id, date or None)
 
 
+@app.post("/api/numerics", summary="记录血压 / 血糖 / 体重")
+def add_numeric(payload: dict) -> dict:
+    """记一次测量值，返回当日汇总。
+
+    血压高压时会**激活「限钠」红线**——报告上不会有血压值（它是测量值非检验项），
+    这条红线只能由日常层触发，这正是日常层存在的意义之一。
+    阈值采用《中国高血压防治指南》诊室标准 ≥140/90 mmHg，写在 service.BP_THRESHOLD。
+    """
+    kind = payload.get("kind")
+    if kind not in ("blood_pressure", "blood_glucose", "weight"):
+        raise HTTPException(status_code=400, detail=f"非法记录类型：{kind}")
+    try:
+        return daily.record_numeric(
+            payload.get("member_id", "me"), payload.get("date") or _today(), kind,
+            systolic=payload.get("systolic"), diastolic=payload.get("diastolic"),
+            glucose=payload.get("glucose"), weight=payload.get("weight"),
+            note=payload.get("note"),
+        )
+    except Exception as e:                              # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"记录失败：{e}")
+
+
+@app.get("/api/week", summary="最近 N 天趋势（周报曲线）")
+def week(member_id: str = "me", days: int = 7, end: str = "") -> dict:
+    """逐日汇总最近 N 天：热量、餐次、撞线次数、血压与血糖。
+
+    周报的数据源与今日对照是同一套计算，不另起炉灶——
+    这也是「一条管线，两个字典，一个规则引擎」的体现。
+    """
+    return daily.week_summary(member_id, end or None, min(max(days, 1), 30))
+
+
 @app.get("/api/contract/active-redlines", summary="当前生效的红线")
 def active_redlines() -> dict:
     """前端「今日记录」页打开时先取这个，知道该盯住哪几条。"""

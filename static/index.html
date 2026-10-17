@@ -284,6 +284,54 @@
     <div id="today-meals" class="today-meals"></div>
   </section>
 
+  <section class="card">
+    <div class="card-head">
+      <h3>记一次测量</h3>
+      <div class="segmented" id="num-seg" role="radiogroup" aria-label="记录类型">
+        <button type="button" class="seg is-active" data-kind="blood_pressure"
+                role="radio" aria-checked="true">血压</button>
+        <button type="button" class="seg" data-kind="blood_glucose"
+                role="radio" aria-checked="false">血糖</button>
+        <button type="button" class="seg" data-kind="weight"
+                role="radio" aria-checked="false">体重</button>
+      </div>
+    </div>
+
+    <div class="num-fields">
+      <div class="num-row" data-for="blood_pressure">
+        <label class="num-field">收缩压
+          <input type="number" id="n-sys" placeholder="120" step="1"></label>
+        <label class="num-field">舒张压
+          <input type="number" id="n-dia" placeholder="80" step="1"></label>
+        <span class="num-unit">mmHg</span>
+      </div>
+      <div class="num-row is-hidden" data-for="blood_glucose">
+        <label class="num-field">血糖
+          <input type="number" id="n-glu" placeholder="5.4" step="0.1"></label>
+        <span class="num-unit">mmol/L</span>
+      </div>
+      <div class="num-row is-hidden" data-for="weight">
+        <label class="num-field">体重
+          <input type="number" id="n-wt" placeholder="65" step="0.1"></label>
+        <span class="num-unit">kg</span>
+      </div>
+    </div>
+
+    <div class="upload-actions">
+      <button type="button" class="btn btn-primary" id="btn-num">记录</button>
+      <span class="field-hint">血压 ≥140/90 会自动激活「限钠」红线（诊室标准）</span>
+    </div>
+    <div id="today-numerics" class="today-meals"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>最近 7 天</h3>
+      <span class="card-note" id="week-note"></span>
+    </div>
+    <div id="week-charts"></div>
+  </section>
+
   <p class="disclaimer">
     热量与标签为估算值，用于日常对照参考，不构成营养处方。如有特殊饮食要求，请遵医嘱。
   </p>

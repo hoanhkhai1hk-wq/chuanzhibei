@@ -552,6 +552,34 @@ em { font-style: normal; }
 .compare-name { font-weight: 600; }
 .compare-vals { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
 
+/* 测量记录 */
+.num-fields { margin-bottom: 14px; }
+.num-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.num-field {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12.5px; color: var(--ink-2); font-weight: 600;
+}
+.num-field input {
+  font: inherit; font-size: 15px; font-weight: 700;
+  padding: 9px 12px; width: 130px;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface-2); color: var(--ink); outline: none;
+}
+.num-field input:focus { border-color: var(--primary); background: #fff; }
+.num-unit { font-size: 13px; color: var(--ink-3); padding-bottom: 10px; }
+
+/* 周报曲线 */
+.chart { margin-bottom: 22px; }
+.chart:last-child { margin-bottom: 0; }
+.chart-title {
+  font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.legend { display: inline-flex; align-items: center; gap: 5px; font-weight: 400; font-size: 12px; }
+.legend i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-empty { font-size: 13px; color: var(--ink-3); padding: 10px 0 2px; }
+
 /* ─── 响应式 ─── */
 @media (max-width: 720px) {
   .view { padding: 24px 16px 56px; }

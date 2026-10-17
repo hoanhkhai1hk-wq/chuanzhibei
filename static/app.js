@@ -574,6 +574,7 @@
       renderActiveRedlines(rl.redlines || []);
       renderToday(today);
       renderDishList(await fetchDishes(''));
+      refreshWeek();
     } catch (e) {
       toast('今日记录加载失败：' + e.message);
     }
@@ -677,6 +678,129 @@
           `<li><span class="meal-tag">${MEAL_TEXT[m.meal_type] || m.meal_type}</span>${escapeHtml((m.dishes || []).join('、'))}</li>`
         ).join('') + '</ul>'
       : '';
+    renderNumerics(s.numerics);
+  }
+
+  /* ══════════════════ 周报曲线（手绘 SVG，不引 CDN） ══════════════════ */
+
+  const W = 660, H = 132, PAD_B = 24, GAP = 12;
+  const _COLOR = { hit: '#b0451d', kcal: '#0d6e5c', sys: '#b0451d', dia: '#0d6e5c' };
+
+  function esc(s) { return escapeHtml(String(s)); }
+
+  function barChart(series, key, color, max) {
+    const n = series.length;
+    const bw = (W - GAP * (n - 1)) / n;
+    const bars = series.map((d, i) => {
+      const v = d[key] || 0;
+      const h = max ? (v / max) * (H - PAD_B - 14) : 0;
+      const x = i * (bw + GAP);
+      const y = H - PAD_B - h;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}"
+                    height="${Math.max(h, 1).toFixed(1)}" rx="3" fill="${color}"/>`
+        + (v ? `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}"
+                      text-anchor="middle" font-size="11" fill="${color}"
+                      font-weight="700">${v}</text>` : '')
+        + `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle"
+                 font-size="10" fill="#7b8c84">${esc(d.date.slice(5))}</text>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
+                 role="img" aria-label="最近七天柱状图">
+              <line x1="0" y1="${H - PAD_B}" x2="${W}" y2="${H - PAD_B}"
+                    stroke="#e0e8e4" stroke-width="1"/>${bars}</svg>`;
+  }
+
+  function lineChart(series, keyA, keyB) {
+    const pts = series.map(d => [d[keyA], d[keyB]]);
+    const all = pts.flat().filter(v => v !== null && v !== undefined);
+    if (!all.length) return '';
+
+    let lo = Math.min(...all), hi = Math.max(...all);
+    if (hi - lo < 12) { const mid = (hi + lo) / 2; lo = mid - 6; hi = mid + 6; }
+    const pad = (hi - lo) * 0.15;
+    lo -= pad; hi += pad;
+
+    const xAt = i => (i + 0.5) * (W / series.length);
+    const yAt = v => 12 + (1 - (v - lo) / (hi - lo)) * (H - PAD_B - 12);
+
+    function polyline(key, color) {
+      // 缺失的日期断开线段——连起来会画出一段根本不存在的趋势
+      const segs = [];
+      let cur = [];
+      series.forEach((d, i) => {
+        if (d[key] === null || d[key] === undefined) {
+          if (cur.length) segs.push(cur);
+          cur = [];
+        } else {
+          cur.push([xAt(i), yAt(d[key]), d[key]]);
+        }
+      });
+      if (cur.length) segs.push(cur);
+      return segs.map(seg => `
+        <polyline points="${seg.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')}"
+                  fill="none" stroke="${color}" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+        ${seg.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}"
+                                r="3.5" fill="#fff" stroke="${color}" stroke-width="2"/>`).join('')}
+        ${seg.map(p => `<text x="${p[0].toFixed(1)}" y="${(p[1] - 9).toFixed(1)}"
+                              text-anchor="middle" font-size="10"
+                              fill="${color}">${p[2]}</text>`).join('')}`).join('');
+    }
+
+    const labels = series.map((d, i) =>
+      `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="middle"
+             font-size="10" fill="#7b8c84">${esc(d.date.slice(5))}</text>`).join('');
+
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
+                 role="img" aria-label="最近七天血压折线图">
+              <line x1="0" y1="${(H - PAD_B).toFixed(1)}" x2="${W}"
+                    y2="${(H - PAD_B).toFixed(1)}" stroke="#e0e8e4" stroke-width="1"/>
+              ${polyline(keyA, _COLOR.sys)}${polyline(keyB, _COLOR.dia)}${labels}</svg>`;
+  }
+
+  async function refreshWeek() {
+    try {
+      const week = await (await fetch('/api/week?days=7')).json();
+      const s = week.series || [];
+      const maxHit = Math.max(2, ...s.map(d => d.hit_count));   // 至少 2 留余量，单根柱子才不会顶满
+      const hasBp = s.some(d => d.systolic !== null);
+      $('#week-note').textContent = s.filter(d => d.meals).length
+        + ' / 7 天有记录';
+      $('#week-charts').innerHTML = `
+        <div class="chart">
+          <div class="chart-title">每天碰到红线的次数
+            <span class="legend"><i style="background:${_COLOR.hit}"></i>撞线</span></div>
+          ${maxHit > 1 || s.some(d => d.hit_count)
+            ? barChart(s, 'hit_count', _COLOR.hit, maxHit)
+            : '<p class="chart-empty">这七天一条红线都没碰到，继续保持 👍</p>'}
+        </div>
+        <div class="chart">
+          <div class="chart-title">血压趋势
+            <span class="legend"><i style="background:${_COLOR.sys}"></i>收缩压</span>
+            <span class="legend"><i style="background:${_COLOR.dia}"></i>舒张压</span></div>
+          ${hasBp
+            ? lineChart(s, 'systolic', 'diastolic')
+            : '<p class="chart-empty">还没有血压记录，在上面记一次就会出曲线</p>'}
+        </div>`;
+    } catch { /* 曲线加载失败不影响其他功能 */ }
+  }
+
+  /* ══════════════════ 测量记录（血压 / 血糖 / 体重） ══════════════════ */
+
+  const numeric = { kind: 'blood_pressure' };
+
+  function renderNumerics(list) {
+    const el = $('#today-numerics');
+    if (!list || !list.length) { el.innerHTML = ''; return; }
+    el.innerHTML = '<ul>' + list.map(n => {
+      const txt = n.kind === 'blood_pressure'
+        ? `${n.systolic ?? '—'} / ${n.diastolic ?? '—'} mmHg`
+        : n.kind === 'blood_glucose'
+          ? `${n.glucose ?? '—'} mmol/L` : `${n.weight ?? '—'} kg`;
+      return `<li><span class="meal-tag">${
+        { blood_pressure: '血压', blood_glucose: '血糖', weight: '体重' }[n.kind]
+      }</span>${esc(txt)}${n.note ? ' · ' + esc(n.note) : ''}</li>`;
+    }).join('') + '</ul>';
   }
 
   function bindDaily() {
@@ -713,7 +837,54 @@
         daily.picked.clear();
         renderPicked();
         renderToday(summary);
+        refreshWeek();
         toast('已记录，对照结果更新了');
+      } catch (e) {
+        toast('记录失败：' + e.message);
+      }
+    });
+
+    /* 测量记录：切换类型只显示对应输入框 */
+    $$('#num-seg .seg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $$('#num-seg .seg').forEach(b => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-checked', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-checked', 'true');
+        numeric.kind = btn.dataset.kind;
+        $$('.num-row').forEach(row => {
+          row.classList.toggle('is-hidden', row.dataset.for !== numeric.kind);
+        });
+      });
+    });
+
+    $('#btn-num').addEventListener('click', async () => {
+      const payload = { kind: numeric.kind };
+      if (numeric.kind === 'blood_pressure') {
+        payload.systolic = +$('#n-sys').value || null;
+        payload.diastolic = +$('#n-dia').value || null;
+        if (!payload.systolic && !payload.diastolic) {
+          toast('至少填一个血压值'); return;
+        }
+      } else if (numeric.kind === 'blood_glucose') {
+        payload.glucose = +$('#n-glu').value || null;
+        if (!payload.glucose) { toast('请填写血糖值'); return; }
+      } else {
+        payload.weight = +$('#n-wt').value || null;
+        if (!payload.weight) { toast('请填写体重'); return; }
+      }
+      try {
+        const summary = await postJson('/api/numerics', payload);
+        renderToday(summary);
+        renderActiveRedlines((await (await fetch('/api/contract/active-redlines')).json()).redlines);
+        refreshWeek();
+        // 血压偏高激活限钠红线时，明确告诉用户发生了什么
+        toast(summary.activated_redline
+          ? `已记录。血压偏高，已激活「${summary.activated_redline}」红线`
+          : '已记录');
+        $('#n-sys').value = $('#n-dia').value = $('#n-glu').value = $('#n-wt').value = '';
       } catch (e) {
         toast('记录失败：' + e.message);
       }

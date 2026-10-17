@@ -227,3 +227,24 @@ def get_active_redlines(member_id: str = "me") -> list[dict]:
             }
             for r in rows
         ]
+
+
+def activate_redline(member_id: str, rule: dict) -> None:
+    """激活单条红线（新增或更新），不动其他红线。
+
+    为什么单独一个函数：报告保存是「整组替换」，日常层触发是「追加单条」——
+    血压这种测量值由日常录入触发，不该把报告产生的红线清掉。
+    """
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO active_redlines VALUES (?,?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(member_id, rule_id) DO UPDATE SET "
+            "restriction=excluded.restriction, marker=excluded.marker, "
+            "nutrient_key=excluded.nutrient_key, action=excluded.action, "
+            "trigger_foods=excluded.trigger_foods, advice=excluded.advice, "
+            "created_at=excluded.created_at",
+            (member_id, rule["rule_id"], rule["restriction"], rule.get("marker", ""),
+             rule["nutrient_key"], rule.get("action", "limit"),
+             json.dumps(rule.get("trigger_foods", []), ensure_ascii=False),
+             rule.get("advice", ""), _now()),
+        )

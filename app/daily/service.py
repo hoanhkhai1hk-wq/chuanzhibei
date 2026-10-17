@@ -71,6 +71,100 @@ def _resolve(name: str) -> dict | None:
     return index.get(name.strip())
 
 
+#: 血压偏高的判定阈值（收缩压 / 舒张压，mmHg）。
+#: 采用《中国高血压防治指南》的诊室血压标准 ≥140/90；家测标准更严（≥135/85），
+#: 这里用诊室标准并记录在案——判定口径必须有出处，不能自己拍一个数。
+BP_THRESHOLD = (140, 90)
+
+
+def bp_flag(systolic, diastolic) -> str:
+    """血压高低判定。返回 high / normal / unknown。"""
+    if systolic is None and diastolic is None:
+        return "unknown"
+    s, d = systolic, diastolic
+    if (s is not None and s >= BP_THRESHOLD[0]) or (d is not None and d >= BP_THRESHOLD[1]):
+        return "high"
+    if s is None or d is None:
+        return "unknown"
+    return "normal"
+
+
+_BP_RULE_CACHE: dict | None = None
+
+
+def _bp_redline_rule() -> dict | None:
+    """从红线规则表里取血压那条（R03_BP_HIGH）。"""
+    global _BP_RULE_CACHE
+    if _BP_RULE_CACHE is None:
+        import json
+        rules = json.loads((APP / "rules" / "redlines.json").read_text(encoding="utf-8"))
+        for r in rules["rules"]:
+            if r.get("marker_id") == "bp_systolic" and r.get("enabled", True):
+                _BP_RULE_CACHE = r
+                break
+        _BP_RULE_CACHE = _BP_RULE_CACHE or {}
+    return _BP_RULE_CACHE or None
+
+
+def record_numeric(member_id: str, date: str, kind: str, **vals) -> dict:
+    """记录一次血压/血糖/体重，并返回当日汇总。
+
+    血压为什么能激活红线：
+    报告上不会有血压值（它是测量值，不是检验项），
+    所以「限钠」这条红线只能由日常层触发——这正是日常层的存在意义。
+    """
+    from app.data import db as store
+
+    store.add_numeric(member_id, date, kind, **vals)
+
+    activated = None
+    if kind == "blood_pressure":
+        flag = bp_flag(vals.get("systolic"), vals.get("diastolic"))
+        if flag == "high":
+            rule = _bp_redline_rule()
+            if rule:
+                store.activate_redline(member_id, {
+                    "rule_id": rule["rule_id"],
+                    "restriction": rule["restriction"],
+                    "marker": rule["marker"],
+                    "nutrient_key": rule["nutrient_key"],
+                    "action": rule.get("action", "limit"),
+                    "trigger_foods": rule.get("trigger_foods", []),
+                    "advice": rule["advice_template"].replace(
+                        "{trigger_foods}",
+                        "、".join(rule.get("trigger_foods", [])[:3]) or "相关食物"),
+                })
+                activated = rule["restriction"]
+
+    summary = today_summary(member_id, date)
+    summary["activated_redline"] = activated
+    return summary
+
+
+def week_summary(member_id: str = DEFAULT_MEMBER,
+                 end_date: str | None = None, days: int = 7) -> dict:
+    """最近 N 天的逐日汇总。全部本地聚合，用于周报曲线。"""
+    from datetime import date as _dt, timedelta
+
+    end = _dt.fromisoformat(end_date) if end_date else _dt.today()
+    series = []
+    for i in range(days - 1, -1, -1):
+        day = (end - timedelta(days=i)).isoformat()
+        s = today_summary(member_id, day)
+        bps = [n for n in s["numerics"] if n["kind"] == "blood_pressure"]
+        gluc = [n for n in s["numerics"] if n["kind"] == "blood_glucose"]
+        series.append({
+            "date": day,
+            "kcal": s["calories"],
+            "meals": s["meal_count"],
+            "hit_count": sum(h["hit_count"] for h in s["hits"]),
+            "systolic": bps[-1]["systolic"] if bps else None,
+            "diastolic": bps[-1]["diastolic"] if bps else None,
+            "glucose": gluc[-1]["glucose"] if gluc else None,
+        })
+    return {"member_id": member_id, "days": days, "series": series}
+
+
 def today_summary(member_id: str = DEFAULT_MEMBER,
                   date: str | None = None) -> dict:
     """当日汇总：已记录的餐 + 各红线被碰情况。全部本地计算。
