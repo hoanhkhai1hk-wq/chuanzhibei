@@ -21,7 +21,8 @@
 
   const state = {
     file: null,
-    sex: 'unknown',
+    sex: 'male',          // 只保留男/女两档：性别会影响肌酐、血红蛋白等区间，
+                          // 不提供「不确定」可避免走兜底区间（男女专属区间更准）
     extract: null,
     analysis: null,
     explain: null,

@@ -1,435 +1,1626 @@
 {
-  "version": "0.1.0",
-  "updated": "2026-10-16",
-  "source_primary": "参考数据/指标参考区间_种子表.md（源自 H1an1/health-coach，MIT License）",
-  "source_note": "本字典在 MIT 种子表基础上做了中文别名补全、单位本地化，并新增 unit_ocr_variants 与 redline 两个原创字段。区间以中国医院常见印刷值为准，种子表仅作别名映射与缺项兜底。",
-  "coverage_note": "首批 40 项，覆盖血常规、生化、血脂、糖代谢、尿常规五类常见体检项目，并优先保证 7 条红线规则的触发指标齐全。后续按真实报告出现的指标扩充至约 120 项。",
-
-  "markers": [
-    {
-      "id": "wbc", "standard_name": "白细胞计数", "panel": "血常规",
-      "aliases": ["WBC", "白细胞", "白细胞数", "白血球"],
-      "unit": "×10⁹/L",
-      "unit_ocr_variants": ["×10°/L", "×109/L", "10^9/L", "×10/L", "10⁹/L"],
-      "ref": { "default": [3.5, 9.5], "male": [3.5, 9.5], "female": [3.5, 9.5] },
-      "explain_high": "常在感染或炎症时升高。",
-      "explain_low": "偏低时抵抗力可能下降。",
-      "redline": null
-    },
-    {
-      "id": "rbc", "standard_name": "红细胞计数", "panel": "血常规",
-      "aliases": ["RBC", "红细胞", "红血球"],
-      "unit": "×10¹²/L",
-      "unit_ocr_variants": ["×1012/L", "×101/L", "10^12/L", "×10²/L"],
-      "ref": { "default": [3.8, 5.1], "male": [4.3, 5.8], "female": [3.8, 5.1] },
-      "explain_high": "偏高可能与脱水、血液浓缩有关。",
-      "explain_low": "偏低常见于贫血。",
-      "redline": null
-    },
-    {
-      "id": "hb", "standard_name": "血红蛋白", "panel": "血常规",
-      "aliases": ["Hb", "HGB", "血红蛋白", "血色素"],
-      "unit": "g/L",
-      "unit_ocr_variants": ["g/l", "G/L", "g/L"],
-      "ref": { "default": [115, 150], "male": [130, 175], "female": [115, 150] },
-      "explain_high": "偏高可能与脱水、长期缺氧有关。",
-      "explain_low": "偏低提示贫血，常见原因是缺铁。",
-      "redline": "R05"
-    },
-    {
-      "id": "plt", "standard_name": "血小板计数", "panel": "血常规",
-      "aliases": ["PLT", "血小板", "血小板数"],
-      "unit": "×10⁹/L",
-      "unit_ocr_variants": ["×10°/L", "×109/L", "10^9/L"],
-      "ref": { "default": [125, 350], "male": [125, 350], "female": [125, 350] },
-      "explain_high": "偏高可能增加凝血风险。",
-      "explain_low": "偏低时出血风险上升。",
-      "redline": null
-    },
-    {
-      "id": "hct", "standard_name": "红细胞压积", "panel": "血常规",
-      "aliases": ["HCT", "红细胞压积", "血细胞比容"],
-      "unit": "L/L",
-      "unit_ocr_variants": ["L/l", "l/L"],
-      "ref": { "default": [0.36, 0.50], "male": [0.40, 0.50], "female": [0.36, 0.44] },
-      "explain_high": "偏高常见于脱水。",
-      "explain_low": "偏低常见于贫血。",
-      "redline": null
-    },
-    {
-      "id": "mcv", "standard_name": "平均红细胞体积", "panel": "血常规",
-      "aliases": ["MCV"],
-      "unit": "fL",
-      "unit_ocr_variants": ["FL", "fl"],
-      "ref": { "default": [80, 100], "male": [80, 100], "female": [80, 100] },
-      "explain_high": "偏大常见于缺乏叶酸或维生素 B12。",
-      "explain_low": "偏小常见于缺铁。",
-      "redline": null
-    },
-    {
-      "id": "mch", "standard_name": "平均红细胞血红蛋白量", "panel": "血常规",
-      "aliases": ["MCH"],
-      "unit": "pg",
-      "unit_ocr_variants": ["PG"],
-      "ref": { "default": [27, 34], "male": [27, 34], "female": [27, 34] },
-      "explain_high": "偏大常见于巨幼细胞性贫血。",
-      "explain_low": "偏小常见于缺铁。",
-      "redline": null
-    },
-    {
-      "id": "mchc", "standard_name": "平均红细胞血红蛋白浓度", "panel": "血常规",
-      "aliases": ["MCHC"],
-      "unit": "g/L",
-      "unit_ocr_variants": ["g/l"],
-      "ref": { "default": [320, 360], "male": [320, 360], "female": [320, 360] },
-      "explain_high": "偏高临床意义有限，需结合其他指标。",
-      "explain_low": "偏低常见于缺铁性贫血。",
-      "redline": null
-    },
-    {
-      "id": "rdw", "standard_name": "红细胞分布宽度", "panel": "血常规",
-      "aliases": ["RDW"],
-      "unit": "%",
-      "unit_ocr_variants": ["%"],
-      "ref": { "default": [11.5, 14.5], "male": [11.5, 14.5], "female": [11.5, 14.5] },
-      "explain_high": "偏大提示红细胞大小不均。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-    {
-      "id": "lymph_pct", "standard_name": "淋巴细胞百分比", "panel": "血常规",
-      "aliases": ["LYMPH%", "淋巴细胞比率", "淋巴细胞百分数"],
-      "unit": "%",
-      "unit_ocr_variants": ["%"],
-      "ref": { "default": [20, 50], "male": [20, 50], "female": [20, 50] },
-      "explain_high": "偏高常见于病毒感染。",
-      "explain_low": "偏低需结合白细胞总数判断。",
-      "redline": null
-    },
-    {
-      "id": "neut_pct", "standard_name": "中性粒细胞百分比", "panel": "血常规",
-      "aliases": ["NEUT%", "中性粒细胞比率", "中性粒细胞百分数"],
-      "unit": "%",
-      "unit_ocr_variants": ["%"],
-      "ref": { "default": [40, 75], "male": [40, 75], "female": [40, 75] },
-      "explain_high": "偏高常见于细菌感染。",
-      "explain_low": "偏低需结合白细胞总数判断。",
-      "redline": null
-    },
-    {
-      "id": "eos_pct", "standard_name": "嗜酸性粒细胞百分比", "panel": "血常规",
-      "aliases": ["EOS%", "嗜酸性粒细胞比率"],
-      "unit": "%",
-      "unit_ocr_variants": ["%"],
-      "ref": { "default": [0.5, 5.0], "male": [0.5, 5.0], "female": [0.5, 5.0] },
-      "explain_high": "偏高常见于过敏或寄生虫感染。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-
-    {
-      "id": "glu", "standard_name": "空腹血糖", "panel": "糖代谢",
-      "aliases": ["GLU", "血糖", "空腹血糖", "葡萄糖", "FPG"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [3.9, 6.1], "male": [3.9, 6.1], "female": [3.9, 6.1] },
-      "explain_high": "偏高提示血糖代谢异常，需要关注。",
-      "explain_low": "偏低可能出现低血糖症状。",
-      "redline": "R02"
-    },
-    {
-      "id": "hba1c", "standard_name": "糖化血红蛋白", "panel": "糖代谢",
-      "aliases": ["HbA1c", "糖化血红蛋白", "糖化"],
-      "unit": "%",
-      "unit_ocr_variants": ["%"],
-      "ref": { "default": [4.0, 6.0], "male": [4.0, 6.0], "female": [4.0, 6.0] },
-      "explain_high": "反映近两三个月的平均血糖水平，偏高需重视。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R02"
-    },
-
-    {
-      "id": "alt", "standard_name": "谷丙转氨酶", "panel": "肝功能",
-      "aliases": ["ALT", "GPT", "谷丙转氨酶", "丙氨酸氨基转移酶"],
-      "unit": "U/L",
-      "unit_ocr_variants": ["U/l", "u/L", "IU/L"],
-      "ref": { "default": [9, 50], "male": [9, 50], "female": [9, 50] },
-      "explain_high": "偏高提示肝细胞可能受损，常见与脂肪肝、饮酒、药物有关。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R06"
-    },
-    {
-      "id": "ast", "standard_name": "谷草转氨酶", "panel": "肝功能",
-      "aliases": ["AST", "GOT", "谷草转氨酶", "天门冬氨酸氨基转移酶"],
-      "unit": "U/L",
-      "unit_ocr_variants": ["U/l", "u/L", "IU/L"],
-      "ref": { "default": [15, 40], "male": [15, 40], "female": [15, 40] },
-      "explain_high": "偏高提示肝或肌肉可能受损。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R06"
-    },
-    {
-      "id": "ggt", "standard_name": "谷氨酰转肽酶", "panel": "肝功能",
-      "aliases": ["GGT", "γ-GT", "谷氨酰转肽酶", "γ-谷氨酰转移酶"],
-      "unit": "U/L",
-      "unit_ocr_variants": ["U/l", "u/L", "r-GT", "γGT"],
-      "ref": { "default": [8, 61], "male": [11, 61], "female": [8, 40] },
-      "explain_high": "偏高与饮酒、肝胆疾病关系较密切。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R06"
-    },
-    {
-      "id": "alp", "standard_name": "碱性磷酸酶", "panel": "肝功能",
-      "aliases": ["ALP", "AKP", "碱性磷酸酶"],
-      "unit": "U/L",
-      "unit_ocr_variants": ["U/l", "u/L"],
-      "ref": { "default": [45, 125], "male": [45, 125], "female": [45, 125] },
-      "explain_high": "偏高可能与肝胆或骨骼问题有关。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-    {
-      "id": "tbil", "standard_name": "总胆红素", "panel": "肝功能",
-      "aliases": ["TBIL", "总胆红素", "胆红素总量"],
-      "unit": "μmol/L",
-      "unit_ocr_variants": ["umol/L", "μmo1/L", "umo1/L", "umol/l"],
-      "ref": { "default": [3.4, 20.5], "male": [3.4, 20.5], "female": [3.4, 20.5] },
-      "explain_high": "偏高可能出现黄疸，需结合直接胆红素判断。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-    {
-      "id": "dbil", "standard_name": "直接胆红素", "panel": "肝功能",
-      "aliases": ["DBIL", "直接胆红素", "结合胆红素"],
-      "unit": "μmol/L",
-      "unit_ocr_variants": ["umol/L", "μmo1/L", "umo1/L"],
-      "ref": { "default": [0.0, 6.8], "male": [0.0, 6.8], "female": [0.0, 6.8] },
-      "explain_high": "偏高多提示胆道排泄不畅。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-    {
-      "id": "alb", "standard_name": "白蛋白", "panel": "肝功能",
-      "aliases": ["ALB", "白蛋白", "清蛋白"],
-      "unit": "g/L",
-      "unit_ocr_variants": ["g/l", "G/L"],
-      "ref": { "default": [40, 55], "male": [40, 55], "female": [40, 55] },
-      "explain_high": "偏高常见于脱水。",
-      "explain_low": "偏低可能与营养或肝脏合成能力有关。",
-      "redline": null
-    },
-    {
-      "id": "tp", "standard_name": "总蛋白", "panel": "肝功能",
-      "aliases": ["TP", "总蛋白"],
-      "unit": "g/L",
-      "unit_ocr_variants": ["g/l", "G/L"],
-      "ref": { "default": [65, 85], "male": [65, 85], "female": [65, 85] },
-      "explain_high": "偏高常见于脱水。",
-      "explain_low": "偏低可能与营养或肝脏合成能力有关。",
-      "redline": null
-    },
-
-    {
-      "id": "bun", "standard_name": "尿素氮", "panel": "肾功能",
-      "aliases": ["BUN", "尿素氮", "尿素"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [2.9, 8.2], "male": [2.9, 8.2], "female": [2.9, 8.2] },
-      "explain_high": "偏高提示肾功能或饮水状态需关注。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": null
-    },
-    {
-      "id": "cr", "standard_name": "肌酐", "panel": "肾功能",
-      "aliases": ["Cr", "CREA", "肌酐", "血肌酐"],
-      "unit": "μmol/L",
-      "unit_ocr_variants": ["umol/L", "μmo1/L", "umo1/L"],
-      "ref": { "default": [44, 133], "male": [57, 111], "female": [44, 97] },
-      "explain_high": "偏高提示肾功能需要关注。",
-      "explain_low": "偏低常见于肌肉量偏少。",
-      "redline": "R07"
-    },
-    {
-      "id": "ua", "standard_name": "尿酸", "panel": "肾功能",
-      "aliases": ["UA", "尿酸", "血尿酸"],
-      "unit": "μmol/L",
-      "unit_ocr_variants": ["umol/L", "μmo1/L", "umo1/L", "umol/l"],
-      "ref": { "default": [155, 428], "male": [208, 428], "female": [155, 357] },
-      "explain_high": "偏高与饮食结构关系密切，也可能引发痛风。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R01"
-    },
-    {
-      "id": "egfr", "standard_name": "估算肾小球滤过率", "panel": "肾功能",
-      "aliases": ["eGFR", "肾小球滤过率"],
-      "unit": "mL/min",
-      "unit_ocr_variants": ["ml/min", "ML/MIN"],
-      "ref": { "default": [90, 120], "male": [90, 120], "female": [90, 120] },
-      "explain_high": "偏高临床意义通常不大。",
-      "explain_low": "偏低提示肾功能减退。",
-      "redline": "R07"
-    },
-
-    {
-      "id": "tc", "standard_name": "总胆固醇", "panel": "血脂",
-      "aliases": ["TC", "总胆固醇", "胆固醇"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [3.1, 5.2], "male": [3.1, 5.2], "female": [3.1, 5.2] },
-      "explain_high": "偏高与心血管风险相关。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R04"
-    },
-    {
-      "id": "tg", "standard_name": "甘油三酯", "panel": "血脂",
-      "aliases": ["TG", "甘油三酯", "三酰甘油"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [0.45, 1.70], "male": [0.45, 1.70], "female": [0.45, 1.70] },
-      "explain_high": "偏高与饮食、饮酒、代谢都有关系。",
-      "explain_low": "偏低临床意义通常不大。",
-      "redline": "R04"
-    },
-    {
-      "id": "hdl", "standard_name": "高密度脂蛋白胆固醇", "panel": "血脂",
-      "aliases": ["HDL-C", "高密度脂蛋白", "好胆固醇"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [1.04, 1.55], "male": [1.04, 1.55], "female": [1.04, 1.55] },
-      "explain_high": "偏高通常是好事。",
-      "explain_low": "偏低时心血管风险相对上升。",
-      "redline": "R04"
-    },
-    {
-      "id": "ldl", "standard_name": "低密度脂蛋白胆固醇", "panel": "血脂",
-      "aliases": ["LDL-C", "低密度脂蛋白", "坏胆固醇"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L", "mmo1/L"],
-      "ref": { "default": [1.50, 3.40], "male": [1.50, 3.40], "female": [1.50, 3.40] },
-      "explain_high": "偏高是心血管风险的重要指标。",
-      "explain_low": "偏低通常是好事。",
-      "redline": "R04"
-    },
-
-    {
-      "id": "na", "standard_name": "钠", "panel": "电解质",
-      "aliases": ["Na", "钠", "血钠"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L"],
-      "ref": { "default": [136, 145], "male": [136, 145], "female": [136, 145] },
-      "explain_high": "偏高可能与饮水不足或盐摄入过多有关。",
-      "explain_low": "偏低需排查原因。",
-      "redline": null
-    },
-    {
-      "id": "k", "standard_name": "钾", "panel": "电解质",
-      "aliases": ["K", "钾", "血钾"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L"],
-      "ref": { "default": [3.5, 5.1], "male": [3.5, 5.1], "female": [3.5, 5.1] },
-      "explain_high": "偏高需及时就医。",
-      "explain_low": "偏低可能引起乏力、心律问题。",
-      "redline": null
-    },
-    {
-      "id": "ca", "standard_name": "钙", "panel": "电解质",
-      "aliases": ["Ca", "钙", "血钙"],
-      "unit": "mmol/L",
-      "unit_ocr_variants": ["mmol/l", "MMOL/L"],
-      "ref": { "default": [2.15, 2.55], "male": [2.15, 2.55], "female": [2.15, 2.55] },
-      "explain_high": "偏高需排查甲状旁腺等原因。",
-      "explain_low": "偏低与骨健康相关。",
-      "redline": null
-    },
-
-    {
-      "id": "tsh", "standard_name": "促甲状腺激素", "panel": "甲状腺",
-      "aliases": ["TSH", "促甲状腺激素"],
-      "unit": "mIU/L",
-      "unit_ocr_variants": ["mIU/l", "uIU/mL", "mlU/L"],
-      "ref": { "default": [0.55, 4.78], "male": [0.55, 4.78], "female": [0.55, 4.78] },
-      "explain_high": "偏高提示甲状腺功能可能减退。",
-      "explain_low": "偏低提示甲状腺功能可能亢进。",
-      "redline": null,
-      "note": "甲状腺相关不做饮食映射，一律转为问诊提示。碘的边界容易踩雷。"
-    },
-    {
-      "id": "ft3", "standard_name": "游离三碘甲状腺原氨酸", "panel": "甲状腺",
-      "aliases": ["FT3", "游离T3"],
-      "unit": "pmol/L",
-      "unit_ocr_variants": ["pmol/l", "PMOL/L"],
-      "ref": { "default": [3.5, 6.5], "male": [3.5, 6.5], "female": [3.5, 6.5] },
-      "explain_high": "偏高提示甲亢可能。",
-      "explain_low": "偏低提示甲减可能。",
-      "redline": null,
-      "note": "甲状腺相关不做饮食映射，一律转为问诊提示。"
-    },
-    {
-      "id": "ft4", "standard_name": "游离甲状腺素", "panel": "甲状腺",
-      "aliases": ["FT4", "游离T4"],
-      "unit": "pmol/L",
-      "unit_ocr_variants": ["pmol/l", "PMOL/L"],
-      "ref": { "default": [11.5, 22.7], "male": [11.5, 22.7], "female": [11.5, 22.7] },
-      "explain_high": "偏高提示甲亢可能。",
-      "explain_low": "偏低提示甲减可能。",
-      "redline": null,
-      "note": "甲状腺相关不做饮食映射，一律转为问诊提示。"
-    },
-
-    {
-      "id": "u_protein", "standard_name": "尿蛋白", "panel": "尿常规",
-      "aliases": ["PRO", "尿蛋白", "蛋白质"],
-      "unit": "定性",
-      "unit_ocr_variants": [],
-      "ref": { "default": null, "male": null, "female": null },
-      "ref_text": "阴性（-）",
-      "explain_high": "出现阳性需复查，可能与肾脏有关。",
-      "explain_low": "阴性为正常。",
-      "redline": "R07"
-    },
-    {
-      "id": "u_glucose", "standard_name": "尿糖", "panel": "尿常规",
-      "aliases": ["尿糖", "尿葡萄糖", "尿GLU"],
-      "unit": "定性",
-      "unit_ocr_variants": [],
-      "ref": { "default": null, "male": null, "female": null },
-      "ref_text": "阴性（-）",
-      "explain_high": "出现阳性需关注血糖。",
-      "explain_low": "阴性为正常。",
-      "redline": "R02"
-    },
-    {
-      "id": "u_ph", "standard_name": "尿酸碱度", "panel": "尿常规",
-      "aliases": ["pH(尿)", "尿酸碱度", "尿PH"],
-      "unit": "定性",
-      "unit_ocr_variants": ["PH"],
-      "ref": { "default": [4.5, 8.0], "male": [4.5, 8.0], "female": [4.5, 8.0] },
-      "explain_high": "偏碱需结合其他项目判断。",
-      "explain_low": "偏酸常见于饮食结构偏肉食。",
-      "redline": null
-    },
-    {
-      "id": "u_wbc", "standard_name": "尿白细胞", "panel": "尿常规",
-      "aliases": ["尿白细胞", "尿WBC", "LEU", "白细胞酯酶"],
-      "alias_note": "绝不能用「WBC(尿)」这类写法：归一化会去掉括号，变成 WBC，与血常规的白细胞计数撞车，且字典索引是后写覆盖前写，会导致血常规指标被误判成尿检项目。",
-      "unit": "定性",
-      "unit_ocr_variants": [],
-      "ref": { "default": null, "male": null, "female": null },
-      "ref_text": "阴性（-）",
-      "explain_high": "阳性提示可能存在尿路感染。",
-      "explain_low": "阴性为正常。",
-      "redline": null
-    },
-    {
-      "id": "u_rbc", "standard_name": "尿红细胞", "panel": "尿常规",
-      "aliases": ["尿红细胞", "尿RBC", "BLD", "尿潜血"],
-      "unit": "定性",
-      "unit_ocr_variants": [],
-      "ref": { "default": null, "male": null, "female": null },
-      "ref_text": "阴性（-）",
-      "explain_high": "阳性需复查，排除泌尿系统问题。",
-      "explain_low": "阴性为正常。",
-      "redline": null
-    }
-  ]
+ "version": "0.1.0",
+ "updated": "2026-10-17",
+ "source_primary": "参考数据/指标参考区间_种子表.md（源自 H1an1/health-coach，MIT License）",
+ "source_note": "本字典在 MIT 种子表基础上做了中文别名补全、单位本地化，并新增 unit_ocr_variants 与 redline 两个原创字段。区间以中国医院常见印刷值为准，种子表仅作别名映射与缺项兜底。",
+ "coverage_note": "首批 40 项，覆盖血常规、生化、血脂、糖代谢、尿常规五类常见体检项目，并优先保证 7 条红线规则的触发指标齐全。后续按真实报告出现的指标扩充至约 120 项。 2026-10-17 依据真实报告实测（tests/real_bench.py）补充血常规五分类计数与血小板三项，并补入真实报告中的倒装名与 OCR 误认形式（如「平均血红蛋自」）。",
+ "markers": [
+  {
+   "id": "wbc",
+   "standard_name": "白细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "WBC",
+    "白细胞",
+    "白细胞数",
+    "白血球"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×10°/L",
+    "×109/L",
+    "10^9/L",
+    "×10/L",
+    "10⁹/L"
+   ],
+   "ref": {
+    "default": [
+     3.5,
+     9.5
+    ],
+    "male": [
+     3.5,
+     9.5
+    ],
+    "female": [
+     3.5,
+     9.5
+    ]
+   },
+   "explain_high": "常在感染或炎症时升高。",
+   "explain_low": "偏低时抵抗力可能下降。",
+   "redline": null
+  },
+  {
+   "id": "rbc",
+   "standard_name": "红细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "RBC",
+    "红细胞",
+    "红血球",
+    "红细胞数"
+   ],
+   "unit": "×10¹²/L",
+   "unit_ocr_variants": [
+    "×1012/L",
+    "×101/L",
+    "10^12/L",
+    "×10²/L"
+   ],
+   "ref": {
+    "default": [
+     3.8,
+     5.1
+    ],
+    "male": [
+     4.3,
+     5.8
+    ],
+    "female": [
+     3.8,
+     5.1
+    ]
+   },
+   "explain_high": "偏高可能与脱水、血液浓缩有关。",
+   "explain_low": "偏低常见于贫血。",
+   "redline": null
+  },
+  {
+   "id": "hb",
+   "standard_name": "血红蛋白",
+   "panel": "血常规",
+   "aliases": [
+    "Hb",
+    "HGB",
+    "血红蛋白",
+    "血色素",
+    "血红蛋自"
+   ],
+   "unit": "g/L",
+   "unit_ocr_variants": [
+    "g/l",
+    "G/L",
+    "g/L"
+   ],
+   "ref": {
+    "default": [
+     115,
+     150
+    ],
+    "male": [
+     130,
+     175
+    ],
+    "female": [
+     115,
+     150
+    ]
+   },
+   "explain_high": "偏高可能与脱水、长期缺氧有关。",
+   "explain_low": "偏低提示贫血，常见原因是缺铁。",
+   "redline": "R05"
+  },
+  {
+   "id": "plt",
+   "standard_name": "血小板计数",
+   "panel": "血常规",
+   "aliases": [
+    "PLT",
+    "血小板",
+    "血小板数"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×10°/L",
+    "×109/L",
+    "10^9/L"
+   ],
+   "ref": {
+    "default": [
+     125,
+     350
+    ],
+    "male": [
+     125,
+     350
+    ],
+    "female": [
+     125,
+     350
+    ]
+   },
+   "explain_high": "偏高可能增加凝血风险。",
+   "explain_low": "偏低时出血风险上升。",
+   "redline": null
+  },
+  {
+   "id": "hct",
+   "standard_name": "红细胞压积",
+   "panel": "血常规",
+   "aliases": [
+    "HCT",
+    "红细胞压积",
+    "血细胞比容"
+   ],
+   "unit": "L/L",
+   "unit_ocr_variants": [
+    "L/l",
+    "l/L"
+   ],
+   "ref": {
+    "default": [
+     0.36,
+     0.5
+    ],
+    "male": [
+     0.4,
+     0.5
+    ],
+    "female": [
+     0.36,
+     0.44
+    ]
+   },
+   "explain_high": "偏高常见于脱水。",
+   "explain_low": "偏低常见于贫血。",
+   "redline": null
+  },
+  {
+   "id": "mcv",
+   "standard_name": "平均红细胞体积",
+   "panel": "血常规",
+   "aliases": [
+    "MCV",
+    "红细胞平均体积"
+   ],
+   "unit": "fL",
+   "unit_ocr_variants": [
+    "FL",
+    "fl"
+   ],
+   "ref": {
+    "default": [
+     80,
+     100
+    ],
+    "male": [
+     80,
+     100
+    ],
+    "female": [
+     80,
+     100
+    ]
+   },
+   "explain_high": "偏大常见于缺乏叶酸或维生素 B12。",
+   "explain_low": "偏小常见于缺铁。",
+   "redline": null
+  },
+  {
+   "id": "mch",
+   "standard_name": "平均红细胞血红蛋白量",
+   "panel": "血常规",
+   "aliases": [
+    "MCH",
+    "平均血红蛋自",
+    "红细胞平均血红蛋白量"
+   ],
+   "unit": "pg",
+   "unit_ocr_variants": [
+    "PG"
+   ],
+   "ref": {
+    "default": [
+     27,
+     34
+    ],
+    "male": [
+     27,
+     34
+    ],
+    "female": [
+     27,
+     34
+    ]
+   },
+   "explain_high": "偏大常见于巨幼细胞性贫血。",
+   "explain_low": "偏小常见于缺铁。",
+   "redline": null
+  },
+  {
+   "id": "mchc",
+   "standard_name": "平均红细胞血红蛋白浓度",
+   "panel": "血常规",
+   "aliases": [
+    "MCHC",
+    "平均血红蛋自浓度"
+   ],
+   "unit": "g/L",
+   "unit_ocr_variants": [
+    "g/l"
+   ],
+   "ref": {
+    "default": [
+     320,
+     360
+    ],
+    "male": [
+     320,
+     360
+    ],
+    "female": [
+     320,
+     360
+    ]
+   },
+   "explain_high": "偏高临床意义有限，需结合其他指标。",
+   "explain_low": "偏低常见于缺铁性贫血。",
+   "redline": null
+  },
+  {
+   "id": "rdw",
+   "standard_name": "红细胞分布宽度",
+   "panel": "血常规",
+   "aliases": [
+    "RDW"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     11.5,
+     14.5
+    ],
+    "male": [
+     11.5,
+     14.5
+    ],
+    "female": [
+     11.5,
+     14.5
+    ]
+   },
+   "explain_high": "偏大提示红细胞大小不均。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "lymph_pct",
+   "standard_name": "淋巴细胞百分比",
+   "panel": "血常规",
+   "aliases": [
+    "LYMPH%",
+    "淋巴细胞比率",
+    "淋巴细胞百分数"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     20,
+     50
+    ],
+    "male": [
+     20,
+     50
+    ],
+    "female": [
+     20,
+     50
+    ]
+   },
+   "explain_high": "偏高常见于病毒感染。",
+   "explain_low": "偏低需结合白细胞总数判断。",
+   "redline": null
+  },
+  {
+   "id": "neut_pct",
+   "standard_name": "中性粒细胞百分比",
+   "panel": "血常规",
+   "aliases": [
+    "NEUT%",
+    "中性粒细胞比率",
+    "中性粒细胞百分数"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     40,
+     75
+    ],
+    "male": [
+     40,
+     75
+    ],
+    "female": [
+     40,
+     75
+    ]
+   },
+   "explain_high": "偏高常见于细菌感染。",
+   "explain_low": "偏低需结合白细胞总数判断。",
+   "redline": null
+  },
+  {
+   "id": "eos_pct",
+   "standard_name": "嗜酸性粒细胞百分比",
+   "panel": "血常规",
+   "aliases": [
+    "EOS%",
+    "嗜酸性粒细胞比率"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     0.5,
+     5.0
+    ],
+    "male": [
+     0.5,
+     5.0
+    ],
+    "female": [
+     0.5,
+     5.0
+    ]
+   },
+   "explain_high": "偏高常见于过敏或寄生虫感染。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "glu",
+   "standard_name": "空腹血糖",
+   "panel": "糖代谢",
+   "aliases": [
+    "GLU",
+    "血糖",
+    "空腹血糖",
+    "葡萄糖",
+    "FPG"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     3.9,
+     6.1
+    ],
+    "male": [
+     3.9,
+     6.1
+    ],
+    "female": [
+     3.9,
+     6.1
+    ]
+   },
+   "explain_high": "偏高提示血糖代谢异常，需要关注。",
+   "explain_low": "偏低可能出现低血糖症状。",
+   "redline": "R02"
+  },
+  {
+   "id": "hba1c",
+   "standard_name": "糖化血红蛋白",
+   "panel": "糖代谢",
+   "aliases": [
+    "HbA1c",
+    "糖化血红蛋白",
+    "糖化"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     4.0,
+     6.0
+    ],
+    "male": [
+     4.0,
+     6.0
+    ],
+    "female": [
+     4.0,
+     6.0
+    ]
+   },
+   "explain_high": "反映近两三个月的平均血糖水平，偏高需重视。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R02"
+  },
+  {
+   "id": "alt",
+   "standard_name": "谷丙转氨酶",
+   "panel": "肝功能",
+   "aliases": [
+    "ALT",
+    "GPT",
+    "谷丙转氨酶",
+    "丙氨酸氨基转移酶"
+   ],
+   "unit": "U/L",
+   "unit_ocr_variants": [
+    "U/l",
+    "u/L",
+    "IU/L"
+   ],
+   "ref": {
+    "default": [
+     9,
+     50
+    ],
+    "male": [
+     9,
+     50
+    ],
+    "female": [
+     9,
+     50
+    ]
+   },
+   "explain_high": "偏高提示肝细胞可能受损，常见与脂肪肝、饮酒、药物有关。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R06"
+  },
+  {
+   "id": "ast",
+   "standard_name": "谷草转氨酶",
+   "panel": "肝功能",
+   "aliases": [
+    "AST",
+    "GOT",
+    "谷草转氨酶",
+    "天门冬氨酸氨基转移酶"
+   ],
+   "unit": "U/L",
+   "unit_ocr_variants": [
+    "U/l",
+    "u/L",
+    "IU/L"
+   ],
+   "ref": {
+    "default": [
+     15,
+     40
+    ],
+    "male": [
+     15,
+     40
+    ],
+    "female": [
+     15,
+     40
+    ]
+   },
+   "explain_high": "偏高提示肝或肌肉可能受损。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R06"
+  },
+  {
+   "id": "ggt",
+   "standard_name": "谷氨酰转肽酶",
+   "panel": "肝功能",
+   "aliases": [
+    "GGT",
+    "γ-GT",
+    "谷氨酰转肽酶",
+    "γ-谷氨酰转移酶"
+   ],
+   "unit": "U/L",
+   "unit_ocr_variants": [
+    "U/l",
+    "u/L",
+    "r-GT",
+    "γGT"
+   ],
+   "ref": {
+    "default": [
+     8,
+     61
+    ],
+    "male": [
+     11,
+     61
+    ],
+    "female": [
+     8,
+     40
+    ]
+   },
+   "explain_high": "偏高与饮酒、肝胆疾病关系较密切。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R06"
+  },
+  {
+   "id": "alp",
+   "standard_name": "碱性磷酸酶",
+   "panel": "肝功能",
+   "aliases": [
+    "ALP",
+    "AKP",
+    "碱性磷酸酶"
+   ],
+   "unit": "U/L",
+   "unit_ocr_variants": [
+    "U/l",
+    "u/L"
+   ],
+   "ref": {
+    "default": [
+     45,
+     125
+    ],
+    "male": [
+     45,
+     125
+    ],
+    "female": [
+     45,
+     125
+    ]
+   },
+   "explain_high": "偏高可能与肝胆或骨骼问题有关。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "tbil",
+   "standard_name": "总胆红素",
+   "panel": "肝功能",
+   "aliases": [
+    "TBIL",
+    "总胆红素",
+    "胆红素总量"
+   ],
+   "unit": "μmol/L",
+   "unit_ocr_variants": [
+    "umol/L",
+    "μmo1/L",
+    "umo1/L",
+    "umol/l"
+   ],
+   "ref": {
+    "default": [
+     3.4,
+     20.5
+    ],
+    "male": [
+     3.4,
+     20.5
+    ],
+    "female": [
+     3.4,
+     20.5
+    ]
+   },
+   "explain_high": "偏高可能出现黄疸，需结合直接胆红素判断。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "dbil",
+   "standard_name": "直接胆红素",
+   "panel": "肝功能",
+   "aliases": [
+    "DBIL",
+    "直接胆红素",
+    "结合胆红素"
+   ],
+   "unit": "μmol/L",
+   "unit_ocr_variants": [
+    "umol/L",
+    "μmo1/L",
+    "umo1/L"
+   ],
+   "ref": {
+    "default": [
+     0.0,
+     6.8
+    ],
+    "male": [
+     0.0,
+     6.8
+    ],
+    "female": [
+     0.0,
+     6.8
+    ]
+   },
+   "explain_high": "偏高多提示胆道排泄不畅。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "alb",
+   "standard_name": "白蛋白",
+   "panel": "肝功能",
+   "aliases": [
+    "ALB",
+    "白蛋白",
+    "清蛋白"
+   ],
+   "unit": "g/L",
+   "unit_ocr_variants": [
+    "g/l",
+    "G/L"
+   ],
+   "ref": {
+    "default": [
+     40,
+     55
+    ],
+    "male": [
+     40,
+     55
+    ],
+    "female": [
+     40,
+     55
+    ]
+   },
+   "explain_high": "偏高常见于脱水。",
+   "explain_low": "偏低可能与营养或肝脏合成能力有关。",
+   "redline": null
+  },
+  {
+   "id": "tp",
+   "standard_name": "总蛋白",
+   "panel": "肝功能",
+   "aliases": [
+    "TP",
+    "总蛋白"
+   ],
+   "unit": "g/L",
+   "unit_ocr_variants": [
+    "g/l",
+    "G/L"
+   ],
+   "ref": {
+    "default": [
+     65,
+     85
+    ],
+    "male": [
+     65,
+     85
+    ],
+    "female": [
+     65,
+     85
+    ]
+   },
+   "explain_high": "偏高常见于脱水。",
+   "explain_low": "偏低可能与营养或肝脏合成能力有关。",
+   "redline": null
+  },
+  {
+   "id": "bun",
+   "standard_name": "尿素氮",
+   "panel": "肾功能",
+   "aliases": [
+    "BUN",
+    "尿素氮",
+    "尿素"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     2.9,
+     8.2
+    ],
+    "male": [
+     2.9,
+     8.2
+    ],
+    "female": [
+     2.9,
+     8.2
+    ]
+   },
+   "explain_high": "偏高提示肾功能或饮水状态需关注。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": null
+  },
+  {
+   "id": "cr",
+   "standard_name": "肌酐",
+   "panel": "肾功能",
+   "aliases": [
+    "Cr",
+    "CREA",
+    "肌酐",
+    "血肌酐"
+   ],
+   "unit": "μmol/L",
+   "unit_ocr_variants": [
+    "umol/L",
+    "μmo1/L",
+    "umo1/L"
+   ],
+   "ref": {
+    "default": [
+     44,
+     133
+    ],
+    "male": [
+     57,
+     111
+    ],
+    "female": [
+     44,
+     97
+    ]
+   },
+   "explain_high": "偏高提示肾功能需要关注。",
+   "explain_low": "偏低常见于肌肉量偏少。",
+   "redline": "R07"
+  },
+  {
+   "id": "ua",
+   "standard_name": "尿酸",
+   "panel": "肾功能",
+   "aliases": [
+    "UA",
+    "尿酸",
+    "血尿酸"
+   ],
+   "unit": "μmol/L",
+   "unit_ocr_variants": [
+    "umol/L",
+    "μmo1/L",
+    "umo1/L",
+    "umol/l"
+   ],
+   "ref": {
+    "default": [
+     155,
+     428
+    ],
+    "male": [
+     208,
+     428
+    ],
+    "female": [
+     155,
+     357
+    ]
+   },
+   "explain_high": "偏高与饮食结构关系密切，也可能引发痛风。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R01"
+  },
+  {
+   "id": "egfr",
+   "standard_name": "估算肾小球滤过率",
+   "panel": "肾功能",
+   "aliases": [
+    "eGFR",
+    "肾小球滤过率"
+   ],
+   "unit": "mL/min",
+   "unit_ocr_variants": [
+    "ml/min",
+    "ML/MIN"
+   ],
+   "ref": {
+    "default": [
+     90,
+     120
+    ],
+    "male": [
+     90,
+     120
+    ],
+    "female": [
+     90,
+     120
+    ]
+   },
+   "explain_high": "偏高临床意义通常不大。",
+   "explain_low": "偏低提示肾功能减退。",
+   "redline": "R07"
+  },
+  {
+   "id": "tc",
+   "standard_name": "总胆固醇",
+   "panel": "血脂",
+   "aliases": [
+    "TC",
+    "总胆固醇",
+    "胆固醇"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     3.1,
+     5.2
+    ],
+    "male": [
+     3.1,
+     5.2
+    ],
+    "female": [
+     3.1,
+     5.2
+    ]
+   },
+   "explain_high": "偏高与心血管风险相关。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R04"
+  },
+  {
+   "id": "tg",
+   "standard_name": "甘油三酯",
+   "panel": "血脂",
+   "aliases": [
+    "TG",
+    "甘油三酯",
+    "三酰甘油"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     0.45,
+     1.7
+    ],
+    "male": [
+     0.45,
+     1.7
+    ],
+    "female": [
+     0.45,
+     1.7
+    ]
+   },
+   "explain_high": "偏高与饮食、饮酒、代谢都有关系。",
+   "explain_low": "偏低临床意义通常不大。",
+   "redline": "R04"
+  },
+  {
+   "id": "hdl",
+   "standard_name": "高密度脂蛋白胆固醇",
+   "panel": "血脂",
+   "aliases": [
+    "HDL-C",
+    "高密度脂蛋白",
+    "好胆固醇"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     1.04,
+     1.55
+    ],
+    "male": [
+     1.04,
+     1.55
+    ],
+    "female": [
+     1.04,
+     1.55
+    ]
+   },
+   "explain_high": "偏高通常是好事。",
+   "explain_low": "偏低时心血管风险相对上升。",
+   "redline": "R04"
+  },
+  {
+   "id": "ldl",
+   "standard_name": "低密度脂蛋白胆固醇",
+   "panel": "血脂",
+   "aliases": [
+    "LDL-C",
+    "低密度脂蛋白",
+    "坏胆固醇"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L",
+    "mmo1/L"
+   ],
+   "ref": {
+    "default": [
+     1.5,
+     3.4
+    ],
+    "male": [
+     1.5,
+     3.4
+    ],
+    "female": [
+     1.5,
+     3.4
+    ]
+   },
+   "explain_high": "偏高是心血管风险的重要指标。",
+   "explain_low": "偏低通常是好事。",
+   "redline": "R04"
+  },
+  {
+   "id": "na",
+   "standard_name": "钠",
+   "panel": "电解质",
+   "aliases": [
+    "Na",
+    "钠",
+    "血钠"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L"
+   ],
+   "ref": {
+    "default": [
+     136,
+     145
+    ],
+    "male": [
+     136,
+     145
+    ],
+    "female": [
+     136,
+     145
+    ]
+   },
+   "explain_high": "偏高可能与饮水不足或盐摄入过多有关。",
+   "explain_low": "偏低需排查原因。",
+   "redline": null
+  },
+  {
+   "id": "k",
+   "standard_name": "钾",
+   "panel": "电解质",
+   "aliases": [
+    "K",
+    "钾",
+    "血钾"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L"
+   ],
+   "ref": {
+    "default": [
+     3.5,
+     5.1
+    ],
+    "male": [
+     3.5,
+     5.1
+    ],
+    "female": [
+     3.5,
+     5.1
+    ]
+   },
+   "explain_high": "偏高需及时就医。",
+   "explain_low": "偏低可能引起乏力、心律问题。",
+   "redline": null
+  },
+  {
+   "id": "ca",
+   "standard_name": "钙",
+   "panel": "电解质",
+   "aliases": [
+    "Ca",
+    "钙",
+    "血钙"
+   ],
+   "unit": "mmol/L",
+   "unit_ocr_variants": [
+    "mmol/l",
+    "MMOL/L"
+   ],
+   "ref": {
+    "default": [
+     2.15,
+     2.55
+    ],
+    "male": [
+     2.15,
+     2.55
+    ],
+    "female": [
+     2.15,
+     2.55
+    ]
+   },
+   "explain_high": "偏高需排查甲状旁腺等原因。",
+   "explain_low": "偏低与骨健康相关。",
+   "redline": null
+  },
+  {
+   "id": "tsh",
+   "standard_name": "促甲状腺激素",
+   "panel": "甲状腺",
+   "aliases": [
+    "TSH",
+    "促甲状腺激素"
+   ],
+   "unit": "mIU/L",
+   "unit_ocr_variants": [
+    "mIU/l",
+    "uIU/mL",
+    "mlU/L"
+   ],
+   "ref": {
+    "default": [
+     0.55,
+     4.78
+    ],
+    "male": [
+     0.55,
+     4.78
+    ],
+    "female": [
+     0.55,
+     4.78
+    ]
+   },
+   "explain_high": "偏高提示甲状腺功能可能减退。",
+   "explain_low": "偏低提示甲状腺功能可能亢进。",
+   "redline": null,
+   "note": "甲状腺相关不做饮食映射，一律转为问诊提示。碘的边界容易踩雷。"
+  },
+  {
+   "id": "ft3",
+   "standard_name": "游离三碘甲状腺原氨酸",
+   "panel": "甲状腺",
+   "aliases": [
+    "FT3",
+    "游离T3"
+   ],
+   "unit": "pmol/L",
+   "unit_ocr_variants": [
+    "pmol/l",
+    "PMOL/L"
+   ],
+   "ref": {
+    "default": [
+     3.5,
+     6.5
+    ],
+    "male": [
+     3.5,
+     6.5
+    ],
+    "female": [
+     3.5,
+     6.5
+    ]
+   },
+   "explain_high": "偏高提示甲亢可能。",
+   "explain_low": "偏低提示甲减可能。",
+   "redline": null,
+   "note": "甲状腺相关不做饮食映射，一律转为问诊提示。"
+  },
+  {
+   "id": "ft4",
+   "standard_name": "游离甲状腺素",
+   "panel": "甲状腺",
+   "aliases": [
+    "FT4",
+    "游离T4"
+   ],
+   "unit": "pmol/L",
+   "unit_ocr_variants": [
+    "pmol/l",
+    "PMOL/L"
+   ],
+   "ref": {
+    "default": [
+     11.5,
+     22.7
+    ],
+    "male": [
+     11.5,
+     22.7
+    ],
+    "female": [
+     11.5,
+     22.7
+    ]
+   },
+   "explain_high": "偏高提示甲亢可能。",
+   "explain_low": "偏低提示甲减可能。",
+   "redline": null,
+   "note": "甲状腺相关不做饮食映射，一律转为问诊提示。"
+  },
+  {
+   "id": "u_protein",
+   "standard_name": "尿蛋白",
+   "panel": "尿常规",
+   "aliases": [
+    "PRO",
+    "尿蛋白",
+    "蛋白质"
+   ],
+   "unit": "定性",
+   "unit_ocr_variants": [],
+   "ref": {
+    "default": null,
+    "male": null,
+    "female": null
+   },
+   "ref_text": "阴性（-）",
+   "explain_high": "出现阳性需复查，可能与肾脏有关。",
+   "explain_low": "阴性为正常。",
+   "redline": "R07"
+  },
+  {
+   "id": "u_glucose",
+   "standard_name": "尿糖",
+   "panel": "尿常规",
+   "aliases": [
+    "尿糖",
+    "尿葡萄糖",
+    "尿GLU"
+   ],
+   "unit": "定性",
+   "unit_ocr_variants": [],
+   "ref": {
+    "default": null,
+    "male": null,
+    "female": null
+   },
+   "ref_text": "阴性（-）",
+   "explain_high": "出现阳性需关注血糖。",
+   "explain_low": "阴性为正常。",
+   "redline": "R02"
+  },
+  {
+   "id": "u_ph",
+   "standard_name": "尿酸碱度",
+   "panel": "尿常规",
+   "aliases": [
+    "pH(尿)",
+    "尿酸碱度",
+    "尿PH"
+   ],
+   "unit": "定性",
+   "unit_ocr_variants": [
+    "PH"
+   ],
+   "ref": {
+    "default": [
+     4.5,
+     8.0
+    ],
+    "male": [
+     4.5,
+     8.0
+    ],
+    "female": [
+     4.5,
+     8.0
+    ]
+   },
+   "explain_high": "偏碱需结合其他项目判断。",
+   "explain_low": "偏酸常见于饮食结构偏肉食。",
+   "redline": null
+  },
+  {
+   "id": "u_wbc",
+   "standard_name": "尿白细胞",
+   "panel": "尿常规",
+   "aliases": [
+    "尿白细胞",
+    "尿WBC",
+    "LEU",
+    "白细胞酯酶"
+   ],
+   "alias_note": "绝不能用「WBC(尿)」这类写法：归一化会去掉括号，变成 WBC，与血常规的白细胞计数撞车，且字典索引是后写覆盖前写，会导致血常规指标被误判成尿检项目。",
+   "unit": "定性",
+   "unit_ocr_variants": [],
+   "ref": {
+    "default": null,
+    "male": null,
+    "female": null
+   },
+   "ref_text": "阴性（-）",
+   "explain_high": "阳性提示可能存在尿路感染。",
+   "explain_low": "阴性为正常。",
+   "redline": null
+  },
+  {
+   "id": "u_rbc",
+   "standard_name": "尿红细胞",
+   "panel": "尿常规",
+   "aliases": [
+    "尿红细胞",
+    "尿RBC",
+    "BLD",
+    "尿潜血"
+   ],
+   "unit": "定性",
+   "unit_ocr_variants": [],
+   "ref": {
+    "default": null,
+    "male": null,
+    "female": null
+   },
+   "ref_text": "阴性（-）",
+   "explain_high": "阳性需复查，排除泌尿系统问题。",
+   "explain_low": "阴性为正常。",
+   "redline": null
+  },
+  {
+   "id": "neut",
+   "standard_name": "中性粒细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "中性粒细胞计数",
+    "NEUT",
+    "NEUT#",
+    "中性粒细胞绝对值",
+    "中性粒细胞数"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×109/L",
+    "10^9/L",
+    "×10°/L",
+    "10⁹/L"
+   ],
+   "ref": {
+    "default": [
+     1.8,
+     6.3
+    ],
+    "male": [
+     1.8,
+     6.3
+    ],
+    "female": [
+     1.8,
+     6.3
+    ]
+   },
+   "explain_high": "升高常见于细菌感染或炎症。",
+   "explain_low": "偏低时抵抗力可能下降，感染风险升高。",
+   "redline": null
+  },
+  {
+   "id": "lymph",
+   "standard_name": "淋巴细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "淋巴细胞计数",
+    "LYMPH",
+    "LYMPH#",
+    "淋巴细胞绝对值",
+    "淋巴细胞数"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×109/L",
+    "10^9/L",
+    "10⁹/L"
+   ],
+   "ref": {
+    "default": [
+     1.1,
+     3.2
+    ],
+    "male": [
+     1.1,
+     3.2
+    ],
+    "female": [
+     1.1,
+     3.2
+    ]
+   },
+   "explain_high": "升高常见于病毒感染。",
+   "explain_low": "偏低可能与免疫力下降有关。",
+   "redline": null
+  },
+  {
+   "id": "mono",
+   "standard_name": "单核细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "单核细胞计数",
+    "MONO",
+    "MONO#",
+    "单核细胞绝对值"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×109/L",
+    "10^9/L"
+   ],
+   "ref": {
+    "default": [
+     0.1,
+     0.6
+    ],
+    "male": [
+     0.1,
+     0.6
+    ],
+    "female": [
+     0.1,
+     0.6
+    ]
+   },
+   "explain_high": "升高可见于某些感染的恢复期。",
+   "explain_low": "偏低通常临床意义有限。",
+   "redline": null
+  },
+  {
+   "id": "eos",
+   "standard_name": "嗜酸性粒细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "嗜酸性粒细胞计数",
+    "EO",
+    "EOS",
+    "EO#",
+    "嗜酸性粒细胞绝对值",
+    "嗜酸性粒细胞百分"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×109/L",
+    "10^9/L"
+   ],
+   "ref": {
+    "default": [
+     0.02,
+     0.52
+    ],
+    "male": [
+     0.02,
+     0.52
+    ],
+    "female": [
+     0.02,
+     0.52
+    ]
+   },
+   "explain_high": "升高常见于过敏或寄生虫感染。",
+   "explain_low": "偏低通常无临床意义。",
+   "redline": null
+  },
+  {
+   "id": "baso",
+   "standard_name": "嗜碱性粒细胞计数",
+   "panel": "血常规",
+   "aliases": [
+    "嗜碱性粒细胞计数",
+    "BASO",
+    "BASO#",
+    "嗜碱性粒细胞绝对值"
+   ],
+   "unit": "×10⁹/L",
+   "unit_ocr_variants": [
+    "×109/L",
+    "10^9/L"
+   ],
+   "ref": {
+    "default": [
+     0.0,
+     0.06
+    ],
+    "male": [
+     0.0,
+     0.06
+    ],
+    "female": [
+     0.0,
+     0.06
+    ]
+   },
+   "explain_high": "升高较少见，需结合临床判断。",
+   "explain_low": "偏低通常无临床意义。",
+   "redline": null
+  },
+  {
+   "id": "mono_p",
+   "standard_name": "单核细胞百分比",
+   "panel": "血常规",
+   "aliases": [
+    "单核细胞百分比",
+    "MONO%",
+    "单核细胞百分率",
+    "单核细胞百分"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     3,
+     10
+    ],
+    "male": [
+     3,
+     10
+    ],
+    "female": [
+     3,
+     10
+    ]
+   },
+   "explain_high": "升高可见于某些慢性感染。",
+   "explain_low": "偏低通常临床意义有限。",
+   "redline": null
+  },
+  {
+   "id": "baso_p",
+   "standard_name": "嗜碱性粒细胞百分比",
+   "panel": "血常规",
+   "aliases": [
+    "嗜碱性粒细胞百分比",
+    "BASO%",
+    "嗜碱性粒细胞百分"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     0,
+     1
+    ],
+    "male": [
+     0,
+     1
+    ],
+    "female": [
+     0,
+     1
+    ]
+   },
+   "explain_high": "升高较少见，需结合临床判断。",
+   "explain_low": "偏低通常无临床意义。",
+   "redline": null
+  },
+  {
+   "id": "pct",
+   "standard_name": "血小板压积",
+   "panel": "血常规",
+   "aliases": [
+    "血小板压积",
+    "PCT"
+   ],
+   "unit": "L/L",
+   "unit_ocr_variants": [
+    "L/l",
+    "l/L"
+   ],
+   "ref": {
+    "default": [
+     0.11,
+     0.28
+    ],
+    "male": [
+     0.11,
+     0.28
+    ],
+    "female": [
+     0.11,
+     0.28
+    ]
+   },
+   "explain_high": "升高可能与血小板增多有关。",
+   "explain_low": "偏低可能与血小板减少有关。",
+   "redline": null
+  },
+  {
+   "id": "pdw",
+   "standard_name": "血小板分布宽度",
+   "panel": "血常规",
+   "aliases": [
+    "血小板分布宽度",
+    "PDW"
+   ],
+   "unit": "%",
+   "unit_ocr_variants": [
+    "%"
+   ],
+   "ref": {
+    "default": [
+     10,
+     18
+    ],
+    "male": [
+     10,
+     18
+    ],
+    "female": [
+     10,
+     18
+    ]
+   },
+   "explain_high": "升高提示血小板大小差异增大。",
+   "explain_low": "偏低通常临床意义有限。",
+   "redline": null
+  },
+  {
+   "id": "mpv",
+   "standard_name": "平均血小板体积",
+   "panel": "血常规",
+   "aliases": [
+    "平均血小板体积",
+    "MPV"
+   ],
+   "unit": "fL",
+   "unit_ocr_variants": [
+    "FL",
+    "fl"
+   ],
+   "ref": {
+    "default": [
+     7,
+     11
+    ],
+    "male": [
+     7,
+     11
+    ],
+    "female": [
+     7,
+     11
+    ]
+   },
+   "explain_high": "血小板偏大，常见于破坏增多后的代偿。",
+   "explain_low": "血小板偏小，需结合血小板计数看。",
+   "redline": null
+  }
+ ]
 }

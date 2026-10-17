@@ -196,8 +196,64 @@ PROVIDERS = {
 DEFAULT_PROVIDER = "rapidocr"
 
 
-def extract_text(path: Path, provider: str = DEFAULT_PROVIDER) -> str:
-    """统一入口：图片 → 文本。"""
+#: OCR 产出低于这个字符数就认为"这张图没读出来"，值得预处理后重试。
+#: 一份正常体检报告至少有十几行指标，不可能只有几十个字符。
+_MIN_TEXT_LEN = 200
+
+#: 预处理放大倍数。实测对比过 1.5x 与 2.0x：
+#: 1.5x 在三类弱图上都是最优（拉得太大会让笔画发虚，反而更难认）。
+_PREP_SCALE = 1.5
+
+
+def preprocess_for_ocr(path: Path) -> Path:
+    """弱图预处理：灰度 → 自动对比度 → 放大 1.5 倍。
+
+    依据（真实报告实测，tests/real_bench.py）：
+        报告在照片里占比小、或整体偏暗时，RapidOCR 几乎读不出字：
+            github_bloodtest_6  原图 17 字符 → 预处理后 307 字符
+            github_bloodtest_3  原图 81 字符 → 预处理后 234 字符
+        而清晰件预处理前后几乎没有变化（842 → 843），
+        所以只在产出不足时才用，不做无差别预处理。
+    """
+    import tempfile
+    from PIL import ImageOps
+
+    im = Image.open(path).convert("L")
+    im = ImageOps.autocontrast(im)
+    w, h = im.size
+    im = im.resize((int(w * _PREP_SCALE), int(h * _PREP_SCALE)), Image.LANCZOS)
+    tmp = Path(tempfile.mkdtemp(prefix="tjzh_ocr_")) / ("prep_" + path.name + ".png")
+    im.save(tmp)
+    return tmp
+
+
+def extract_text(path: Path, provider: str = DEFAULT_PROVIDER,
+                 retry: bool = True) -> str:
+    """统一入口：图片 → 文本。
+
+    retry=True（默认）时启用自适应重试：
+        先用原图 OCR；若产出字符数过少，预处理后再跑一次，取更好的那份。
+        清晰件因此没有任何额外开销——预处理只在"快失败"时才发生。
+    """
     if provider not in PROVIDERS:
         raise ValueError(f"未知 OCR provider: {provider}")
-    return PROVIDERS[provider](path)
+
+    text = PROVIDERS[provider](path)
+    if not retry or len(text.strip()) >= _MIN_TEXT_LEN:
+        return text
+
+    tmp: Path | None = None
+    try:
+        tmp = preprocess_for_ocr(path)
+        retry_text = PROVIDERS[provider](tmp)
+        if len(retry_text.strip()) > len(text.strip()):
+            return retry_text
+    except Exception:                          # noqa: BLE001
+        pass                                   # 预处理失败就用原图结果，不中断链路
+    finally:
+        if tmp:
+            for f in tmp.parent.iterdir():
+                f.unlink(missing_ok=True)
+            tmp.parent.rmdir()
+
+    return text
