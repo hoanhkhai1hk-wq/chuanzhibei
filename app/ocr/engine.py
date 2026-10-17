@@ -227,17 +227,15 @@ def preprocess_for_ocr(path: Path) -> Path:
     return tmp
 
 
-def extract_text(path: Path, provider: str = DEFAULT_PROVIDER,
-                 retry: bool = True) -> str:
-    """统一入口：图片 → 文本。
+#: 原图直接能解析出这么多行，就认为方向没问题，不再试旋转。
+#: 一份真实报告少说十几行指标；设成 4 是为了兼顾"只拍到局部"的照片。
+_MIN_ROWS_NO_ROTATE = 4
 
-    retry=True（默认）时启用自适应重试：
-        先用原图 OCR；若产出字符数过少，预处理后再跑一次，取更好的那份。
-        清晰件因此没有任何额外开销——预处理只在"快失败"时才发生。
-    """
-    if provider not in PROVIDERS:
-        raise ValueError(f"未知 OCR provider: {provider}")
+_ROTATIONS = (90, 180, 270)
 
+
+def _ocr_once(path: Path, provider: str, retry: bool) -> str:
+    """跑一次 OCR，必要时带预处理重试。"""
     text = PROVIDERS[provider](path)
     if not retry or len(text.strip()) >= _MIN_TEXT_LEN:
         return text
@@ -255,5 +253,81 @@ def extract_text(path: Path, provider: str = DEFAULT_PROVIDER,
             for f in tmp.parent.iterdir():
                 f.unlink(missing_ok=True)
             tmp.parent.rmdir()
+    return text
 
+
+def _rotate_to_tmp(path: Path, angle: int) -> Path:
+    import tempfile
+
+    im = Image.open(path)
+    out_dir = Path(tempfile.mkdtemp(prefix="tjzh_rot_"))
+    out = out_dir / f"rot{angle}_{path.name}.png"
+    im.rotate(-angle, expand=True).save(out)
+    return out
+
+
+def _cleanup_tmp(f: Path) -> None:
+    for x in f.parent.iterdir():
+        x.unlink(missing_ok=True)
+    f.parent.rmdir()
+
+
+def _usable_rows(text: str) -> int:
+    """用「解析出的指标行数」当方向的评分。
+
+    为什么不能用 OCR 字符数：实测 bloodtest_1 在 0° 与 270° 下
+    字符数几乎一样（842 vs 857），但解析行数是 2 vs 12——
+    读旋转过的图照样能认出一堆字，只是全串不成行。
+    """
+    from app.ocr.parser import parse_markers      # 局部导入避免模块级循环依赖
+    try:
+        return len(parse_markers(text))
+    except Exception:                          # noqa: BLE001
+        return 0
+
+
+def extract_text(path: Path, provider: str = DEFAULT_PROVIDER,
+                 retry: bool = True, auto_rotate: bool = True) -> str:
+    """统一入口：图片 → 文本。
+
+    两级自适应，都只在"原图不够好"时才付出额外开销：
+
+        1. retry      —— 产出字符过少时，预处理（灰度+对比度+1.5x）再跑一次
+        2. auto_rotate —— 解析出的指标行过少时，试 90/180/270 三个方向取最好
+
+    第 2 级的依据来自真实报告实测：手机拍照的方向千奇百怪，
+    同一份报告的不同照片里，有的横拍有的竖拍。读一张旋转 90° 的图，
+    OCR 照样能认出字（字符数几乎不变），但**串不成行**——
+    于是此前被误诊为"双栏排版跨栏读取"。
+
+        实测 bloodtest_1：0° 解析 2 行 / 命中 1  →  270° 解析 12 行 / 命中 12
+        实测 bloodtest_5：0° 解析 2 行 / 命中 1  →  270° 解析 11 行 / 命中 11
+    """
+    if provider not in PROVIDERS:
+        raise ValueError(f"未知 OCR provider: {provider}")
+
+    text = _ocr_once(path, provider, retry)
+    if not auto_rotate:
+        return text
+
+    best_rows = _usable_rows(text)
+    if best_rows >= _MIN_ROWS_NO_ROTATE:
+        return text                            # 原图方向就是对的，不做无用功
+
+    for angle in _ROTATIONS:
+        tmp: Path | None = None
+        try:
+            tmp = _rotate_to_tmp(path, angle)
+            cand = _ocr_once(tmp, provider, retry)
+            rows = _usable_rows(cand)
+            if rows > best_rows:
+                text, best_rows = cand, rows
+        except Exception:                      # noqa: BLE001
+            continue
+        finally:
+            if tmp:
+                try:
+                    _cleanup_tmp(tmp)
+                except Exception:              # noqa: BLE001
+                    pass
     return text
