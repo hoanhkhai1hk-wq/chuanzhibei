@@ -160,7 +160,7 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
   并修复后升到 **64%**，判定可用率 100%；其中一份真实 22 项血常规
   **11 行全命中、全可判定，检出 3 项异常并命中 1 条日常红线**。
   完整过程、数据表与仍未解决的短板见
-  [tests/ocr_bench/results/真实样本实测.md](tests/ocr_bench/results/真实样本实测.md)
+  [tests/ocr_bench/results/真实样本实测.md](docs/真实样本实测.md)
 - `[x]` **表达层已落地（模板模式）**：无 API Key 也完整可用——逐项解释来自指标
   字典的 `explain_high/low` 字段，问诊清单与「给爸妈说的话」由本地规则生成。
   配置 `DEEPSEEK_API_KEY` 后自动升级为大模型模式，输出须经**数字回溯校验**
