@@ -26,14 +26,26 @@
     extract: null,
     analysis: null,
     explain: null,
+    week: null,           // 第 7 步取回的一周趋势（真实数据，失败时为 null）
+    isLlm: true,          // 表达层是否真在调大模型；由 /api/about 校正，
+                          // 用于让第 6 步的措辞不说假话
   };
 
-  /* ─── 阶段定义 ─── */
+  /* ─── 阶段定义 ───
+     七步对应真实链路，顺序即用户看到的顺序：
+       read     选好文件、装箱上传
+       ocr      /api/extract 在途（服务端此时确实在跑 OCR）
+       redact   /api/extract 返回后，汇报实际抹掉了哪些字段
+       judge    /api/analyze 在途 + 返回（判定高低、匹配红线）
+       verify   /api/explain/stream 在途：大模型写作 + 数字回溯校验
+       write    收到 explain 事件后，正文逐段流式吐出
+       redline  整理红线卡片 + 拉取 /api/week 的一周趋势
+     进度百分比只用于让进度条推进得均匀，不冒充服务端回调。 */
   const STAGE_PCT = {
-    upload: 4, extract: 24, redact: 34, parse: 44,
-    judge: 60, redline: 70, explain: 78,
+    read: 6, ocr: 22, redact: 38, judge: 56,
+    verify: 72, write: 86, redline: 96,
   };
-  const STAGE_ORDER = ['upload', 'extract', 'redact', 'parse', 'judge', 'redline', 'explain'];
+  const STAGE_ORDER = ['read', 'ocr', 'redact', 'judge', 'verify', 'write', 'redline'];
 
   /* ─── 小工具 ─── */
   const FLAG_TEXT = { high: '偏高', low: '偏低', normal: '正常', unknown: '待确认' };
@@ -62,14 +74,26 @@
   }
 
   /* ─── 进度与思考日志 ─── */
+  let progressValue = 0;      // 进度只增不减：SSE 事件的 progress 会乱序到达
+
   function resetProgress() {
     $$('.stage').forEach(s => s.classList.remove('is-active', 'is-done'));
     $('#thinking-log').innerHTML = '';
+    progressValue = 0;
     setProgress(0);
+    // 第 6 步措辞跟着表达层的真实模式走：没配密钥时不能声称在调 DeepSeek
+    const w = $('.stage[data-stage="write"] .s-doing');
+    if (w) {
+      w.textContent = state.isLlm
+        ? '正在让 DeepSeek 写人话解释…'
+        : '正在用本地模板写人话解释…';
+    }
   }
 
   function setProgress(pct) {
     const p = Math.max(0, Math.min(100, Math.round(pct)));
+    if (p < progressValue) return;
+    progressValue = p;
     $('#progress-bar').style.width = p + '%';
     $('#progress-pct').textContent = p + '%';
   }
@@ -87,6 +111,13 @@
   function completeStage(name) {
     const el = $(`.stage[data-stage="${name}"]`);
     if (el) { el.classList.remove('is-active'); el.classList.add('is-done'); }
+  }
+
+  function completeAllStages() {
+    $$('.stage').forEach(el => {
+      el.classList.remove('is-active');
+      el.classList.add('is-done');
+    });
   }
 
   function log(msg) {
@@ -127,29 +158,27 @@
     $('#progress-title').textContent = '正在解读…';
 
     try {
-      /* 1. 上传 + OCR（脱敏与解析在服务端同一次调用内完成） */
-      setStage('upload');
-      log('报告已接收，正在本地处理…');
-      completeStage('upload');
+      /* ── 1 / 2 读取图片 + OCR ──
+         服务端 /api/extract 内部顺序是「读图 → OCR → 脱敏 → 解析」，
+         这里如实对应：请求发出后服务端正在 OCR，所以第 2 步点亮。 */
+      setStage('read');
+      log(`已选「${state.file.name}」，${(state.file.size / 1024).toFixed(0)} KB`);
 
-      setStage('extract');
-      log('正在识别图片中的文字…');
+      setStage('ocr');
+      log('正在调用本地 OCR 引擎识别图片文字…');
       const ex = await postExtract(state.file);
       state.extract = ex;
-      completeStage('extract');
+      completeStage('ocr');
       log(`OCR 完成，提取到 ${ex.rows} 行文本`);
 
-      /* 2. 脱敏与解析的结果由服务端一并返回，此处如实汇报 */
+      /* ── 3 脱敏：返回里带着实际抹掉了哪些字段，照实汇报 ── */
       setStage('redact');
       const fields = (ex.privacy && ex.privacy.redacted_fields) || [];
       log(fields.length
         ? `已抹除个人信息：${fields.join('、')}`
         : '未检测到需要抹除的个人信息');
-      completeStage('redact');
-
-      setStage('parse');
       log(`解析出 ${ex.markers.length} 个指标四元组`);
-      completeStage('parse');
+      completeStage('redact');
 
       if (!ex.markers.length) {
         throw new Error(
@@ -158,9 +187,9 @@
         );
       }
 
-      /* 3. 本地判定 + 红线匹配 */
+      /* ── 4 本地规则引擎：判定高低 + 匹配红线 ── */
       setStage('judge');
-      log('正在查指标字典、比对参考区间…');
+      log('正在查指标字典、比对参考区间、匹配日常红线…');
       const an = await postJson('/api/analyze', { markers: ex.markers, sex: state.sex });
       state.analysis = an;
       completeStage('judge');
@@ -168,24 +197,27 @@
       if (an.unmatched && an.unmatched.length) {
         log(`有 ${an.unmatched.length} 项未收录进字典，已标记为待确认`);
       }
+      const nRedline = (an.redlines || []).length;
+      log(nRedline ? `命中 ${nRedline} 条日常红线` : '未触发日常红线');
 
       /* 判定结果落库：红线成为「今日记录」页的日常对照依据 */
       try {
         const saved = await postJson('/api/report',
           { result: an, sex: state.sex, source: 'upload' });
         state.compare = saved.compare;      // 有上一份报告时返回趋势对比
-        log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
+        log(`已保存到本地档案，激活 ${nRedline} 条日常红线`);
       } catch { /* 落库失败不阻塞解读展示 */ }
 
-      setStage('redline');
-      log(an.redlines.length
-        ? `命中 ${an.redlines.length} 条日常红线`
-        : '未触发日常红线');
-      completeStage('redline');
-
-      /* 4. 表达层（流式） */
-      setStage('explain');
+      /* ── 5 / 6 表达层：校验与写人话由 SSE 真实事件推进 ── */
+      setStage('verify');
+      log('正在把正文里的每个数字回查到本地事实清单…');
       await streamExplain(an);
+
+      /* ── 7 红线卡片 + 一周趋势 ── */
+      await assembleRedlines(an);
+
+      completeAllStages();
+      renderResult(state.explain);
 
     } catch (err) {
       console.error(err);
@@ -203,42 +235,50 @@
     $('#progress-title').textContent = '正在用演示数据跑一遍…';
 
     try {
-      setStage('upload');
+      setStage('read');
       log('正在现场合成一份演示报告…');
+
+      // /api/demo 一次调用里包含「合成 → OCR → 脱敏 → 解析」，
+      // 所以第 2 步从请求发出到返回期间点亮，返回后一并结清第 2、3 步
+      setStage('ocr');
+      log('合成完成，正在调用本地 OCR 引擎识别…');
       const ex = await postJson('/api/demo', { sex: state.sex });
       state.extract = ex;
-      completeStage('upload');
-      completeStage('extract');
-      log(`演示报告已生成，OCR 提取到 ${ex.rows} 行文本`);
+      completeStage('ocr');
+      log(`OCR 完成，提取到 ${ex.rows} 行文本`);
 
       setStage('redact');
       const fields = (ex.privacy && ex.privacy.redacted_fields) || [];
-      log(fields.length ? `已抹除个人信息：${fields.join('、')}` : '未检测到需要抹除的个人信息');
+      log(fields.length
+        ? `已抹除个人信息：${fields.join('、')}`
+        : '演示数据不含个人信息');
+      log(`解析出 ${ex.markers.length} 个指标四元组`);
       completeStage('redact');
 
-      setStage('parse');
-      log(`解析出 ${ex.markers.length} 个指标四元组`);
-      completeStage('parse');
-
       setStage('judge');
+      log('正在查指标字典、比对参考区间、匹配日常红线…');
       const an = await postJson('/api/analyze', { markers: ex.markers, sex: state.sex });
       state.analysis = an;
       completeStage('judge');
       log(`判定完成：${an.matched} 项命中字典，${an.abnormal_count} 项不在参考区间内`);
+      const nRedline = (an.redlines || []).length;
+      log(nRedline ? `命中 ${nRedline} 条日常红线` : '未触发日常红线');
 
       try {
         const saved = await postJson('/api/report',
           { result: an, sex: state.sex, source: 'demo' });
         state.compare = saved.compare;
-        log(`已保存到本地档案，激活 ${an.redlines.length} 条日常红线`);
+        log(`已保存到本地档案，激活 ${nRedline} 条日常红线`);
       } catch { /* 落库失败不阻塞演示 */ }
 
-      setStage('redline');
-      log(an.redlines.length ? `命中 ${an.redlines.length} 条日常红线` : '未触发日常红线');
-      completeStage('redline');
-
-      setStage('explain');
+      setStage('verify');
+      log('正在把正文里的每个数字回查到本地事实清单…');
       await streamExplain(an);
+
+      await assembleRedlines(an);
+
+      completeAllStages();
+      renderResult(state.explain);
     } catch (err) {
       console.error(err);
       $('#progress-title').textContent = '出了点问题';
@@ -248,10 +288,49 @@
     }
   }
 
-  /* ─── 流式解读 ─── */
+  /* ─── 第 7 步：红线卡片 + 一周趋势 ───
+     红线其实在第 4 步就已经算出来了，这一步做的是「整理成可对照的卡片」
+     并把日常层最近七天的真实记录取回来——取不到不影响结果页。 */
+  async function assembleRedlines(analysis) {
+    setStage('redline');
+    const n = (analysis.redlines || []).length;
+    log(n ? `${n} 条红线已整理成可对照的卡片` : '本次没有红线，已如实标注');
+
+    try {
+      const wk = await (await fetch('/api/week?days=7')).json();
+      const series = wk.series || [];
+      const days = series.filter(d => d.meals).length;
+      const hits = series.reduce((a, d) => a + (d.hit_count || 0), 0);
+      state.week = { days, hits };
+      log(`最近七天：${days} 天有记录，累计撞线 ${hits} 次`);
+    } catch {
+      state.week = null;
+    }
+
+    setProgress(100);
+    completeStage('redline');
+  }
+
+  /* ─── 流式解读（同时推进第 5、6 步的真实状态） ───
+     服务端的事件顺序就是真实执行顺序：
+       status/thinking judge → thinking redline*  判定与红线（第 4 步已做完，这里只是复述）
+       —— 阻塞：大模型写作 + 数字回溯校验，校验不过会重写一次 ——
+       thinking explain                            这条发出时校验已有结论
+       token*                                      正文逐段吐出
+       status family → done(payload)
+     因此「校验完成」的分界点就是 explain 事件或第一个 token：
+     在此之前第 5 步转圈，之后第 6 步转圈。 */
   async function streamExplain(analysis) {
     let payload = null;
     let streamed = '';
+    let writing = false;
+
+    const enterWrite = () => {
+      if (writing) return;
+      writing = true;
+      completeStage('verify');
+      setStage('write');
+    };
 
     try {
       const resp = await fetch('/api/explain/stream', {
@@ -278,13 +357,17 @@
             if (!line.startsWith('data: ')) continue;
             let ev;
             try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+
+            if (ev.stage === 'explain' || ev.type === 'token') enterWrite();
             if (ev.message && ev.type !== 'token') log(ev.message);
             if (ev.type === 'token' && ev.message) {
               streamed += ev.message;
               $('#summary-text').textContent = streamed;
             }
+            if (ev.type === 'status' && ev.stage === 'family') completeStage('write');
             if (typeof ev.progress === 'number') {
-              setProgress(78 + ev.progress * 0.22);
+              // 70→88：给第 7 步留出 88→100 的收尾区间，不到终点不冲满
+              setProgress(70 + ev.progress * 0.18);
             }
             if (ev.type === 'done') payload = ev.payload;
           }
@@ -293,12 +376,32 @@
     } catch (e) {
       // SSE 被代理缓冲时走这条路，结果一致，只是没有逐字效果
       log('流式通道不可用，已切换普通请求');
+      enterWrite();
       payload = await postJson('/api/explain', analysis);
     }
 
+    completeStage('write');
     if (!payload) throw new Error('没有收到解读结果，请重试');
+
     state.explain = payload;
-    renderResult(payload);
+    logExplainFacts(payload);
+    return payload;
+  }
+
+  /* 如实汇报表达层的实际情况：走了大模型、还是校验没过退回本地模板。
+     这段日志是「数字不让大模型编」这条铁律在界面上可见的证据。 */
+  function logExplainFacts(payload) {
+    const qs = (payload.report && payload.report.follow_up_questions) || [];
+    const fellBack = qs.some(q => q.includes('本地模板生成') || q.includes('大模型不可用'));
+
+    if (payload.mode !== 'llm') {
+      log('未配置大模型密钥：正文由本地模板生成，数字全部取自本地判定结果');
+    } else if (fellBack) {
+      log('数字回溯校验未通过：正文已退回本地模板，报告值仍由本地回填');
+    } else {
+      log('数字回溯校验通过：正文中的数字都能在本地事实清单里找到出处');
+      log(`由 ${payload.model} 改写措辞；报告值由本地回填，未采信模型写的数字`);
+    }
   }
 
   /* ─── 报告对比 ─── */
@@ -392,6 +495,16 @@
       ? rl.map(r => redlineCard(r)).join('')
       : '<p class="empty-note">这份报告没有触发日常饮食红线。'
       + '三餐记录功能上线后，依然可以在这里看到每天的对照结果。</p>';
+
+    /* 一周趋势：第 7 步顺带取回的真实数据，只有一句事实，不铺成图表 */
+    const weekEl = $('#redline-week');
+    const wk = state.week;
+    if (weekEl) {
+      weekEl.classList.toggle('is-hidden', !wk);
+      weekEl.textContent = wk
+        ? `最近七天：${wk.days} 天有记录，累计撞线 ${wk.hits} 次。去「今日记录」可以逐日回看。`
+        : '';
+    }
 
     /* 问诊清单 */
     const qs = report.follow_up_questions || [];
@@ -504,6 +617,7 @@
     $('#btn-again').addEventListener('click', () => {
       state.file = null;
       state.extract = state.analysis = state.explain = state.compare = null;
+      state.week = null;
       $('#file-input').value = '';
       $('#chosen-file').textContent = '尚未选择文件';
       $('#btn-start').disabled = true;
@@ -900,8 +1014,9 @@
     bindDaily();
     try {
       const info = await (await fetch('/api/about')).json();
-      const chip = $('#mode-chip');
       const isLlm = info.explain_mode === 'llm';
+      state.isLlm = isLlm;              // 第 6 步的措辞据此决定，避免说假话
+      const chip = $('#mode-chip');
       chip.textContent = isLlm ? `AI 解读 · ${info.explain_model}` : '本地模板解读';
       chip.title = isLlm
         ? '已配置大模型密钥，数字仍由本地链路定稿'

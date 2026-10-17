@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体检之后 —— 体检是一天的事，吃饭是每天的事</title>
 <meta name="description" content="把体检报告翻译成大白话，再变成每天吃饭能对照的几条红线。">
+<!-- 空 data URI 图标：只为消掉 /favicon.ico 的 404，不引任何外部资源 -->
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -113,13 +115,13 @@
     </div>
     <div class="track"><div class="bar" id="progress-bar"></div></div>
     <ol class="stages" id="stages">
-      <li class="stage" data-stage="upload"><span class="dot"></span>上传报告</li>
-      <li class="stage" data-stage="extract"><span class="dot"></span>OCR 识别</li>
-      <li class="stage" data-stage="redact"><span class="dot"></span>隐私脱敏</li>
-      <li class="stage" data-stage="parse"><span class="dot"></span>指标解析</li>
-      <li class="stage" data-stage="judge"><span class="dot"></span>本地判定</li>
-      <li class="stage" data-stage="redline"><span class="dot"></span>红线匹配</li>
-      <li class="stage" data-stage="explain"><span class="dot"></span>生成解读</li>
+      <li class="stage" data-stage="read"><span class="dot"></span><span class="s-doing">正在读取报告图片…</span><span class="s-done">读取报告图片</span></li>
+      <li class="stage" data-stage="ocr"><span class="dot"></span><span class="s-doing">正在 OCR 识别文字…</span><span class="s-done">OCR 识别文字</span></li>
+      <li class="stage" data-stage="redact"><span class="dot"></span><span class="s-doing">正在脱敏（去掉姓名、身份证、医院信息）…</span><span class="s-done">脱敏：姓名、身份证、医院信息</span></li>
+      <li class="stage" data-stage="judge"><span class="dot"></span><span class="s-doing">正在本地规则引擎判定红线…</span><span class="s-done">本地规则引擎判定红线</span></li>
+      <li class="stage" data-stage="verify"><span class="dot"></span><span class="s-doing">正在做数字回溯校验（数字不让大模型编）…</span><span class="s-done">数字回溯校验</span></li>
+      <li class="stage" data-stage="write"><span class="dot"></span><span class="s-doing">正在让 DeepSeek 写人话解释…</span><span class="s-done">人话解释</span></li>
+      <li class="stage" data-stage="redline"><span class="dot"></span><span class="s-doing">正在生成三条红线 + 一周趋势…</span><span class="s-done">日常红线 + 一周趋势</span></li>
     </ol>
     <div class="thinking">
       <span class="label">思考过程</span>
@@ -171,6 +173,7 @@
       <span class="label-weak">体检换来的、接下来一年能用的约束</span>
     </div>
     <div class="redlines" id="redlines"></div>
+    <p class="redline-week is-hidden" id="redline-week"></p>
   </section>
 
   <section class="panel">
