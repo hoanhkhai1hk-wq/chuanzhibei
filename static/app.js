@@ -189,7 +189,7 @@
     } catch (err) {
       console.error(err);
       $('#progress-title').textContent = '出了点问题';
-      log(`✗ ${err.message}`);
+      log(`× ${err.message}`);
       toast(err.message);
       setTimeout(() => showView('home'), 2600);
     }
@@ -241,7 +241,7 @@
     } catch (err) {
       console.error(err);
       $('#progress-title').textContent = '出了点问题';
-      log(`✗ ${err.message}`);
+      log(`× ${err.message}`);
       toast(err.message);
       setTimeout(() => showView('home'), 2600);
     }
@@ -656,7 +656,7 @@
     if (!s.redlines_active) {
       el.innerHTML = '<p class="empty-note">没有生效的红线，记录仍会保存。</p>';
     } else if (!s.hits.length) {
-      el.innerHTML = `<div class="all-clear">今天 ${s.redlines_active} 条红线一条都没碰到，继续保持 👍</div>`;
+      el.innerHTML = `<div class="all-clear">今天 ${s.redlines_active} 条红线一条都没碰到</div>`;
     } else {
       el.innerHTML = '<div class="hit-list">' + s.hits.map(h => {
         const boost = h.action === 'boost';
@@ -684,30 +684,31 @@
   /* ══════════════════ 周报曲线（手绘 SVG，不引 CDN） ══════════════════ */
 
   const W = 660, H = 132, PAD_B = 24, GAP = 12;
-  const _COLOR = { hit: '#b0451d', kcal: '#0d6e5c', sys: '#b0451d', dia: '#0d6e5c' };
+  const _COLOR = { hit: '#9e422a', kcal: '#24423a', sys: '#9e422a', dia: '#24423a' };
 
   function esc(s) { return escapeHtml(String(s)); }
 
   function barChart(series, key, color, max) {
     const n = series.length;
-    const bw = (W - GAP * (n - 1)) / n;
+    const slot = (W - GAP * (n - 1)) / n;
+    const bw = slot * 0.56;          // 柱子只占槽位一半多，留白比塞满更耐看
     const bars = series.map((d, i) => {
       const v = d[key] || 0;
       const h = max ? (v / max) * (H - PAD_B - 14) : 0;
-      const x = i * (bw + GAP);
+      const x = i * (slot + GAP) + (slot - bw) / 2;
       const y = H - PAD_B - h;
       return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}"
-                    height="${Math.max(h, 1).toFixed(1)}" rx="3" fill="${color}"/>`
+                    height="${Math.max(h, 1).toFixed(1)}" fill="${color}"/>`
         + (v ? `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}"
                       text-anchor="middle" font-size="11" fill="${color}"
                       font-weight="700">${v}</text>` : '')
         + `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle"
-                 font-size="10" fill="#7b8c84">${esc(d.date.slice(5))}</text>`;
+                 font-size="10" fill="#8b9189">${esc(d.date.slice(5))}</text>`;
     }).join('');
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
                  role="img" aria-label="最近七天柱状图">
               <line x1="0" y1="${H - PAD_B}" x2="${W}" y2="${H - PAD_B}"
-                    stroke="#e0e8e4" stroke-width="1"/>${bars}</svg>`;
+                    stroke="#e6e3db" stroke-width="1"/>${bars}</svg>`;
   }
 
   function lineChart(series, keyA, keyB) {
@@ -749,12 +750,12 @@
 
     const labels = series.map((d, i) =>
       `<text x="${xAt(i).toFixed(1)}" y="${H - 6}" text-anchor="middle"
-             font-size="10" fill="#7b8c84">${esc(d.date.slice(5))}</text>`).join('');
+             font-size="10" fill="#8b9189">${esc(d.date.slice(5))}</text>`).join('');
 
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
                  role="img" aria-label="最近七天血压折线图">
               <line x1="0" y1="${(H - PAD_B).toFixed(1)}" x2="${W}"
-                    y2="${(H - PAD_B).toFixed(1)}" stroke="#e0e8e4" stroke-width="1"/>
+                    y2="${(H - PAD_B).toFixed(1)}" stroke="#e6e3db" stroke-width="1"/>
               ${polyline(keyA, _COLOR.sys)}${polyline(keyB, _COLOR.dia)}${labels}</svg>`;
   }
 
@@ -772,7 +773,7 @@
             <span class="legend"><i style="background:${_COLOR.hit}"></i>撞线</span></div>
           ${maxHit > 1 || s.some(d => d.hit_count)
             ? barChart(s, 'hit_count', _COLOR.hit, maxHit)
-            : '<p class="chart-empty">这七天一条红线都没碰到，继续保持 👍</p>'}
+            : '<p class="chart-empty">这七天一条红线都没碰到</p>'}
         </div>
         <div class="chart">
           <div class="chart-title">血压趋势

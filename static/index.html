@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>体检之后 — 体检只占一年中的一天，剩下 364 天才是地盘</title>
+<title>体检之后 —— 体检是一天的事，吃饭是每天的事</title>
 <meta name="description" content="把体检报告翻译成大白话，再变成每天吃饭能对照的几条红线。">
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -13,7 +13,7 @@
   <div class="topbar-inner">
     <div class="brand">
       <span class="brand-mark">体检之后</span>
-      <span class="brand-sub">After&nbsp;the&nbsp;Checkup</span>
+      <span class="brand-sub">After the Checkup</span>
     </div>
     <nav class="topnav">
       <button type="button" class="nav-tab is-active" id="tab-report" data-tab="report">报告解读</button>
@@ -21,240 +21,203 @@
     </nav>
     <div class="topbar-right">
       <span class="mode-chip" id="mode-chip" title="表达层当前工作模式">…</span>
-      <a class="topbar-link" href="/docs" target="_blank" rel="noopener">API 文档</a>
+      <a class="topbar-link" href="/docs" target="_blank" rel="noopener">API</a>
     </div>
   </div>
 </header>
 
-<!-- ══════════════════════════ 视图一：首页 / 上传 ══════════════════════════ -->
+<!-- ══════════════════════════ 报告解读 ════════════════════════════ -->
 <main id="view-home" class="view">
 
-  <section class="hero">
-    <p class="eyebrow">传智杯 · AI 创新应用挑战赛</p>
-    <h1>体检只占一年中的一天，<br>剩下 <em>364</em> 天才是地盘。</h1>
-    <p class="lede">
-      上传一份体检报告。我们先把医学术语和箭头翻译成大白话，
-      再把异常的几项变成<strong>每天吃饭能对照的几条红线</strong>——
-      而不是让你在一年后翻开同一份报告时，依然看不懂。
-    </p>
-  </section>
+  <div class="page-head">
+    <div>
+      <h1>报告解读</h1>
+      <p>上传一份体检报告。识别、归一与判定全部在本地完成，大模型只负责把结果写成大白话。</p>
+    </div>
+  </div>
 
-  <section class="upload-card" id="upload-card">
+  <section class="panel">
+    <div class="panel-head"><span class="label">01 · 选择报告</span></div>
+
     <div class="dropzone" id="dropzone" tabindex="0" role="button"
-         aria-label="选择或拖入体检报告图片">
-      <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="1.5" aria-hidden="true">
-        <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+       aria-label="选择或拖入体检报告图片">
       <p class="dz-title">把报告照片放进来</p>
-      <p class="dz-sub">拖拽到此处，或点击选择文件 · 支持 JPG / PNG / WebP / PDF</p>
+      <p class="dz-sub">拖拽到此处，或点击选择 · JPG / PNG / WebP / PDF</p>
       <input type="file" id="file-input" accept="image/*,.pdf" hidden>
     </div>
 
-    <div class="upload-options">
+    <div class="form-row">
       <div class="field">
         <span class="field-label">性别</span>
         <div class="segmented" id="sex-seg" role="radiogroup" aria-label="性别">
           <button type="button" class="seg" data-sex="male" role="radio" aria-checked="false">男</button>
-          <button type="button" class="seg" data-sex="female" role="radio" aria-checked="false">女</button>
-          <button type="button" class="seg is-active" data-sex="unknown" role="radio" aria-checked="true">不确定</button>
+        <button type="button" class="seg" data-sex="female" role="radio" aria-checked="false">女</button>
+        <button type="button" class="seg is-active" data-sex="unknown" role="radio" aria-checked="true">不确定</button>
         </div>
         <span class="field-hint">肌酐、血红蛋白等指标的参考区间男女不同</span>
       </div>
-
       <div class="field">
         <span class="field-label">已选择</span>
         <p class="chosen-file" id="chosen-file">尚未选择文件</p>
       </div>
     </div>
 
-    <div class="upload-actions">
+    <div class="form-actions">
       <button type="button" class="btn btn-primary" id="btn-start" disabled>开始解读</button>
-      <button type="button" class="btn btn-ghost" id="btn-demo">
-        没有报告？用演示数据试一下
-      </button>
+      <button type="button" class="btn btn-ghost" id="btn-demo">用演示数据试一下</button>
     </div>
-
-    <details class="shoot-tips">
-      <summary>拍不清楚？先看这四条</summary>
-      <ol>
-        <li><strong>放平</strong>：把报告摊在桌面拍，不要手持悬空——倾斜会让表格线干扰识别。</li>
-        <li><strong>光线足</strong>：在自然光或顶灯下拍，避免台灯在纸面上留下一道亮斑。</li>
-        <li><strong>对准一行</strong>：让指标名称、数值、参考区间三列都在画面里，不要裁掉右侧。</li>
-        <li><strong>一次一页</strong>：多页报告请分开拍，本产品按单页处理。</li>
-      </ol>
-      <p class="shoot-tips-note">
-        识别不完整的指标会在结果里标为「待确认」，并告诉你下一步怎么办——不会静默编一个数。
-      </p>
-    </details>
   </section>
 
-  <section class="layers">
-    <h2 class="sec-title">三层架构：一条链路，两本字典，一个规则引擎</h2>
-    <div class="layer-grid">
-      <article class="layer">
-        <span class="layer-tag">档案层</span>
-        <h3>报告 → 指标</h3>
-        <p>OCR 抽出四元组 → 指标字典归一 → 本地比对参考区间 → 判定高低。<br>
-           <strong>全程不调用大模型。</strong></p>
-      </article>
-      <article class="layer">
-        <span class="layer-tag">日常层</span>
-        <h3>吃饭 → 红线</h3>
-        <p>每天点选吃了什么 → 菜品库查嘌呤/钠/糖/脂肪 → 本地累加 → 对照红线。<br>
-           <strong>与档案层共用同一套规则引擎。</strong></p>
-      </article>
-      <article class="layer">
-        <span class="layer-tag">表达层</span>
-        <h3>数字 → 人话</h3>
-        <p>大模型只负责措辞。所有数字由前两层定稿后注入，<br>
-           输出还要过一遍<strong>数字回溯校验</strong>。</p>
-      </article>
+  <details class="tips">
+    <summary>拍不清楚？先看这四条</summary>
+    <ol>
+      <li><strong>放平</strong>：把报告摊在桌面拍，不要手持悬空——倾斜会让表格线干扰识别。</li>
+      <li><strong>光线足</strong>：在自然光或顶灯下拍，避免台灯在纸面上留下一道亮斑。</li>
+      <li><strong>对准一行</strong>：让指标名称、数值、参考区间三列都在画面里，不要裁掉右侧。</li>
+      <li><strong>一次一页</strong>：多页报告请分开拍，本产品按单页处理。</li>
+    </ol>
+    <p class="tips-note">识别不完整的指标会在结果里标为「待确认」，并告诉你下一步怎么办——不会静默编一个数。</p>
+  </details>
+
+  <section class="panel">
+    <div class="panel-head"><span class="label">链路</span></div>
+    <div class="flow">
+      <div class="flow-step">
+        <span class="flow-tag">档案层</span>
+        <p>报告 → 指标字典归一 → 本地判定高低</p>
+      </div>
+      <div class="flow-sep"></div>
+      <div class="flow-step">
+        <span class="flow-tag">日常层</span>
+        <p>点选菜品 → 本地累加 → 对照红线</p>
+      </div>
+      <div class="flow-sep"></div>
+      <div class="flow-step">
+        <span class="flow-tag">表达层</span>
+        <p>大模型只改写措辞，不产生数字</p>
+      </div>
     </div>
-    <p class="layers-note">
-      铁律：<strong>数字绝不来自大模型。</strong>少接一次模型，产品照样能跑；
-      这也意味着每一句结论都能追到报告上的具体数字。
+    <p class="flow-note">
+      铁律：数字绝不来自大模型。即使不接大模型，红线结论也能由本地链路独立产出。
     </p>
   </section>
-
-  <section class="features">
-    <h2 class="sec-title">解读只是起点</h2>
-    <div class="feature-grid">
-      <article class="feature">
-        <h3>下次就诊问什么</h3>
-        <p>按异常指标生成问题清单，直接拿着去医院。产品不替你下结论，只替你想好要问什么。</p>
-      </article>
-      <article class="feature">
-        <h3>给爸妈说的话</h3>
-        <p>一键生成能直接念给父母听的大白话，可复制发家庭群。看懂报告的是子女，需要改变生活的是父母。</p>
-      </article>
-      <article class="feature">
-        <h3>报告不留存</h3>
-        <p>图片处理完立即删除，个人信息在送模型之前就已抹除。隐私是写进数据契约的，不是口头承诺。</p>
-      </article>
-    </div>
-  </section>
-
-  <footer class="foot">
-    <p>本产品不构成医疗建议，不能替代医生诊断。数值来自报告本身，判定基于公开的成人参考区间。</p>
-  </footer>
 </main>
 
-<!-- ══════════════════════════ 视图二：处理中 ══════════════════════════ -->
+<!-- ══════════════════════════ 处理中 ══════════════════════════ -->
 <main id="view-progress" class="view is-hidden">
-  <div class="progress-wrap">
-    <h2 class="progress-title" id="progress-title">正在解读…</h2>
-    <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
-    <p class="progress-pct" id="progress-pct">0%</p>
-
+  <div class="panel panel-narrow">
+    <div class="panel-head">
+      <span class="label" id="progress-title">正在解读…</span>
+      <span class="pct" id="progress-pct">0%</span>
+    </div>
+    <div class="track"><div class="bar" id="progress-bar"></div></div>
     <ol class="stages" id="stages">
-      <li class="stage" data-stage="upload"><span class="stage-dot"></span>上传报告</li>
-      <li class="stage" data-stage="extract"><span class="stage-dot"></span>OCR 识别</li>
-      <li class="stage" data-stage="redact"><span class="stage-dot"></span>隐私脱敏</li>
-      <li class="stage" data-stage="parse"><span class="stage-dot"></span>指标解析</li>
-      <li class="stage" data-stage="judge"><span class="stage-dot"></span>本地判定</li>
-      <li class="stage" data-stage="redline"><span class="stage-dot"></span>红线匹配</li>
-      <li class="stage" data-stage="explain"><span class="stage-dot"></span>生成解读</li>
+      <li class="stage" data-stage="upload"><span class="dot"></span>上传报告</li>
+      <li class="stage" data-stage="extract"><span class="dot"></span>OCR 识别</li>
+      <li class="stage" data-stage="redact"><span class="dot"></span>隐私脱敏</li>
+      <li class="stage" data-stage="parse"><span class="dot"></span>指标解析</li>
+      <li class="stage" data-stage="judge"><span class="dot"></span>本地判定</li>
+      <li class="stage" data-stage="redline"><span class="dot"></span>红线匹配</li>
+      <li class="stage" data-stage="explain"><span class="dot"></span>生成解读</li>
     </ol>
-
     <div class="thinking">
-      <p class="thinking-head">思考过程</p>
-      <ul class="thinking-log" id="thinking-log"></ul>
+      <span class="label">思考过程</span>
+      <ul class="log" id="thinking-log"></ul>
     </div>
   </div>
 </main>
 
-<!-- ══════════════════════════ 视图三：结果 ══════════════════════════ -->
+<!-- ══════════════════════════ 结果 ══════════════════════════════════ -->
 <main id="view-result" class="view is-hidden">
 
-  <div class="result-head">
-    <h2 class="result-title">解读结果</h2>
-    <button type="button" class="btn btn-ghost btn-sm" id="btn-again">再看一份</button>
+  <div class="page-head">
+    <div>
+      <h1>解读结果</h1>
+      <p>本地判定已完成，以下结论可追溯到报告上的具体数字。</p>
+    </div>
+    <button type="button" class="btn btn-ghost" id="btn-again">再看一份</button>
   </div>
 
   <div class="chips" id="chips"></div>
 
-  <section class="card compare-card is-hidden" id="compare-card">
-    <div class="card-head">
-      <h3>与上次报告对比</h3>
-      <span class="card-note">同一个人、同一套字典与规则，趋势才有意义</span>
+  <section class="panel is-hidden" id="compare-card">
+    <div class="panel-head">
+      <span class="label">与上次报告对比</span>
     </div>
-    <div class="chips" id="compare-chips" style="margin-bottom:12px"></div>
-    <div class="hit-list" id="compare-rows"></div>
+    <div class="chips" id="compare-chips"></div>
+    <div class="rows" id="compare-rows"></div>
   </section>
 
-  <section class="card summary-card">
-    <div class="card-head">
-      <h3>整体解读</h3>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">整体解读</span>
       <span class="badge" id="mode-badge"></span>
     </div>
-    <p class="summary-text" id="summary-text"></p>
+    <p class="prose" id="summary-text"></p>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>逐项结果</h3>
-      <span class="card-note" id="marker-note"></span>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">逐项结果</span>
+      <span class="label-weak" id="marker-note"></span>
     </div>
     <ul class="markers" id="markers"></ul>
   </section>
 
-  <section class="card" id="redline-card">
-    <div class="card-head">
-      <h3>你的日常红线</h3>
-      <span class="card-note">体检报告换来的、接下来一年能用的几条约束</span>
+  <section class="panel" id="redline-card">
+    <div class="panel-head">
+      <span class="label">你的日常红线</span>
+      <span class="label-weak">体检换来的、接下来一年能用的约束</span>
     </div>
     <div class="redlines" id="redlines"></div>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>下次就诊，问医生这些</h3>
-    </div>
-    <ul class="questions" id="questions"></ul>
+  <section class="panel">
+    <div class="panel-head"><span class="label">下次就诊，问医生这些</span></div>
+    <ul class="ask" id="questions"></ul>
   </section>
 
-  <section class="card family-card">
-    <div class="card-head">
-      <h3>给爸妈说的话</h3>
+  <section class="panel panel-warm">
+    <div class="panel-head">
+      <span class="label">给爸妈说的话</span>
       <button type="button" class="btn btn-ghost btn-sm" id="btn-copy">复制</button>
     </div>
-    <p class="family-text" id="family-text"></p>
+    <p class="prose prose-warm" id="family-text"></p>
   </section>
 
-  <details class="card raw-card">
+  <details class="tips">
     <summary>
       <span>识别到的原文（已脱敏）</span>
-      <span class="raw-note" id="raw-note"></span>
+      <span class="label-weak" id="raw-note"></span>
     </summary>
-    <pre class="raw-text" id="raw-text"></pre>
-    <div class="raw-extra" id="raw-extra"></div>
+    <pre class="raw" id="raw-text"></pre>
+    <div id="raw-extra"></div>
   </details>
 
   <p class="disclaimer" id="disclaimer"></p>
 </main>
 
-<!-- ══════════════════════════ 视图四：今日记录（日常层） ══════════════════════════ -->
+<!-- ══════════════════════════ 今日记录（日常层） ══════════════════════════ -->
 <main id="view-daily" class="view is-hidden">
 
-  <div class="result-head">
-    <h2 class="result-title">今日记录</h2>
-    <span class="card-note" id="daily-date"></span>
+  <div class="page-head">
+    <div>
+      <h1>今日记录</h1>
+      <p id="daily-date"></p>
+    </div>
   </div>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>当前红线</h3>
-      <span class="card-note" id="redline-src-note">来自最近一次报告</span>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">01 · 当前红线</span>
+      <span class="label-weak" id="redline-src-note">来自最近一次报告</span>
     </div>
     <div id="active-redlines"></div>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>记一餐</h3>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">02 · 记一餐</span>
       <div class="segmented" id="meal-seg" role="radiogroup" aria-label="餐次">
         <button type="button" class="seg" data-meal="breakfast" role="radio" aria-checked="false">早</button>
         <button type="button" class="seg is-active" data-meal="lunch" role="radio" aria-checked="true">午</button>
@@ -262,47 +225,38 @@
         <button type="button" class="seg" data-meal="snack" role="radio" aria-checked="false">加餐</button>
       </div>
     </div>
-    <input type="search" class="dish-search" id="dish-q"
-           placeholder="搜索菜品，如：火锅、奶茶、红烧肉…" autocomplete="off">
+    <input type="search" class="search" id="dish-q"
+           placeholder="搜索菜品，如：火锅 / 奶茶 / 红烧肉" autocomplete="off">
     <div class="dish-grid" id="dish-list"></div>
-    <div class="picked-row" id="picked-row">
-      <span class="picked-label">已选</span>
-      <span id="picked-dishes" class="picked-dishes">还没选，点上面的菜名</span>
+    <div class="picked">
+      <span class="label">已选</span>
+      <span id="picked-dishes" class="picked-text">还没选，点上面的菜名</span>
     </div>
-    <div class="upload-actions">
+    <div class="form-actions">
       <button type="button" class="btn btn-primary" id="btn-meal" disabled>记录这一餐</button>
-      <span class="field-hint">标签是粗筛：high 档才撞线，medium 不打扰</span>
+      <span class="field-hint">标签为粗筛，high 档才撞线，medium 不打扰</span>
     </div>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>今日对照</h3>
-      <span class="card-note" id="today-kcal"></span>
-    </div>
-    <div id="today-hits"></div>
-    <div id="today-meals" class="today-meals"></div>
-  </section>
-
-  <section class="card">
-    <div class="card-head">
-      <h3>记一次测量</h3>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">03 · 记一次测量</span>
       <div class="segmented" id="num-seg" role="radiogroup" aria-label="记录类型">
         <button type="button" class="seg is-active" data-kind="blood_pressure"
-                role="radio" aria-checked="true">血压</button>
+              role="radio" aria-checked="true">血压</button>
         <button type="button" class="seg" data-kind="blood_glucose"
-                role="radio" aria-checked="false">血糖</button>
+              role="radio" aria-checked="false">血糖</button>
         <button type="button" class="seg" data-kind="weight"
-                role="radio" aria-checked="false">体重</button>
+              role="radio" aria-checked="false">体重</button>
       </div>
     </div>
 
-    <div class="num-fields">
+    <div class="num-wrap">
       <div class="num-row" data-for="blood_pressure">
         <label class="num-field">收缩压
-          <input type="number" id="n-sys" placeholder="120" step="1"></label>
+          <input type="number" id="n-sys" placeholder="120"></label>
         <label class="num-field">舒张压
-          <input type="number" id="n-dia" placeholder="80" step="1"></label>
+          <input type="number" id="n-dia" placeholder="80"></label>
         <span class="num-unit">mmHg</span>
       </div>
       <div class="num-row is-hidden" data-for="blood_glucose">
@@ -317,17 +271,26 @@
       </div>
     </div>
 
-    <div class="upload-actions">
+    <div class="form-actions">
       <button type="button" class="btn btn-primary" id="btn-num">记录</button>
-      <span class="field-hint">血压 ≥140/90 会自动激活「限钠」红线（诊室标准）</span>
+      <span class="field-hint">血压 ≥140/90 会自动激活「限钠」红线</span>
     </div>
-    <div id="today-numerics" class="today-meals"></div>
+    <div id="today-numerics" class="mini-list"></div>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h3>最近 7 天</h3>
-      <span class="card-note" id="week-note"></span>
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">04 · 今日对照</span>
+      <span class="label-weak" id="today-kcal"></span>
+    </div>
+    <div id="today-hits"></div>
+    <div id="today-meals" class="mini-list"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="label">05 · 最近七天</span>
+      <span class="label-weak" id="week-note"></span>
     </div>
     <div id="week-charts"></div>
   </section>
