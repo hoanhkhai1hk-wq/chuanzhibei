@@ -104,6 +104,22 @@ def main() -> int:
     check("正常血糖不触发红线",
           any(r["rule_id"].startswith("R02") for r in res["redlines"]), False)
 
+    # ---------------------------------------------------------- 定性指标判定
+    # 中国检验报告上定性结果几乎都写成「阴性（-）」「阳性（+）」，
+    # 修复前「阴性（-）」会被判成 unknown——最常见的写法反而判不出来。
+    for val, want in [("阴性（-）", "normal"), ("阴性(-)", "normal"),
+                      ("阴性", "normal"), ("未见", "normal"),
+                      ("阳性（+）", "high"), ("阳性(+)", "high"),
+                      ("弱阳性（±）", "high"), ("微量", "high"),
+                      ("2+", "high"), ("+++", "high"), ("±", "high")]:
+        flag, _ = e.judge("u_protein", val, "male")
+        check(f"定性 {val!r}", flag, want)
+
+    # 非定性的描述性文本（如尿液颜色）不应被当成异常
+    flag, why = e.judge("u_protein", "淡黄色", "male")
+    check("描述性文本不误判", flag, "unknown")
+    check("无法判定时如实说明", "无法识别" in why["reason"], True)
+
     # ------------------------------------------------------------------ 输出
     print(f"通过 {PASSED} 项断言")
     if FAILED:

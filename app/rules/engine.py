@@ -44,6 +44,10 @@ REDLINES_F = HERE / "redlines.json"
 NEGATIVE_WORDS = {"阴性", "-", "–", "—", "neg", "negative", "未见", "无"}
 POSITIVE_WORDS = {"阳性", "+", "++", "+++", "++++", "pos", "positive", "微量", "trace"}
 
+#: 定性结果里带括号的符号，如「阴性（-）」「阳性（+）」「弱阳性（±）」。
+#: 报告上最可靠的定性标记就是它——比文字更不容易被 OCR 认错。
+_QUAL_SIGN_RE = re.compile(r"[（(]\s*(?P<sign>[+\-±–—]+)\s*[)）]")
+
 _NUM_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 
 
@@ -138,8 +142,29 @@ class RuleEngine:
 
         raw = str(value or "").strip()
 
-        # 定性指标（尿常规等）：按阴性/阳性判定
+        # 定性指标（尿常规、便检、乙肝定性等）：按阴性/阳性判定
         if m.get("unit") == "定性" or not m.get("ref", {}).get("default"):
+            # 括号里的符号优先：报告上最可靠的定性标记就是它。
+            # 修复前，「阴性（-）」——中国检验报告最常见的写法——会被判成 unknown，
+            # 而「阳性（+）」却能被正确识别，两边不对称。
+            bracket = _QUAL_SIGN_RE.search(raw)
+            if bracket:
+                sign = bracket.group("sign")
+                # ± 视为弱阳性/临界，按「需关注」处理并如实说明
+                if "+" in sign or "±" in sign:
+                    return "high", {
+                        "reason": f"定性结果阳性（标记 {sign}，正常应为{m.get('ref_text', '阴性')}）",
+                        "ref_text": m.get("ref_text")}
+                return "normal", {
+                    "reason": f"定性结果阴性（标记 {sign}，{m.get('ref_text', '阴性')}）",
+                    "ref_text": m.get("ref_text")}
+
+            # 半定量写法（尿蛋白/尿糖常见的 "2+"、"+++"）：带 + 号即阳性，
+            # 程度差异交给医生解读，产品不替用户分级
+            if "+" in raw or "±" in raw:
+                return "high", {"reason": f"定性结果阳性（{raw}，正常应为{m.get('ref_text', '阴性')}）",
+                                "ref_text": m.get("ref_text")}
+
             if raw in POSITIVE_WORDS or any(w in raw for w in POSITIVE_WORDS if len(w) > 1):
                 return "high", {"reason": f"定性结果阳性（正常应为{m.get('ref_text', '阴性')}）",
                                 "ref_text": m.get("ref_text")}

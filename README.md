@@ -152,7 +152,7 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 - `[x]` Python 环境与依赖清单已实测核验（见 `requirements.txt`）
 - `[x]` `app/schemas.py` 数据契约已落地：19 个模型，已通过导入验证与架构铁律自检
 - `[x]` FastAPI 骨架可启动：`/health`、`/docs`、`/api/contract/sample` 已实测可用
-- `[x]` 指标字典 **51** 条 + 红线规则 16 条，含交叉引用校验
+- `[x]` 指标字典 **80** 条 + 红线规则 16 条，含交叉引用校验
 - `[x]` **端到端链路已跑通**：图片 → OCR → 脱敏 → 解析 → 本地判定 → 红线
   （12 份合成样本验证，字典命中率 100%，触发 12 条红线）
 - `[x]` **真实报告实测已完成**：8 张真实报告图跑完整链路。
@@ -161,6 +161,9 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
   **全部命中、全部可判定，并实际触发日常红线**。
   最大的一个坑是照片方向——曾被误诊为"双栏排版跨栏读取"，
   实为旋转后 OCR 串不成行（详见文档第二节的误诊记录）。
+- `[x]` **定性指标判定修复**：「阴性（-）」——中国检验报告上最常见的定性写法——
+  此前会被判成「待确认」，而「阳性（+）」却能正确识别（两边不对称）。
+  现按括号内的符号优先判定，并支持半定量写法（尿蛋白 `2+`、`±`）。
   完整过程、数据表与仍未解决的短板见
   [tests/ocr_bench/results/真实样本实测.md](docs/真实样本实测.md)
 - `[x]` **表达层已落地（模板模式）**：无 API Key 也完整可用——逐项解释来自指标
@@ -206,7 +209,7 @@ D:/aconda3/envs/hwh_ml/python.exe -m uvicorn app.main:app --reload --port 8000
 │   │   ├── engine.py        # [x] OCR 适配层（rapidocr 默认，可换 paddle / baidu）
 │   │   └── parser.py        # [x] 文本 → 四元组
 │   ├── dict/
-│   │   ├── markers.json     # [x] 指标字典 41 条
+│   │   ├── markers.json     # [x] 指标字典 80 条（血常规/肝肾/血脂/电解质/甲功/尿常规/心肌酶）
 │   │   ├── dishes.json      # [x] 菜品库 316 条（种子表脚本化转换，六档标签）
 │   │   ├── build_dishes.py  # [x] 种子表 → 菜品库转换脚本（可重跑）
 │   │   └── validate.py      # [x] 交叉引用校验
