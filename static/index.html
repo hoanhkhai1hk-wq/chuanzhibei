@@ -11,11 +11,15 @@
 </head>
 <body>
 
+<!-- 背景光晕：三层缓慢漂移的青绿高光，纯装饰，不参与交互也不影响布局 -->
+<div class="bg-glow glow-1" aria-hidden="true"></div>
+<div class="bg-glow glow-2" aria-hidden="true"></div>
+<div class="bg-glow glow-3" aria-hidden="true"></div>
+
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
       <span class="brand-mark">体检之后</span>
-      <span class="brand-sub">After the Checkup</span>
     </div>
     <nav class="topnav">
       <button type="button" class="nav-tab is-active" id="tab-report" data-tab="report">报告解读</button>
@@ -30,33 +34,38 @@
         <span class="model-note is-hidden" id="model-note"></span>
       </div>
       <span class="mode-chip" id="mode-chip" title="表达层当前工作模式">…</span>
+      <span class="lang-pill" aria-hidden="true">中 / EN</span>
       <a class="topbar-link" href="/docs" target="_blank" rel="noopener">API</a>
     </div>
   </div>
 </header>
 
 <!-- ══════════════════════════ 报告解读 ════════════════════════════ -->
-<main id="view-home" class="view">
+<main id="view-home" class="view view-home">
 
-  <div class="page-head">
-    <div>
-      <h1>报告解读</h1>
-      <p>上传一份体检报告。识别、归一与判定全部在本地完成，大模型只负责把结果写成大白话。</p>
-    </div>
-  </div>
+  <section class="hero">
+    <span class="hero-pill">AI 解读 · 本地规则引擎 · 隐私脱敏</span>
+    <h1 class="hero-title">把体检报告，<br>变成每天的三件事。</h1>
+  </section>
 
-  <section class="panel">
-    <div class="panel-head"><span class="label">01 · 选择报告</span></div>
-
+  <section class="upload-card">
     <div class="dropzone" id="dropzone" tabindex="0" role="button"
        aria-label="选择或拖入体检报告图片">
-      <p class="dz-title">把报告照片放进来</p>
-      <p class="dz-sub">拖拽到此处，或点击选择 · JPG / PNG / WebP / PDF</p>
+      <p class="dz-title">把体检报告拖到这里，或点击上传</p>
+      <p class="dz-sub">支持拍照 / PDF，报告原图不保存</p>
       <input type="file" id="file-input" accept="image/*,.pdf" hidden>
     </div>
 
-    <div class="form-row">
-      <div class="field">
+    <div class="upload-bar">
+      <div class="upload-bar-left">
+        <button type="button" class="mini-pill" id="btn-pick">拍照上传</button>
+        <button type="button" class="mini-pill" id="btn-demo">演示数据</button>
+      </div>
+      <button type="button" class="btn btn-primary" id="btn-start" disabled>开始解读</button>
+    </div>
+
+    <div class="upload-meta">
+      <div class="field field-inline">
         <span class="field-label">性别</span>
         <div class="segmented" id="sex-seg" role="radiogroup" aria-label="性别">
           <button type="button" class="seg is-active" data-sex="male"
@@ -66,19 +75,47 @@
         </div>
         <span class="field-hint">肌酐、血红蛋白等指标的参考区间男女不同</span>
       </div>
-      <div class="field">
-        <span class="field-label">已选择</span>
-        <p class="chosen-file" id="chosen-file">尚未选择文件</p>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="button" class="btn btn-primary" id="btn-start" disabled>开始解读</button>
-      <button type="button" class="btn btn-ghost" id="btn-demo">用演示数据试一下</button>
+      <p class="chosen-file" id="chosen-file">尚未选择文件</p>
     </div>
   </section>
 
-  <details class="tips">
+  <section class="preview-block">
+    <p class="preview-head">
+      上传后，你会得到这样的三条红线 ↓
+      <span class="preview-tag">示例</span>
+    </p>
+    <div class="preview-cards">
+      <div class="preview-card is-warn">
+        <div class="pc-top">
+          <span class="pc-name">限嘌呤</span>
+          <span class="pc-value">520 μmol/L</span>
+        </div>
+        <p class="pc-note">尿酸偏高，火锅先缓缓</p>
+      </div>
+      <div class="preview-card is-warn">
+        <div class="pc-top">
+          <span class="pc-name">限钠</span>
+          <span class="pc-value">142/92</span>
+        </div>
+        <p class="pc-note">血压偏高，盐少放一勺</p>
+      </div>
+      <div class="preview-card is-ok">
+        <div class="pc-top">
+          <span class="pc-name">补铁</span>
+          <span class="pc-value">98 g/L</span>
+        </div>
+        <p class="pc-note">血红蛋白偏低，瘦肉安排上</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="quick-row">
+    <button type="button" class="quick-pill" data-jump="redlines">三条红线</button>
+    <button type="button" class="quick-pill" data-jump="daily">今日记餐</button>
+    <button type="button" class="quick-pill" data-jump="chat">问问 AI</button>
+  </div>
+
+  <details class="home-tips">
     <summary>拍不清楚？先看这四条</summary>
     <ol>
       <li><strong>放平</strong>：把报告摊在桌面拍，不要手持悬空——倾斜会让表格线干扰识别。</li>
@@ -89,28 +126,7 @@
     <p class="tips-note">识别不完整的指标会在结果里标为「待确认」，并告诉你下一步怎么办——不会静默编一个数。</p>
   </details>
 
-  <section class="panel">
-    <div class="panel-head"><span class="label">链路</span></div>
-    <div class="flow">
-      <div class="flow-step">
-        <span class="flow-tag">档案层</span>
-        <p>报告 → 指标字典归一 → 本地判定高低</p>
-      </div>
-      <div class="flow-sep"></div>
-      <div class="flow-step">
-        <span class="flow-tag">日常层</span>
-        <p>点选菜品 → 本地累加 → 对照红线</p>
-      </div>
-      <div class="flow-sep"></div>
-      <div class="flow-step">
-        <span class="flow-tag">表达层</span>
-        <p>大模型只改写措辞，不产生数字</p>
-      </div>
-    </div>
-    <p class="flow-note">
-      铁律：数字绝不来自大模型。即使不接大模型，红线结论也能由本地链路独立产出。
-    </p>
-  </section>
+  <p class="home-foot">数字本地判定 · 大模型只写人话 · 绝不编造指标</p>
 </main>
 
 <!-- ══════════════════════════ 处理中 ══════════════════════════ -->
@@ -212,7 +228,12 @@
   <section class="panel panel-warm">
     <div class="panel-head">
       <span class="label">给爸妈说的话</span>
-      <button type="button" class="btn btn-ghost btn-sm" id="btn-copy">复制</button>
+      <div class="head-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-speech" aria-pressed="false">
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.6 3.1 5 6H3.2v4H5l3.6 2.9z" fill="currentColor"/><path d="M11.2 5.7a3.1 3.1 0 0 1 0 4.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>朗读
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-copy">复制</button>
+      </div>
     </div>
     <p class="prose prose-warm" id="family-text"></p>
   </section>
@@ -241,7 +262,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="label">01 · 当前红线</span>
+      <span class="label">当前红线</span>
       <span class="label-weak" id="redline-src-note">来自最近一次报告</span>
     </div>
     <div id="active-redlines"></div>
@@ -249,7 +270,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="label">02 · 记一餐</span>
+      <span class="label">记一餐</span>
       <div class="segmented" id="meal-seg" role="radiogroup" aria-label="餐次">
         <button type="button" class="seg" data-meal="breakfast" role="radio" aria-checked="false">早</button>
         <button type="button" class="seg is-active" data-meal="lunch" role="radio" aria-checked="true">午</button>
@@ -272,7 +293,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="label">03 · 记一次测量</span>
+      <span class="label">记一次测量</span>
       <div class="segmented" id="num-seg" role="radiogroup" aria-label="记录类型">
         <button type="button" class="seg is-active" data-kind="blood_pressure"
               role="radio" aria-checked="true">血压</button>
@@ -312,7 +333,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="label">04 · 今日对照</span>
+      <span class="label">今日对照</span>
       <span class="label-weak" id="today-kcal"></span>
     </div>
     <div id="today-hits"></div>
@@ -321,7 +342,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="label">05 · 最近七天</span>
+      <span class="label">最近七天</span>
       <span class="label-weak" id="week-note"></span>
     </div>
     <div id="week-charts"></div>
@@ -335,5 +356,230 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="/static/app.js"></script>
+<script>
+/* 首页改版新增的两个交互。app.js 一个字没改，这里只调用已经存在的元素与事件。
+   1. 「拍照上传」胶囊：转发点击给隐藏的 file-input
+      —— 与点击拖拽区是同一个行为，不另起一条路径。
+   2. 三个快捷胶囊：三条红线 / 问问 AI 都在结果页，还没解读过就先用演示数据跑一遍，
+      免得点了没反应；「今日记餐」直接切到今日记录。 */
+(function () {
+  var fileInput = document.getElementById('file-input');
+  var pick      = document.getElementById('btn-pick');
+  if (pick && fileInput) {
+    pick.addEventListener('click', function () { fileInput.click(); });
+  }
+
+  var result   = document.getElementById('view-result');
+  var tabDaily = document.getElementById('tab-daily');
+  var btnDemo  = document.getElementById('btn-demo');
+
+  function scrollTo_(target) {
+    var sel = target === 'redlines' ? '#redlines' : '#chat-form';
+    var el = document.querySelector(sel);
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  }
+
+  function go(target) {
+    if (target === 'daily') {
+      if (tabDaily) { tabDaily.click(); }
+      return;
+    }
+    if (!result || result.classList.contains('is-hidden')) {
+      if (btnDemo) { btnDemo.click(); }
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries += 1;
+        if (result && !result.classList.contains('is-hidden')) {
+          clearInterval(timer);
+          setTimeout(function () { scrollTo_(target); }, 300);
+        } else if (tries > 60) {
+          clearInterval(timer);
+        }
+      }, 400);
+      return;
+    }
+    scrollTo_(target);
+  }
+
+  var pills = document.querySelectorAll('.quick-pill');
+  Array.prototype.forEach.call(pills, function (b) {
+    b.addEventListener('click', function () { go(b.getAttribute('data-jump')); });
+  });
+})();
+</script>
+<script>
+/* 语音朗读「给爸妈说的话」。浏览器原生 speechSynthesis，后端一行没动。
+   三条边界：
+   1. 只念 #family-text 里**已经生成好**的文案——语音这一层绝不碰任何数字，
+      数字仍然全部来自本地判定，朗读只是出口；
+   2. 浏览器不支持就把按钮整个隐藏，不留一个点了没反应的按钮；
+   3. 优先挑中文音色；挑不到就用默认，并在控制台留一条说明而不是静默。 */
+(function () {
+  var btn = document.getElementById('btn-speech');
+  var textEl = document.getElementById('family-text');
+  if (!btn || !textEl) { return; }
+  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance !== 'function') {
+    btn.style.display = 'none';
+    return;
+  }
+
+  var RATE = 0.9;
+  var LANG = 'zh-CN';
+
+  var ICON_PLAY = '<svg class="si" viewBox="0 0 16 16" aria-hidden="true">'
+    + '<path d="M8.6 3.1 5 6H3.2v4H5l3.6 2.9z" fill="currentColor"/>'
+    + '<path d="M11.2 5.7a3.1 3.1 0 0 1 0 4.6" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.3" stroke-linecap="round"/></svg>';
+  var ICON_STOP = '<svg class="si" viewBox="0 0 16 16" aria-hidden="true">'
+    + '<rect x="4.4" y="4.4" width="7.2" height="7.2" rx="1" fill="currentColor"/></svg>';
+
+  function setUI(speaking) {
+    btn.innerHTML = (speaking ? ICON_STOP : ICON_PLAY) + (speaking ? '停止' : '朗读');
+    btn.classList.toggle('is-speaking', speaking);
+    btn.setAttribute('aria-pressed', speaking ? 'true' : 'false');
+  }
+
+  /* 音色列表在部分浏览器上是异步就绪的，所以每次要念的时候现取，
+     同时监听一次 onvoiceschanged 做预热。 */
+  function pickVoice() {
+    var voices = window.speechSynthesis.getVoices() || [];
+    var i, v;
+    for (i = 0; i < voices.length; i++) {
+      v = voices[i];
+      if (v && /^zh|^cmn/i.test(v.lang || '')) { return v; }
+    }
+    for (i = 0; i < voices.length; i++) {
+      v = voices[i];
+      if (v && /zh|Chinese|Huihui|Yaoyao|Xiaoxiao|Yunxi/i.test(v.name || '')) { return v; }
+    }
+    return null;
+  }
+  try { window.speechSynthesis.onvoiceschanged = function () { pickVoice(); }; } catch (e) {}
+
+  /* ── Chrome 的 15 秒静默停止，两层保险 ──────────────────────────────
+     Chrome（含同内核的 Edge）有个长期未修的行为：单条 utterance 念到
+     **约 15 秒** 会被静默掐断，此时 speechSynthesis.speaking 仍然返回 true，
+     onend 也不一定触发——界面看着"在朗读"，实际已经没声音了。
+
+     「给爸妈说的话」全文 100–200 字，语速 0.9 下必然超过 15 秒，
+     所以整段直接 speak 一定会踩。两层保险：
+
+       1. 主：按标点切短句，逐句 speak。每句只有几秒，根本到不了 15 秒。
+       2. 备：保活定时器，只在**当前这句已连念 8 秒以上**时才 pause()+resume()
+          （这个动作能重置 Chrome 的内部计时）。短句走不到这里，
+          所以正常朗读不会因保活产生顿挫。
+
+     另用 sessionId 做代际标记：cancel() 之后旧回调仍可能触发，
+     没有这个标记就会把已经停掉的朗读又接上下一句。 */
+  var sessionId = 0;
+  var queue = [];
+  var idx = 0;
+  var keepTimer = null;
+  var pieceStart = 0;
+
+  /* 句末标点优先；切出来仍过长的（比如一长串顿号列举），再按逗号/顿号补一刀。
+     阈值 40 字：中文在 rate=0.9 下约 4–5 字/秒，40 字不到 10 秒，
+     离 15 秒那条线还有富余。 */
+  var MAX_PIECE = 40;
+
+  function splitSentences(text) {
+    var ends = '。！？；!?;';
+    var soft = '，,、 ';
+    var out = [];
+    var buf = '';
+    for (var i = 0; i < text.length; i++) {
+      var ch = text.charAt(i);
+      buf += ch;
+      if (ends.indexOf(ch) >= 0) {
+        if (buf.trim()) { out.push(buf.trim()); }
+        buf = '';
+      } else if (buf.length >= MAX_PIECE && soft.indexOf(ch) >= 0) {
+        if (buf.trim()) { out.push(buf.trim()); }
+        buf = '';
+      }
+    }
+    if (buf.trim()) { out.push(buf.trim()); }
+    return out.length ? out : [text];
+  }
+
+  function stopAll(silent) {
+    sessionId++;                                  // 让所有在途回调作废
+    queue = [];
+    idx = 0;
+    if (keepTimer) { clearInterval(keepTimer); keepTimer = null; }
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    if (!silent) { setUI(false); }
+  }
+
+  function playNext(sid) {
+    if (sid !== sessionId) { return; }
+    if (idx >= queue.length) {
+      if (keepTimer) { clearInterval(keepTimer); keepTimer = null; }
+      setUI(false);
+      return;
+    }
+    var u = new SpeechSynthesisUtterance(queue[idx]);
+    u.lang = LANG;
+    u.rate = RATE;
+    var voice = pickVoice();
+    if (voice) { u.voice = voice; }
+    u.onend = function () {
+      if (sid !== sessionId) { return; }
+      idx++;
+      setTimeout(function () { playNext(sid); }, 40);   // 句间留一点自然停顿
+    };
+    u.onerror = function () {
+      if (sid !== sessionId) { return; }
+      stopAll();
+    };
+    pieceStart = Date.now();
+    window.speechSynthesis.speak(u);
+  }
+
+  function startKeepAlive(sid) {
+    if (keepTimer) { clearInterval(keepTimer); }
+    keepTimer = setInterval(function () {
+      if (sid !== sessionId) { clearInterval(keepTimer); keepTimer = null; return; }
+      if (!window.speechSynthesis.speaking || window.speechSynthesis.paused) { return; }
+      if (Date.now() - pieceStart > 8000) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+        pieceStart = Date.now();
+      }
+    }, 1000);
+  }
+
+  function speak() {
+    var text = (textEl.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!text) {
+      btn.textContent = '暂无内容';
+      setTimeout(function () { setUI(false); }, 1500);
+      return;
+    }
+    if (!pickVoice()) { console.warn('[朗读] 未找到中文音色，将使用浏览器默认音色'); }
+    stopAll(true);
+    var sid = sessionId;
+    queue = splitSentences(text);
+    idx = 0;
+    setUI(true);
+    startKeepAlive(sid);
+    playNext(sid);
+  }
+
+  btn.addEventListener('click', function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      stopAll();
+    } else {
+      speak();
+    }
+  });
+
+  /* 离开页面或切到别的标签时停掉，别让声音在后台继续念 */
+  window.addEventListener('beforeunload', function () { stopAll(true); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { stopAll(); }
+  });
+})();
+</script>
 </body>
 </html>
