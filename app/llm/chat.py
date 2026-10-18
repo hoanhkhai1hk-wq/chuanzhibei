@@ -54,6 +54,7 @@ from app.llm.explainer import (
     allowed_numbers,
     find_hallucinations,
 )
+from app.llm.provider import resolve_model
 from app.pipeline import mask_pii
 
 #: 问题长度上限。再长也不是在问一件事，只会把事实清单挤出上下文。
@@ -111,8 +112,12 @@ class QaAnswerer:
 
     # ------------------------------------------------------------------ 入口
 
-    def answer(self, question: str, analysis: dict) -> dict:
-        """回答问题。返回可直接作为 `ChatReply` 的字典。"""
+    def answer(self, question: str, analysis: dict, model: str | None = None) -> dict:
+        """回答问题。返回可直接作为 `ChatReply` 的字典。
+
+        `model` 是用户选的模型 key；不可用时由 provider 回落到默认模型，
+        回落原因通过 `notice` 如实回给界面，不静默、不报错。
+        """
         clean_q, masked = mask_pii((question or "").strip())
         clean_q = clean_q.strip().replace("\n", " ")[:_MAX_QUESTION]
         if not clean_q:
@@ -137,7 +142,7 @@ class QaAnswerer:
         if self.explainer.mode == "llm":
             try:
                 text, validated, attempts = self._llm_answer(
-                    clean_q, analysis, facts, normal_names, foods, hits, measure)
+                    clean_q, analysis, facts, normal_names, foods, hits, measure, model)
                 used_llm = True
             except Exception:                       # noqa: BLE001
                 # 大模型不可用（没网 / 超时 / 连续两次编数字）→ 退回本地，并如实标注。
@@ -149,6 +154,8 @@ class QaAnswerer:
             validated = not find_hallucinations(text, analysis)
             attempts = 0
 
+        # 实际用的模型：选了占位模型时这里会是 DeepSeek，配合 notice 一起显示
+        spec, notice = resolve_model(model)
         return self._reply(
             answer=text,
             validated=validated,
@@ -157,7 +164,8 @@ class QaAnswerer:
             foods=[d["name"] for d in foods],
             analysis=analysis,
             mode="llm" if used_llm else "template",
-            model=self.explainer.model_name if used_llm else "本地模板",
+            model=spec.label if used_llm else "本地模板",
+            notice=(notice if used_llm else ""),
             masked=masked,
         )
 
@@ -322,7 +330,8 @@ class QaAnswerer:
 
     def _llm_answer(self, question: str, analysis: dict, facts: list[dict],
                     normal_names: list[str], foods: list[dict],
-                    hits: list[dict], measure: str) -> tuple[str, bool, int]:
+                    hits: list[dict], measure: str,
+                    model: str | None = None) -> tuple[str, bool, int]:
         """调模型 → 校验 → 不过就带着"多写了哪些数字"重写一次。
 
         返回 (正文, 是否通过校验, 实际尝试次数)。
@@ -335,7 +344,7 @@ class QaAnswerer:
             text = self.explainer.complete([
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
-            ])
+            ], max_tokens=512, model=model)
             bad = find_hallucinations(text, analysis)
             if not bad:
                 return text, True, attempt
@@ -435,13 +444,15 @@ class QaAnswerer:
 
     def _reply(self, answer: str, validated: bool, attempts: int,
                facts: list[str], foods: list[str], analysis: dict,
-               mode: str, model: str, masked: Optional[list[str]] = None) -> dict:
+               mode: str, model: str, notice: str = "",
+               masked: Optional[list[str]] = None) -> dict:
         allowed = allowed_numbers(analysis)
         used = [t for t in dict.fromkeys(_NUM_RE.findall(answer or "")) if t in allowed]
         return {
             "answer": answer,
             "mode": mode,
             "model": model,
+            "model_notice": notice,
             "validated": bool(validated),
             "attempts": int(attempts),
             "facts_used": facts,

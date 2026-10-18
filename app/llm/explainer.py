@@ -34,6 +34,7 @@ import re
 from pathlib import Path
 from typing import Iterator
 
+from app.llm.provider import DEFAULT_MODEL_KEY, MODELS, call_llm
 from app.schemas import FamilyMessage, LabReport, LabTest, StreamEvent
 
 HERE = Path(__file__).parent
@@ -247,12 +248,14 @@ class Explainer:
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None,
                  model: str | None = None) -> None:
+        # 显式传入的 api_key 只用于测试与强制模板模式；
+        # 真实调用一律走 provider.call_llm，由它按模型规格读对应的环境变量。
         self._api_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
-        self._base_url = base_url or os.getenv(
-            "DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"
-        )
-        self._model = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-        self._client = None          # 懒初始化：没配 Key 也照样能启动
+        self._base_url = base_url
+        self._model = model
+        #: 最近一次调用的实际模型与回落提示，供上层展示（问答的 meta 行要用）
+        self.last_model_label: str = ""
+        self.last_notice: str = ""
 
     # ------------------------------------------------------------------ 模式
 
@@ -263,41 +266,29 @@ class Explainer:
 
     @property
     def model_name(self) -> str:
-        return self._model if self.mode == "llm" else "本地模板"
-
-    def _get_client(self):
-        """懒初始化大模型客户端。
-
-        为什么懒初始化：同类项目在模块导入时就建 client，
-        结果没配 Key 的服务连 /health 都起不来，本地开发体验极差。
-        """
-        if self._client is None:
-            try:
-                from openai import OpenAI          # 延迟导入，无依赖也能跑
-            except ImportError as e:               # pragma: no cover
-                raise RuntimeError(
-                    "未安装 openai 依赖。执行 pip install openai 后重启，"
-                    "或清空 DEEPSEEK_API_KEY 使用模板模式。"
-                ) from e
-            self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
-        return self._client
+        return MODELS[DEFAULT_MODEL_KEY].label if self.mode == "llm" else "本地模板"
 
     def complete(self, messages: list[dict], max_tokens: int = 512,
-                 temperature: float = 0.3) -> str:
+                 temperature: float = 0.3, model: str | None = None) -> str:
         """一次纯文本补全，返回正文。
 
-        给问答框（`app/llm/chat.py`）用：它需要的是自由文本而不是 JSON 契约，
-        但**必须复用同一份 Key 配置、同一个客户端、同一种重试纪律**。
-        让问答自己再建一个 OpenAI 客户端，迟早会出现
-        「解读走 A 模型、问答走 B 模型」这种不一致。
+        给问答框（`app/llm/chat.py`）用：它需要的是自由文本而不是 JSON 契约。
+        走的是和解读同一个出口（`call_llm`），
+        所以「解读走 A 模型、问答走 B 模型」这种不一致在结构上不可能发生。
         """
-        resp = self._get_client().chat.completions.create(
-            model=self._model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,          # 显式截断，避免无限生成
-        )
-        return (resp.choices[0].message.content or "").strip()
+        system = ""
+        prompt = ""
+        for m in messages:
+            if m.get("role") == "system":
+                system = m.get("content", "")
+            else:
+                prompt = m.get("content", "")      # 取最后一条非 system 消息
+
+        reply = call_llm(prompt, model, system=system,
+                         max_tokens=max_tokens, temperature=temperature)
+        self.last_model_label = reply.model_label
+        self.last_notice = reply.notice
+        return reply.text
 
     # ------------------------------------------------------------ 问诊清单
 
@@ -425,7 +416,7 @@ class Explainer:
 
     # ------------------------------------------------------------ 大模型模式
 
-    def _llm_report(self, analysis: dict) -> LabReport:
+    def _llm_report(self, analysis: dict, model: str | None = None) -> LabReport:
         """调用大模型生成解释，并通过数字回溯校验。
 
         铁律在这里的具体形态：
@@ -433,26 +424,21 @@ class Explainer:
             2. 输出必须匹配 LabReport 契约（extra="forbid"）；
             3. 输出中每个数字都必须在事实 JSON 里有出处；
             4. 校验不过 → 重跑一次 → 仍不过 → 退回模板模式并如实标记。
+
+        注意这里没有 `client`、没有 `model=xxx`：
+        换模型不改业务代码，只改 provider.MODELS 里那一行。
         """
         facts = self._facts_json(analysis)
         prompt = self._build_prompt(facts)
-        client = self._get_client()
 
         last_err = ""
         for attempt in (1, 2):
             try:
-                resp = client.chat.completions.create(
-                    model=self._model,
-                    messages=[
-                        {"role": "system", "content": _SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=0.3,
-                    max_tokens=2048,          # 显式截断，避免无限生成
-                    response_format={"type": "json_object"},
-                )
-                raw = resp.choices[0].message.content or ""
-                data = json.loads(raw)
+                reply = call_llm(prompt, model, system=_SYSTEM_PROMPT,
+                                 max_tokens=2048, json_mode=True)
+                self.last_model_label = reply.model_label
+                self.last_notice = reply.notice
+                data = json.loads(reply.text)
 
                 # 数字回溯校验：模型写的每个数字都要有出处
                 prose = " ".join(
@@ -542,12 +528,15 @@ class Explainer:
 
     # ------------------------------------------------------------ 对外接口
 
-    def explain(self, analysis: dict) -> dict:
-        """一次性生成完整解读。返回 dict，含 mode 字段供界面展示。"""
+    def explain(self, analysis: dict, model: str | None = None) -> dict:
+        """一次性生成完整解读。返回 dict，含 mode / model 字段供界面展示。"""
         analysis = _with_counts(analysis)
+        # 每次都先清空：last_notice 是实例属性，不清会带着上一次的回落提示串台
+        self.last_notice = ""
+        self.last_model_label = ""
         if self.mode == "llm":
             try:
-                report = self._llm_report(analysis)
+                report = self._llm_report(analysis, model)
             except Exception:                       # noqa: BLE001
                 report = self._template_report(analysis)
                 report.follow_up_questions.append("（大模型不可用，已切换本地模板解读）")
@@ -556,14 +545,18 @@ class Explainer:
 
         return {
             "mode": self.mode,
-            "model": self.model_name,
+            # 用实际跑的那一个，而不是用户选的那一个：
+            # 选了占位模型时这里会是 DeepSeek，界面靠 notice 额外说明
+            "model": self.last_model_label or self.model_name,
+            "model_notice": self.last_notice,
             "report": report.model_dump(),
             "family_message": self.family_message(analysis),
             "privacy": analysis.get("privacy", {}),
             "counts": analysis.get("counts", {}),
         }
 
-    def stream_events(self, analysis: dict) -> Iterator[StreamEvent]:
+    def stream_events(self, analysis: dict,
+                      model: str | None = None) -> Iterator[StreamEvent]:
         """按事件流吐出解读过程。
 
         这一段是为赛题 UX 评分点（「流式、思考可视化」）准备的：
@@ -588,13 +581,18 @@ class Explainer:
                 progress=50,
             )
 
-        result = self.explain(analysis)
+        result = self.explain(analysis, model)
         report = result["report"]
 
         yield StreamEvent(
             type="thinking", stage="explain",
             message=f"正在生成解释（{result['model']}）…", progress=70,
         )
+        if result.get("model_notice"):
+            yield StreamEvent(
+                type="status", stage="explain",
+                message=result["model_notice"], progress=72,
+            )
 
         # 流式吐出正文：按标点切片，接近真实 token 的节奏
         text = report.get("summary", "")

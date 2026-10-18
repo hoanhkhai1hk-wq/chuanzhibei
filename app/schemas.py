@@ -387,6 +387,11 @@ class ChatRequest(_Strict):
 
     question: str = Field(..., min_length=1, max_length=500, description="用户问题（已脱敏）")
     analysis: dict = Field(..., description="/api/analyze 的原始返回")
+    model: str = Field(
+        default="",
+        description=("用哪个模型，为空则用默认模型；"
+                     "传了未接通的模型不会报错，会回落到默认模型并在返回里说明"),
+    )
 
 
 class ChatReply(_Strict):
@@ -399,7 +404,12 @@ class ChatReply(_Strict):
 
     answer: str = Field(..., description="给用户看的回答，纯文本，不含 markdown")
     mode: Literal["llm", "template"] = Field(..., description="本次回答由谁生成")
-    model: str = Field(..., description="模型名；模板模式为「本地模板」")
+    model: str = Field(..., description="**实际**使用的模型名；模板模式为「本地模板」")
+    model_notice: str = Field(
+        default="",
+        description=("非空表示实际用的不是用户选的那个模型"
+                     "（如占位模型回落），界面必须原样显示"),
+    )
     validated: bool = Field(
         ..., description="数字是否全部通过回溯校验（模板模式恒为 True）"
     )

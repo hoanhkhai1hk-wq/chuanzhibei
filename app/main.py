@@ -35,6 +35,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.llm.explainer import Explainer
 from app.llm.chat import QaAnswerer
+from app.llm.provider import default_model_key, list_models
 from app.ocr.engine import extract_text
 from app.ocr.parser import parse_markers
 from app.pipeline import redact
@@ -67,6 +68,25 @@ def index() -> FileResponse:
     return FileResponse(page)
 
 
+@app.get("/api/models", summary="可选的大模型列表")
+def list_llm_models() -> dict:
+    """给右上角下拉框用。
+
+    为什么要有这个接口而不是把模型写死在前端：
+        前端写死一份、后端注册表里再写一份，迟早会不一致——
+        界面上显示「已接通」，实际调用时才发现根本没有这个模型。
+        模型清单与可用状态只有后端说了算（`provider.MODELS`）。
+
+    `status=wiring` 的模型是占位：选中会静默回落到默认模型，
+    并由 `notice` 如实告诉用户「当前使用的是谁」。
+    """
+    return {
+        "models": list_models(),
+        "default": default_model_key(),
+        "current": default_model_key(),
+    }
+
+
 @app.get("/api/about", summary="项目信息")
 def about() -> dict:
     return {
@@ -78,9 +98,11 @@ def about() -> dict:
             "日常层": "每日记录 → 菜品库/数值 → 本地累加 → 对照红线 → 提示/周报",
             "表达层": "大模型只写人话，不写数字",
             "问答层": "提问 → 本地事实清单 → 模型只写措辞 → 数字回溯校验后重写",
+            "多模型": "call_llm(prompt, model) 是唯一出口，换模型只改 provider.MODELS",
         },
         "explain_mode": _EXPLAINER.mode,
         "explain_model": _EXPLAINER.model_name,
+        "models": [m["key"] for m in list_models()],
     }
 
 
@@ -138,6 +160,16 @@ _ENGINE = RuleEngine()
 _EXPLAINER = Explainer()
 _QA = QaAnswerer(explainer=_EXPLAINER, markers=_ENGINE.markers)
 _SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
+
+
+def _take_model(payload: dict) -> str:
+    """从请求体里取出并摘掉 `model`。
+
+    为什么要 pop：这些接口的 body 就是判定结果本身，
+    留一个多余的键进去会一路带到事实清单和大模型的上下文里。
+    模型是**调用参数**，不是报告的一部分。
+    """
+    return str(payload.pop("model", "") or "")
 
 
 @app.post("/api/extract", summary="报告图片 → 脱敏文本 + 四元组")
@@ -258,10 +290,13 @@ def explain(payload: dict) -> dict:
 
     未配置 DEEPSEEK_API_KEY 时自动使用本地模板模式，产品功能不受影响；
     配置后自动升级为大模型模式，输出仍会经过数字回溯校验。
+
+    payload 里可选的 `model` 指定用哪个模型；
+    传了未接通的模型不会报错，provider 会回落到默认模型并在返回里带 `model_notice`。
     """
     if not payload.get("judged"):
         raise HTTPException(status_code=400, detail="judged 不能为空，请先调用 /api/analyze")
-    return _EXPLAINER.explain(payload)
+    return _EXPLAINER.explain(payload, model=_take_model(payload))
 
 
 @app.post("/api/explain/stream", summary="[流式] 判定结果 → 人话解释")
@@ -274,13 +309,18 @@ def explain_stream(payload: dict) -> StreamingResponse:
     而不是对着一个空白转圈圈。
 
     事件契约见 app/schemas.py 的 StreamEvent。
+
+    payload 里可选的 `model` 指定用哪个模型；占位模型会回落到默认模型，
+    并额外吐一条 status 事件说明「当前实际用的是谁」——
+    思考可视化里出现的是真话，不是用户以为的那个模型。
     """
     if not payload.get("judged"):
         raise HTTPException(status_code=400, detail="judged 不能为空，请先调用 /api/analyze")
+    wanted = _take_model(payload)
 
     def gen():
         try:
-            for ev in _EXPLAINER.stream_events(payload):
+            for ev in _EXPLAINER.stream_events(payload, model=wanted):
                 yield f"data: {ev.model_dump_json()}\n\n"
         except Exception as e:                      # noqa: BLE001
             err = StreamEvent(type="error", stage="explain",
@@ -315,7 +355,7 @@ def chat(req: ChatRequest) -> ChatReply:
             status_code=400,
             detail="analysis.judged 不能为空，请先调用 /api/analyze 再提问",
         )
-    return ChatReply(**_QA.answer(req.question, req.analysis))
+    return ChatReply(**_QA.answer(req.question, req.analysis, model=req.model))
 
 
 # ==============================================================================

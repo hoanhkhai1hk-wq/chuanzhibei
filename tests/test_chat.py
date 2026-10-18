@@ -49,10 +49,12 @@ class FakeExplainer(Explainer):
         super().__init__(api_key="fake-key")     # 有 Key → mode = "llm"
         self.replies = list(replies)
         self.prompts: list[str] = []
+        self.models: list[str] = []
 
-    def complete(self, messages, max_tokens=512, temperature=0.3) -> str:
+    def complete(self, messages, max_tokens=512, temperature=0.3, model=None) -> str:
         # 最后一条 user 消息就是 prompt，记下来供断言
         self.prompts.append(messages[-1]["content"])
+        self.models.append(model)
         return self.replies.pop(0)
 
 
@@ -192,6 +194,26 @@ def test_prompt_contains_facts_only() -> None:
     check("prompt 不含身份证", "身份证" in prompt, False)
 
 
+def test_model_fallback_reaches_ui() -> None:
+    """选了占位的模型：答案照给，但必须告诉界面「实际用的是 DeepSeek」。"""
+    an = sample_analysis()
+    fake = FakeExplainer(["你的尿酸是 520，高于参考区间 208-428。"])
+    qa = QaAnswerer(explainer=fake, markers=engine().markers)
+
+    r = qa.answer("尿酸高是怎么回事", an, model="qwen")
+    check("选通义时不崩", bool(r["answer"]), True)
+    check("实际模型是 DeepSeek", r["model"], "DeepSeek V4.1")
+    check("提示回传给界面", r["model_notice"], "该模型正在接入中，当前使用 DeepSeek")
+    check("选中的 key 透传到调用层", fake.models[-1], "qwen")
+
+    r2 = qa.answer("尿酸高是怎么回事", an, model="deepseek")
+    check("选 DeepSeek 无提示", r2["model_notice"], "")
+
+    # 未登记的模型同样不能让接口挂掉
+    r3 = qa.answer("尿酸高是怎么回事", an, model="xxx")
+    check("未登记模型不崩", bool(r3["answer"]), True)
+
+
 def test_counts_are_allowed() -> None:
     """计数类数字（共 N 项）是本地事实，不该被自己的校验器判成幻觉。"""
     an = sample_analysis()
@@ -211,6 +233,7 @@ def main() -> int:
     test_llm_retry_on_hallucination()
     test_llm_falls_back_when_still_bad()
     test_prompt_contains_facts_only()
+    test_model_fallback_reaches_ui()
     test_counts_are_allowed()
 
     print(f"\n通过 {PASSED} 项断言")

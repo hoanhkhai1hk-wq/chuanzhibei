@@ -105,6 +105,28 @@ p { margin: 0; }
 .nav-tab.is-active { background: var(--primary); color: #fff; }
 
 .topbar-right { display: flex; align-items: center; gap: 12px; justify-self: end; }
+
+/* ─── 模型选择 ───
+   未接通的模型照样在下拉框里，但选中后会立刻在下面给出一行提示，
+   而不是让它看起来"已经生效了"。 */
+.model-pick { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.model-pick-row { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.model-pick-label {
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.model-select {
+  font: inherit; font-size: 12px; color: var(--ink-2);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface); padding: 4px 8px; cursor: pointer; outline: none;
+  transition: border-color .15s, color .15s;
+}
+.model-select:hover { border-color: var(--primary); color: var(--primary); }
+.model-select:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.model-select.is-wiring {
+  border-style: dashed; border-color: var(--accent); color: var(--accent);
+}
+.model-note { font-size: 11px; color: var(--accent); letter-spacing: .02em; }
 .topbar-link {
   font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--ink-3); text-decoration: none;
