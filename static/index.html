@@ -281,6 +281,15 @@
         <button type="button" class="seg" data-meal="snack" role="radio" aria-checked="false">加餐</button>
       </div>
     </div>
+    <div class="voice-bar">
+      <button type="button" class="btn btn-primary btn-voice" id="btn-voice"
+              aria-pressed="false" aria-describedby="voice-tip">
+        <svg class="si" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2.2" width="4" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.8 7.6a4.2 4.2 0 0 0 8.4 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8 11.8v2.1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span id="voice-label">按住说话</span>
+        <span class="rec-dot" aria-hidden="true"></span>
+      </button>
+      <span class="voice-tip" id="voice-tip">不会打字没关系，按住说一句，比如「中午吃了红烧肉和米饭」</span>
+    </div>
+    <div class="voice-result is-hidden" id="voice-result" role="status" aria-live="polite"></div>
     <input type="search" class="search" id="dish-q"
            placeholder="搜索菜品，如：火锅 / 奶茶 / 红烧肉" autocomplete="off">
     <div class="dish-grid" id="dish-list"></div>

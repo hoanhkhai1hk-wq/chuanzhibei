@@ -728,6 +728,56 @@ p { margin: 0; }
 }
 .search:focus { border-color: var(--primary); background: #fff; }
 
+/* ─── 语音记餐（按住说话） ───
+   按钮就是普通主按钮：36px / 6px 圆角 / 纯色，复用 --btn-* 令牌，
+   和「记录这一餐」同一套规格，不另起一个视觉体系。
+   按住期间只把底色压深一档 + 出一个红点，不做缩放、不做呼吸光晕：
+   这是工具界面，反馈要能看懂，不要抢戏。 */
+.voice-bar {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.btn-voice {
+  min-width: 132px;
+  /* 长按型按钮必须关掉这两个，否则触屏按住会先选中文字 / 弹系统菜单 */
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+.btn.btn-voice.is-listening,
+.btn.btn-voice.is-listening:hover {
+  background: var(--btn-primary-press);
+  border-color: var(--btn-primary-press);
+}
+.btn-voice .rec-dot {
+  display: none; width: 6px; height: 6px; border-radius: 50%;
+  background: #fff; margin-left: 7px; flex: none;
+}
+.btn-voice.is-listening .rec-dot {
+  display: inline-block; animation: rec-pulse 1.1s ease-in-out infinite;
+}
+@keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) {
+  .btn-voice.is-listening .rec-dot { animation: none; }
+}
+.voice-tip { font-size: 13px; color: var(--ink-3); line-height: 1.6; }
+
+/* 识别结果条：只在真识别出东西时出现，说了什么、勾了哪几道、哪句没认出来，
+   一行一句写清楚——「没匹配上」也要说出来，不能静默消失。 */
+.voice-result {
+  display: flex; flex-direction: column; gap: 3px;
+  font-size: 13px; line-height: 1.6;
+  border-left: 3px solid var(--primary);
+  background: var(--surface-2);
+  padding: 9px 12px; margin-bottom: 10px;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.voice-result.is-warn { border-left-color: var(--warn); }
+.voice-result .vr-row { display: flex; gap: 7px; align-items: baseline; }
+.voice-result .vr-k { color: var(--ink-3); flex: none; }
+.voice-result .vr-v { color: var(--ink); }
+.voice-result .vr-v.is-warn { color: var(--warn); }
+
 .dish-grid {
   display: flex; flex-wrap: wrap; gap: var(--btn-gap);
   margin-bottom: 14px; max-height: 230px; overflow-y: auto; padding: 2px;

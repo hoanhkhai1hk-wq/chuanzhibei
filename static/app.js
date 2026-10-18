@@ -838,6 +838,17 @@
     picked: new Set(),
     mealType: 'lunch',
     searchTimer: null,
+    /* ── 语音记餐（第三单）──
+       voiceMode  输入框里装的是「一句话」还是「关键词」，决定改字时走哪条匹配
+       voiceActive 正按住
+       autoPicked  由语音自动勾上的菜，重新匹配时只撤这一批，不动用户手点的 */
+    voiceMode: false,
+    voiceActive: false,
+    voiceFinal: '',
+    voiceError: null,
+    voiceStartAt: 0,
+    autoPicked: new Set(),
+    rec: null,
   };
 
   const MEAL_TEXT = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
@@ -937,6 +948,361 @@
     $('#picked-dishes').textContent =
       n ? [...daily.picked].join('、') : '还没选，点上面的菜名';
     $('#btn-meal').disabled = n === 0;
+  }
+
+  /* ══════════════════ 语音记餐（按住说话） ══════════════════
+
+     一句话进来，切成「菜名候选」，拿去查菜品库，命中就勾进 daily.picked。
+     勾进去之后与手动点菜名走的是同一个 Set、同一个按钮、同一条 POST /api/meals，
+     没有第二条记录通道。
+
+     三条边界写在这里，免得以后（包括我自己）越界：
+       1. 识别文本只用来查菜。一个字符都不送给大模型，也不问「吃了会怎样」。
+       2. 撞几条红线不在前端算。那是 /api/meals 本地判定的事——
+          数字只能有一个出口，前端另算一份，迟早和后端打架。
+       3. 没匹配上必须说出来。「没认出」比「悄悄少勾一道菜」安全得多。
+
+     为什么两个方向都要查：
+       「红烧肉」——菜品名被这句话包含（正向）
+       「米饭」——这句话被菜品名包含（反向，库里的全名是白米饭 / 糙米饭）
+     只做正向，「米饭」永远勾不上；只做反向，「红烧肉和米饭」整句查不到。
+     ------------------------------------------------------------------ */
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  const VOICE_TIP = '不会打字没关系，按住说一句，比如「中午吃了红烧肉和米饭」';
+
+  // 停用词只收「整词」，一个字的都不收：
+  // 剥单字会把「米饭」「红烧肉」吃成残缺片段，越洗越错。
+  const VOICE_NOISE = [
+    '早餐', '午餐', '晚餐', '加餐', '夜宵', '宵夜',
+    '今天', '昨天', '早上', '上午', '中午', '下午', '晚上', '夜里', '刚刚', '刚才',
+    '我们', '他们', '孩子', '老伴', '家里',
+    '吃的是', '喝了点', '吃了', '喝了', '点了', '叫了', '买了',
+    '做了', '煮了', '炒了', '蒸了', '吃的', '喝的', '煮的', '炒的', '蒸的',
+    '一共', '大概', '差不多', '好像', '感觉', '可能',
+    '一份', '一碗', '一盘', '一杯', '一瓶', '两个', '三个', '一个', '半个',
+  ];
+  // 句首的单字主语/副词单独一张表：只在开头剥，剥完还不能把话剥空
+  const VOICE_HEAD = ['我', '他', '她', '又', '还', '就', '都', '也', '个', '杯', '碗', '盘', '瓶', '份', '只'];
+  // 与 app/dict/dishes.json 的 category 一致。只用来判断「用户说的是一类菜」，
+  // 不参与任何判定——真正的判定仍在 /api/meals。宁可多问一句，也不硬套成某一道：
+  // 「火锅」在库里没有同名菜，按字面硬套会套到「自嗨锅（麻辣火锅）」，
+  // 那道是超市包装食品、标签为空，拿它记火锅会把「限嘌呤」红线整条漏掉。
+  const VOICE_KIND = ['主食', '乳制品', '便利店', '家常菜', '快餐', '早餐',
+    '火锅', '烧烤', '甜品', '超市', '酒类', '饮品'];
+
+  const VOICE_TAIL = /(一份|一碗|一盘|一杯|一瓶|两个|三个|一个|半个|两只|三只)$/;
+  const VOICE_SEP = /[，,。.；;！!？?、\s+＋]|还有|以及|然后|另外|外加|配上|配着|再加|和|跟|与|加/;
+
+  const dishQueryCache = new Map();   // 词 → Promise<dishes[]>，同一个词只问后端一次
+
+  function queryDishes(q) {
+    if (dishQueryCache.has(q)) return dishQueryCache.get(q);
+    const p = fetchDishes(q).catch(() => []);
+    dishQueryCache.set(q, p);
+    return p;
+  }
+
+  function baseName(name) {
+    // 「牛奶（鲜）」「红烧肉（家常）」：括号里是做法/规格，嘴上只会说括号前面那截
+    return String(name).replace(/[（(].*?[)）]/g, '').trim();
+  }
+
+  function nameKeys(dish) {
+    return [dish.name, baseName(dish.name), ...(dish.aliases || [])]
+      .filter(k => typeof k === 'string' && k.length >= 2);
+  }
+
+  function stripNoise(seg) {
+    let s = String(seg).trim();
+    let dirty = true;
+    while (dirty) {
+      dirty = false;
+      for (const w of VOICE_NOISE) {
+        if (s.startsWith(w) && s.length > w.length) { s = s.slice(w.length); dirty = true; }
+      }
+      const head = s.charAt(0);
+      if (VOICE_HEAD.indexOf(head) >= 0 && s.length > 2) { s = s.slice(1); dirty = true; }
+    }
+    return s.replace(VOICE_TAIL, '').trim();
+  }
+
+  /* 一段话 → 一道菜 / 一个分类 / 一组候选。四种结果都要能说清楚：
+       exact     名字对上了，直接勾
+       fuzzy     没有同名的，按覆盖度挑最贴的一道（会标「按最接近」）
+       category  说的是一类菜（火锅、酒类），不猜，让用户自己挑
+       none      一道像都没有，把最像的几道列出来当候选，绝不静默 */
+  async function resolveSeg(seg) {
+    const list = await queryDishes(seg);
+    if (!list.length) return { how: 'none', seg, options: [] };
+
+    // 1) 名字 / 别名 / 去掉括号后缀的名字，完全等于这一段 → 就是它
+    for (const d of list) {
+      if (nameKeys(d).some(k => k === seg)) return { how: 'exact', dish: d, seg };
+    }
+
+    // 2) 是一类菜而不是某一道 → 不硬套（分类检查必须在模糊匹配之前）
+    if (VOICE_KIND.indexOf(seg) >= 0) return { how: 'category', seg };
+
+    // 3) 按「这段字占菜名多大比例」排序挑最贴的。
+    //    白米饭 / 糙米饭 同分时保持菜品库原序（库里就是常用度序）
+    const scored = list.map(d => {
+      const name = baseName(d.name);
+      return {
+        dish: d,
+        cov: name.length >= 2 ? seg.length / name.length : 0,
+        gap: Math.abs(name.length - seg.length),
+      };
+    }).sort((a, b) => (b.cov - a.cov) || (a.gap - b.gap));
+
+    const top = scored[0];
+    // 只有一个候选时门槛放低：「啤酒」对着库里唯一一道「三得利啤酒」，
+    // 覆盖度只有 0.4，但整库只此一条，错的概率很低。
+    const floor = scored.length === 1 ? 0.34 : 0.6;
+    if (top.cov >= floor) return { how: 'fuzzy', dish: top.dish, seg };
+
+    return { how: 'none', seg, options: scored.slice(0, 3).map(x => x.dish) };
+  }
+
+  async function splitByWindow(seg) {
+    // 一口气说完中间没停顿（「红烧肉米饭」）：6→2 字滑窗再切一遍
+    const out = [];
+    let i = 0;
+    while (i < seg.length - 1) {
+      let got = null;
+      for (let len = Math.min(6, seg.length - i); len >= 2; len--) {
+        const r = await resolveSeg(seg.substr(i, len));
+        if (r.how === 'exact' || r.how === 'fuzzy') { got = r; break; }
+      }
+      if (got) { out.push(got); i += got.seg.length; } else { i += 1; }
+    }
+    return out;
+  }
+
+  async function matchSentence(text) {
+    const picks = [];
+    const misses = [];
+    const kinds = [];        // 说成分类的（火锅 / 酒类），不猜，交给用户挑
+    const options = [];      // 没对上的段落，给出「最像的几道」当候选
+    const seen = new Set();
+    const add = p => {
+      if (seen.has(p.dish.name)) return;
+      seen.add(p.dish.name);
+      picks.push(p);
+    };
+
+    const segs = String(text).split(VOICE_SEP)
+      .map(stripNoise).filter(s => s.length >= 2);
+
+    // 一句话里压根没剩下菜名（"今天喝了点水"）——不是没匹配上，是这句话里没有菜，
+    // 这种情况要单独说，否则用户会以为系统坏了
+    if (!segs.length) return { picks, misses, kinds, options, empty: true };
+
+    for (const seg of segs) {
+      const r = await resolveSeg(seg);
+      if (r.how === 'exact' || r.how === 'fuzzy') { add(r); continue; }
+      if (r.how === 'category') { kinds.push(seg); continue; }
+
+      const parts = await splitByWindow(seg);
+      if (parts.length) { parts.forEach(add); continue; }
+
+      misses.push(seg);
+      (r.options || []).forEach(d => {
+        if (!seen.has(d.name) && !options.some(o => o.name === d.name)) options.push(d);
+      });
+    }
+    return { picks, misses, kinds, options, empty: false };
+  }
+
+  function applyVoicePicks(picks) {
+    daily.autoPicked.forEach(name => daily.picked.delete(name));
+    daily.autoPicked.clear();
+    picks.forEach(p => {
+      daily.picked.add(p.dish.name);
+      daily.autoPicked.add(p.dish.name);
+    });
+    renderPicked();
+  }
+
+  function hideVoiceResult() {
+    const el = $('#voice-result');
+    if (el) { el.classList.add('is-hidden'); el.innerHTML = ''; }
+  }
+
+  function showVoiceMsg(msg, isWarn) {
+    const el = $('#voice-result');
+    if (!el) return;
+    el.innerHTML = `<div class="vr-row"><span class="vr-v${isWarn ? ' is-warn' : ''}">`
+      + `${escapeHtml(msg)}</span></div>`;
+    el.classList.remove('is-hidden');
+    el.classList.toggle('is-warn', !!isWarn);
+  }
+
+  function renderVoiceResult(heard, picks, misses, kinds, options, empty) {
+    const el = $('#voice-result');
+    if (!el) return;
+    const rows = [
+      `<div class="vr-row"><span class="vr-k">听到</span>`
+      + `<span class="vr-v">${escapeHtml(heard)}</span></div>`,
+    ];
+    if (picks.length) {
+      const fuzzy = picks.filter(p => p.how === 'fuzzy');
+      rows.push(`<div class="vr-row"><span class="vr-k">勾上</span><span class="vr-v">`
+        + `${picks.length} 道：${escapeHtml(picks.map(p => p.dish.name).join('、'))}</span></div>`);
+      if (fuzzy.length) {
+        rows.push(`<div class="vr-row"><span class="vr-k">按最接近</span><span class="vr-v">`
+          + `${escapeHtml(fuzzy.map(p => '「' + p.seg + '」→ ' + p.dish.name).join('；'))}`
+          + `，不对可以点掉换</span></div>`);
+      }
+    } else if (empty) {
+      rows.push(`<div class="vr-row"><span class="vr-k">提示</span><span class="vr-v is-warn">`
+        + `这句话里没听出菜名 —— 说具体一点，比如「吃了红烧肉和米饭」</span></div>`);
+    } else {
+      rows.push(`<div class="vr-row"><span class="vr-k">勾上</span>`
+        + `<span class="vr-v is-warn">一道都没认出来</span></div>`);
+    }
+    if (kinds.length) {
+      rows.push(`<div class="vr-row"><span class="vr-k">是分类</span><span class="vr-v is-warn">`
+        + `${escapeHtml(kinds.join('、'))} 是一类菜，不是某一道 —— `
+        + `在下面搜索框里挑具体的（毛肚、鸭血、肥牛都算）</span></div>`);
+    }
+    if (options.length) {
+      rows.push(`<div class="vr-row"><span class="vr-k">像的</span><span class="vr-v">`
+        + `下面列了 ${options.length} 道，点一下就能加上</span></div>`);
+    }
+    if (misses.length) {
+      rows.push(`<div class="vr-row"><span class="vr-k">没认出</span><span class="vr-v is-warn">`
+        + `${escapeHtml(misses.join('、'))} —— 可以在下面搜索框打字，或直接点菜名</span></div>`);
+    }
+    el.innerHTML = rows.join('');
+    el.classList.remove('is-hidden');
+    el.classList.toggle('is-warn', picks.length === 0);
+  }
+
+  async function runVoiceMatch(text) {
+    const t = String(text || '').trim();
+    if (t.length < 2) { hideVoiceResult(); return; }
+    const { picks, misses, kinds, options, empty } = await matchSentence(t);
+    applyVoicePicks(picks);
+    renderVoiceResult(t, picks, misses, kinds, options, empty);
+    // 菜品格子 = 这一轮命中的菜（已勾）+ 没对上的候选（未勾，点一下就能加），
+    // 用户既能看见勾的是哪几道，也能一键改正
+    const taken = new Set(picks.map(p => p.dish.name));
+    const show = [...picks.map(p => p.dish), ...options.filter(d => !taken.has(d.name))];
+    if (show.length) renderDishList(show);
+  }
+
+  function setVoiceUI(listening) {
+    const btn = $('#btn-voice');
+    if (!btn) return;
+    btn.classList.toggle('is-listening', !!listening);
+    btn.setAttribute('aria-pressed', listening ? 'true' : 'false');
+    $('#voice-label').textContent = listening ? '松开结束' : '按住说话';
+  }
+
+  function buildRecognizer() {
+    const rec = new SR();
+    rec.lang = 'zh-CN';
+    rec.continuous = true;      // 按住期间一直听，由松手决定结束
+    rec.interimResults = true;  // 边说边出字，用户知道自己被听见了
+    rec.maxAlternatives = 1;
+
+    rec.onresult = ev => {
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) daily.voiceFinal += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      const shown = (daily.voiceFinal + interim).trim();
+      if (shown) $('#dish-q').value = shown;   // 边说边回填，松手前就看得到
+    };
+
+    rec.onerror = ev => { daily.voiceError = ev.error || 'unknown'; };
+
+    rec.onend = async () => {
+      const text = (daily.voiceFinal || '').trim();
+      const tooShort = Date.now() - daily.voiceStartAt < 350;
+      const err = daily.voiceError;
+      daily.voiceActive = false;
+      daily.voiceError = null;
+      setVoiceUI(false);
+      $('#voice-tip').textContent = VOICE_TIP;
+
+      if (!text) {
+        // 每种失败都要说清楚下一步干什么，不能把用户晾在那儿
+        if (err === 'network') {
+          showVoiceMsg('语音识别连不上网（浏览器的语音服务要联网，也可能被当前网络拦住了）。'
+            + '可以直接在下面搜索框打字，或者点菜名。', true);
+        } else if (err === 'not-allowed' || err === 'service-not-allowed') {
+          showVoiceMsg('没有麦克风权限。点地址栏左边的锁图标，把「麦克风」改成允许，再按住说一次。', true);
+        } else if (err === 'audio-capture') {
+          showVoiceMsg('没找到麦克风。检查一下麦克风有没有接好。', true);
+        } else if (tooShort) {
+          showVoiceMsg('按住别松手，说完一整句再松开。', true);
+        } else {
+          showVoiceMsg('没听清。按住按钮，说完再松手，再说一次。', true);
+        }
+        return;
+      }
+
+      daily.voiceMode = true;
+      $('#dish-q').value = text;
+      await runVoiceMatch(text);
+    };
+    return rec;
+  }
+
+  function startVoice() {
+    if (!SR || daily.voiceActive) return;
+    if (!daily.rec) daily.rec = buildRecognizer();
+    daily.voiceActive = true;
+    daily.voiceFinal = '';
+    daily.voiceError = null;
+    daily.voiceStartAt = Date.now();
+    setVoiceUI(true);
+    $('#voice-tip').textContent = '正在听，说完再松手…';
+    try {
+      daily.rec.start();
+    } catch {
+      // 上一次还没完全收尾就按下了，属于正常竞争，重按一次即可
+      daily.voiceActive = false;
+      setVoiceUI(false);
+      $('#voice-tip').textContent = VOICE_TIP;
+      showVoiceMsg('麦克风还没准备好，再按一次。', true);
+    }
+  }
+
+  function stopVoice() {
+    if (!daily.voiceActive || !daily.rec) return;
+    setVoiceUI(false);
+    try { daily.rec.stop(); } catch { /* 没在跑就什么都不用做 */ }
+  }
+
+  function bindVoice() {
+    const btn = $('#btn-voice');
+    if (!btn) return;
+    if (!SR) {
+      // 不支持就整条隐藏，不给一个按了没反应的按钮（与朗读按钮同一处理）
+      const bar = btn.closest('.voice-bar');
+      if (bar) bar.classList.add('is-hidden');
+      return;
+    }
+    btn.addEventListener('mousedown', e => { e.preventDefault(); startVoice(); });
+    btn.addEventListener('mouseup', stopVoice);
+    btn.addEventListener('mouseleave', () => { if (daily.voiceActive) stopVoice(); });
+    btn.addEventListener('touchstart', e => { e.preventDefault(); startVoice(); },
+      { passive: false });
+    btn.addEventListener('touchend', e => { e.preventDefault(); stopVoice(); },
+      { passive: false });
+    btn.addEventListener('touchcancel', stopVoice);
+    // 键盘也能用：空格/回车按住，松手结束
+    btn.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startVoice(); }
+    });
+    btn.addEventListener('keyup', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); stopVoice(); }
+    });
   }
 
   function renderToday(s) {
@@ -1098,6 +1464,7 @@
   function bindDaily() {
     $('#tab-report').addEventListener('click', () => setTab('report'));
     $('#tab-daily').addEventListener('click', () => setTab('daily'));
+    bindVoice();
 
     $$('#meal-seg .seg').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1115,6 +1482,18 @@
       clearTimeout(daily.searchTimer);
       const q = e.target.value;
       daily.searchTimer = setTimeout(async () => {
+        if (!q.trim()) {
+          // 清空 = 退出语音模式，回到默认菜品列表
+          daily.voiceMode = false;
+          hideVoiceResult();
+          try { renderDishList(await fetchDishes('')); } catch { /* 失败不打断 */ }
+          return;
+        }
+        if (daily.voiceMode) {
+          // 语音模式下手改这句话 → 重新匹配，这是「可手动改再确认」那一步
+          await runVoiceMatch(q);
+          return;
+        }
         try { renderDishList(await fetchDishes(q)); } catch { /* 搜索失败不打断 */ }
       }, 250);
     });
@@ -1127,10 +1506,22 @@
           dishes: [...daily.picked],
         });
         daily.picked.clear();
+        daily.autoPicked.clear();
+        daily.voiceMode = false;
+        $('#dish-q').value = '';
+        hideVoiceResult();
         renderPicked();
+        // 菜品格子回到默认列表，别把上一轮的识别结果留在那儿冒充「已选」
+        try { renderDishList(await fetchDishes('')); } catch { /* 失败不影响记录结果 */ }
         renderToday(summary);
         refreshWeek();
-        toast('已记录，对照结果更新了');
+        // 「撞了几条红线」这个数字只从 /api/meals 的返回里读，前端不自己算
+        const hits = (summary.hits || []).length;
+        toast(hits
+          ? `已记录 · 撞到 ${hits} 条红线：${summary.hits.map(h => h.restriction).join('、')}`
+          : (summary.redlines_active
+            ? `已记录 · ${summary.redlines_active} 条红线一条没碰`
+            : '已记录'));
       } catch (e) {
         toast('记录失败：' + e.message);
       }
