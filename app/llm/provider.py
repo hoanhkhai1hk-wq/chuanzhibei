@@ -29,6 +29,19 @@
     1. 在 MODELS 里加一行（写清读哪个环境变量、base_url 是什么）；
     2. 把 status 从 "wiring" 改成 "ready"。
 业务代码一行都不用动。
+
+================================================================================
+写 model_id 之前先去官网对清单
+================================================================================
+这个文件里的三个 model_id 都曾经是退役名，而且**退役名不会报错**：
+DeepSeek 的 `deepseek-chat` 至今仍能调通，服务端会静默改写到你没要求的模型上，
+于是「配置里写的」和「实际跑的」变成两件事，日志、成本、效果全都对不上账。
+Kimi 的 `moonshot-v1` 系列已于 2026-08-31 下线，通义 `qwen-plus` 也已让位给
+`qwen3.7-plus`。
+
+所以定下一条规矩：改 model_id 前先 `GET /v1/models` 对一遍清单，
+或去厂商的「模型列表 / 下线公告」页核一次，不要凭记忆写。
+下面每个 model_id 后面都留了核查日期与出处。
 """
 
 from __future__ import annotations
@@ -81,7 +94,10 @@ MODELS: dict[str, ModelSpec] = {
         key="deepseek",
         label="DeepSeek V4.1",
         vendor="DeepSeek",
-        model_id="deepseek-chat",
+        # 2026-10-19 核对 GET /v1/models：在售 deepseek-flash / deepseek-v4-pro。
+        # 旧名 deepseek-chat 已退役，调用不报错但会被服务端静默改写到 flash，
+        # 配置与实际不符，别再写回去。
+        model_id="deepseek-flash",
         base_url="https://api.deepseek.com/v1",
         env_key="DEEPSEEK_API_KEY",
         env_base="DEEPSEEK_BASE_URL",
@@ -93,7 +109,9 @@ MODELS: dict[str, ModelSpec] = {
         key="qwen",
         label="通义千问",
         vendor="阿里云百炼",
-        model_id="qwen-plus",
+        # 2026-10-19 核对百炼模型列表：qwen-plus 已被列为旧版并进入下线流程，
+        # 现推荐 qwen3.7-plus。这一项仍是 wiring，真正接通时再验证一次。
+        model_id="qwen3.7-plus",
         base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
         env_key="DASHSCOPE_API_KEY",
         env_base="QWEN_BASE_URL",
@@ -105,7 +123,11 @@ MODELS: dict[str, ModelSpec] = {
         key="kimi",
         label="Kimi",
         vendor="月之暗面 Moonshot",
-        model_id="moonshot-v1-8k",
+        # 2026-10-19 核对 Kimi 模型列表：moonshot-v1 全系已于 2026-08-31 下线，
+        # 现役为 kimi-k3（旗舰）/ kimi-k2.7-code / kimi-k2.6。
+        # 启用时注意 K3 用 reasoning_effort（默认 max），会先烧推理再出正文，
+        # max_tokens 给太小会拿到空 content。
+        model_id="kimi-k3",
         base_url="https://api.moonshot.cn/v1",
         env_key="MOONSHOT_API_KEY",
         env_base="KIMI_BASE_URL",
@@ -138,10 +160,18 @@ def resolve_model(key: Optional[str]) -> tuple[ModelSpec, str]:
     两种回落，都记在 notice 里，绝不静默：
         1. 未登记的 key          → 用默认模型，提示会说明
         2. 登记了但 status≠ready → 用默认模型，提示用该模型自己的 notice
+
+    "没指定"和"指定了一个不存在的"必须分开：前者是正常调用（前端已经不传 model 了），
+    后者才是需要告诉用户的事。以前这里把 None 也当成"未登记"，
+    于是每一次正常调用都会带一句「未登记的模型「None」」——
+    提示一旦天天出现，就等于没有提示。
     """
-    spec = MODELS.get((key or "").strip().lower())
+    raw = (key or "").strip()
+    spec = MODELS.get(raw.lower())
     if spec is None:
         fallback = MODELS[DEFAULT_MODEL_KEY]
+        if not raw:
+            return fallback, ""
         return fallback, f"未登记的模型「{key}」，当前使用 {fallback.label}"
     if not spec.is_ready:
         fallback = MODELS[DEFAULT_MODEL_KEY]
@@ -150,8 +180,8 @@ def resolve_model(key: Optional[str]) -> tuple[ModelSpec, str]:
 
 
 def list_models() -> list[dict]:
-    """给前端下拉框用。同时暴露 status 与 has_key，
-    让界面能区分「没接」和「接了但没配 Key」这两种不同的状态。"""
+    """给接口用。同时暴露 status 与 has_key，
+    让调用方能区分「没接」和「接了但没配 Key」这两种不同的状态。"""
     return [
         {
             "key": m.key,
@@ -223,6 +253,12 @@ def _chat(spec: ModelSpec, messages: list[dict], *, max_tokens: int,
 
     client = OpenAI(api_key=os.getenv(spec.env_key, ""),
                     base_url=spec.effective_base_url())
+
+    # 每次真发请求都记一行实际模型名。退役名不会报错、服务端会静默改写，
+    # 不留下这一行，事后就没法证明"当时发的到底是哪个"。
+    # 用 print 而不是 logger：uvicorn 只配了自己的 logger，
+    # 模块级 logger 的 INFO 会被丢掉，去日志里查反而查不到。
+    print(f"[调用] {spec.label} → {spec.effective_model_id()}", flush=True)
 
     kwargs: dict = {
         "model": spec.effective_model_id(),

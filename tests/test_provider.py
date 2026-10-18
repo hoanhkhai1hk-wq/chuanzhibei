@@ -73,9 +73,14 @@ def test_resolve_fallback() -> None:
     check("未登记也回落", spec.key, DEFAULT_MODEL_KEY)
     check("未登记有提示", "未登记" in notice, True)
 
-    # 空值 / None 走默认
+    # 空值 / None 走默认，且**不能有提示**：
+    # 前端已经不再传 model，这两条是正常调用的必经之路，
+    # 一旦这里冒出一句「未登记的模型「None」」，每次解读都会挂个假警告
     check("空串走默认", resolve_model("")[0].key, DEFAULT_MODEL_KEY)
+    check("空串无提示", resolve_model("")[1], "")
     check("None 走默认", resolve_model(None)[0].key, DEFAULT_MODEL_KEY)
+    check("None 无提示", resolve_model(None)[1], "")
+    check("全空格无提示", resolve_model("   ")[1], "")
     check("大小写不敏感", resolve_model("DeepSeek")[0].key, "deepseek")
 
 
@@ -92,6 +97,11 @@ def test_call_llm_falls_back() -> None:
 
     provider._chat = fake_chat
     try:
+        # 前端已经不传 model 了，这条是主路径：必须静默走默认模型，不能带提示
+        r0 = call_llm("问题")
+        check("不传 model 用默认模型", calls[-1][0], "deepseek")
+        check("不传 model 无提示", r0.notice, "")
+
         r1 = call_llm("问题", "deepseek")
         check("用 DeepSeek 调用", calls[-1][0], "deepseek")
         check("DeepSeek 无提示", r1.notice, "")

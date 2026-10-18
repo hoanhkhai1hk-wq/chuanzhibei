@@ -332,8 +332,8 @@
       setStage('write');
     };
 
-    // 模型是调用参数，不是报告的一部分：后端取走后会从 body 里摘掉
-    const body = { ...analysis, model: currentModel() };
+    // 前端不再指定模型：用哪个由后端注册表决定，前端传了就多一处会过期的配置
+    const body = { ...analysis };
 
     try {
       const resp = await fetch('/api/explain/stream', {
@@ -588,65 +588,13 @@
     }[c]));
   }
 
-  /* ══════════════════ 模型选择 ══════════════════
-     清单与可用状态由后端 /api/models 说了算，前端不写死——
-     否则界面上显示「已接通」，调的时候才发现根本没这个模型。
-     选了未接通的模型不会报错：后端回落到默认模型，
-     这里把 notice 原样显示出来，让用户知道实际用的是谁。 */
-
-  const models = { list: [], fallback: 'deepseek' };
-
-  function currentModel() {
-    const sel = $('#model-select');
-    return (sel && sel.value) || models.fallback;
-  }
-
-  function applyModel(key) {
-    const m = models.list.find(x => x.key === key);
-    const note = (m && !m.ready) ? (m.notice || `${m.label}正在接入中`) : '';
-
-    const sel = $('#model-select');
-    sel.value = key;
-    sel.classList.toggle('is-wiring', !!note);
-
-    const noteEl = $('#model-note');
-    noteEl.textContent = note;
-    noteEl.classList.toggle('is-hidden', !note);
-
-    try { localStorage.setItem('tjzh.model', key); } catch { /* 隐私模式下写不了，不影响使用 */ }
-  }
-
-  async function loadModels() {
-    try {
-      const data = await (await fetch('/api/models')).json();
-      models.list = data.models || [];
-      models.fallback = data.default || 'deepseek';
-    } catch {
-      models.list = [];
-    }
-
-    const sel = $('#model-select');
-    if (!models.list.length) {
-      sel.innerHTML = '<option value="">（模型列表加载失败）</option>';
-      return;
-    }
-    sel.innerHTML = models.list.map(m =>
-      `<option value="${escapeHtml(m.key)}">${escapeHtml(m.label)}</option>`).join('');
-
-    let saved = '';
-    try { saved = localStorage.getItem('tjzh.model') || ''; } catch { /* 忽略 */ }
-    const want = models.list.some(m => m.key === saved) ? saved : models.fallback;
-    applyModel(want);
-  }
-
-  function bindModelPick() {
-    const sel = $('#model-select');
-    sel.addEventListener('change', e => {
-      applyModel(e.target.value);
-      const m = models.list.find(x => x.key === e.target.value);
-      if (m && !m.ready) toast(m.notice || `${m.label}正在接入中`);
-    });
-  }
+  /* ══════════════════ 模型 ══════════════════
+     这里原来有一个右上角下拉框。整个删掉了：
+     注册表里三个模型、两个是占位，选中会静默回落再补一行 notice——
+     把一个半成品摆在首页，比"只有一个模型"掉分得多。
+     现在前端不指定模型，请求里也不再带 model 字段，后端回落链兜底
+     （provider.DEFAULT_MODEL_KEY = deepseek）。真正在跑哪个由
+     /api/about 的 explain_model 回显，顶栏徽标照实显示。 */
 
   /* ══════════════════ 问问 AI ══════════════════
      只把「问题 + 已判定好的结果」发给后端，绝不发图片、不发原始 OCR 文本。
@@ -730,7 +678,6 @@
         const reply = await postJson('/api/chat', {
           question: q,
           analysis: state.analysis,
-          model: currentModel(),
         });
         chat.fill(wrap, reply);
       } catch (err) {
@@ -1580,8 +1527,6 @@
     bindEvents();
     bindDaily();
     bindChat();
-    await loadModels();          // 必须先加载：后面的请求都要带上当前模型
-    bindModelPick();
     try {
       const info = await (await fetch('/api/about')).json();
       const isLlm = info.explain_mode === 'llm';

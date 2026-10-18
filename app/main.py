@@ -56,7 +56,18 @@ from app.env_loader import load_dotenv_once, status_line  # noqa: E402
 # 「无 Key → 模板模式」这组守门断言得以保持确定性。
 # 幂等、只补不盖、文件缺失也不报错——没 Key 时模板模式照样能跑。
 load_dotenv_once()
-print(f"[配置] {status_line()}")
+# flush=True：uvicorn 把 stdout 重定向到文件时是块缓冲，
+# 不加这一句日志会卡在缓冲区里，去日志里查模型名就只能查个寂寞。
+print(f"[配置] {status_line()}", flush=True)
+
+# 启动时把「实际会发给服务端的模型名」打出来。
+# 这条日志不是装饰：model_id 写错了（用了已退役的别名）不会报错，
+# 服务端会静默改写，只有对着这行日志才能发现「以为在跑 A、其实在跑 B」。
+# 打印的是 model_id 而不是界面显示名，显示名好看但对不上账没有意义。
+from app.llm.provider import MODELS as _MODELS, DEFAULT_MODEL_KEY as _DEFAULT  # noqa: E402
+_SPEC = _MODELS[_DEFAULT]
+print(f"[模型] {_SPEC.label} → {_SPEC.effective_model_id()} @ {_SPEC.effective_base_url()}",
+      flush=True)
 
 app = FastAPI(
     title="体检之后",
@@ -81,15 +92,12 @@ def index() -> FileResponse:
 
 @app.get("/api/models", summary="可选的大模型列表")
 def list_llm_models() -> dict:
-    """给右上角下拉框用。
-
-    为什么要有这个接口而不是把模型写死在前端：
-        前端写死一份、后端注册表里再写一份，迟早会不一致——
-        界面上显示「已接通」，实际调用时才发现根本没有这个模型。
-        模型清单与可用状态只有后端说了算（`provider.MODELS`）。
+    """模型清单。右上角下拉框已经拿掉了，这个接口仍然保留：
+    它回答的是「这会儿到底跑的是哪个模型、哪个还没接」，
+    排查问题时第一句要问的就是这个，而且清单只有后端说了算。
 
     `status=wiring` 的模型是占位：选中会静默回落到默认模型，
-    并由 `notice` 如实告诉用户「当前使用的是谁」。
+    并由 `notice` 如实告诉调用方「当前使用的是谁」。
     """
     return {
         "models": list_models(),
