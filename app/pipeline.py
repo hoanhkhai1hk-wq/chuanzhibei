@@ -56,6 +56,48 @@ _SENSITIVE_LINE = re.compile(
     r"病区|床号|门诊号|住院号|标本|临床诊断|送检医生|检验者|审核者)"
 )
 
+#: 用户在提问里自报姓名，如「我叫张三」「姓名：李四」。
+#: 刻意不收「我是」——「我是尿酸高」会被误伤成姓名。
+_QUERY_NAME = re.compile(r"(我叫|名字叫|姓名\s*[:：]?\s*)([\u4e00-\u9fa5]{2,4})")
+
+
+def _mask_pii_line(line: str) -> tuple[str, list[str]]:
+    """抹掉单行里可直接指向个人的编号串，返回 (处理后文本, 命中的字段类型)。"""
+    hit: list[str] = []
+    for name, pattern in _REDACT_RULES:
+        if pattern.search(line):
+            line = pattern.sub("[已抹除]", line)
+            if name not in hit:
+                hit.append(name)
+    return line, hit
+
+
+def mask_pii(text: str) -> tuple[str, list[str]]:
+    """轻量脱敏：只抹编号与自报姓名，**不整行丢弃**。
+
+    与 `redact()` 的分工：
+        redact()    处理整份报告，报告抬头那一行（"姓名 张三 性别 男…"）
+                    里面有大量与指标无关的信息，整行丢弃是对的；
+        mask_pii()  处理用户的**一句话提问**。"我今年 45 岁，尿酸 520 要紧吗"
+                    整行丢完就什么都不剩了，问答直接失效。
+                    所以这里只做定点替换，保留问题本身。
+
+    两个函数共用同一张编号正则——脱敏规则只能有一份，
+    否则「体检报告脱了、聊天框没脱」这种漏洞迟早出现。
+    """
+    out: list[str] = []
+    fields: list[str] = []
+    for line in (text or "").splitlines():
+        line, hit = _mask_pii_line(line)
+        for f in hit:
+            if f not in fields:
+                fields.append(f)
+        line2, n = _QUERY_NAME.subn(r"\1[已抹除]", line)
+        if n and "name" not in fields:
+            fields.append("name")
+        out.append(line2)
+    return "\n".join(out), fields
+
 
 def redact(text: str) -> tuple[str, list[str]]:
     """脱敏：抹掉个人信息。返回 (脱敏后文本, 被处理的字段类型)。
@@ -74,11 +116,10 @@ def redact(text: str) -> tuple[str, list[str]]:
         if _SENSITIVE_LINE.search(line):
             redacted.append("info_line")
             continue
-        for name, pattern in _REDACT_RULES:
-            if pattern.search(line):
-                line = pattern.sub("[已抹除]", line)
-                if name not in redacted:
-                    redacted.append(name)
+        line, hit = _mask_pii_line(line)
+        for f in hit:
+            if f not in redacted:
+                redacted.append(f)
         lines.append(line)
     return "\n".join(lines), redacted
 

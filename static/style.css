@@ -387,6 +387,67 @@ p { margin: 0; }
   font-size: 12.5px; color: var(--ink-3);
   margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--line);
 }
+
+/* ─── 问问 AI ───
+   刻意不做气泡：这是一个「问一句、拿一句」的工具区，
+   气泡的圆角和背景只会让本来就窄的内容区更挤。
+   改用「问」字前缀 + 细线分隔，和逐项结果、红线卡片是同一套语言。 */
+.chat-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-ask {
+  font: inherit; font-size: 12.5px; cursor: pointer;
+  border: 1px solid var(--line-2); background: var(--surface);
+  color: var(--ink-2); border-radius: 999px; padding: 6px 14px;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.chat-ask:hover:not(:disabled) {
+  border-color: var(--primary); color: var(--primary); background: var(--primary-soft);
+}
+.chat-ask:disabled { opacity: .5; cursor: not-allowed; }
+
+.chat-log { margin-top: 14px; }
+.chat-turn { border-top: 1px dashed var(--line); padding: 13px 0; }
+.chat-turn:first-child { border-top: 0; padding-top: 4px; }
+
+.chat-q {
+  display: flex; gap: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
+}
+.chat-q::before {
+  content: "问"; flex: none;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--primary); line-height: 1.8;
+}
+.chat-a {
+  font-size: 13.5px; line-height: 1.8; color: var(--ink-2);
+  margin-top: 7px; padding-left: 22px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.chat-a.is-error { color: var(--warn); }
+.chat-meta {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  margin-top: 7px; padding-left: 22px;
+}
+.chat-meta.is-warn { color: var(--accent); }
+.chat-spin {
+  display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--primary-soft); border-top-color: var(--primary);
+  animation: spin .8s linear infinite;
+  vertical-align: -1px; margin-right: 7px;
+}
+
+.chat-form {
+  display: flex; gap: 8px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+}
+.chat-input {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 13.5px; color: var(--ink);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  padding: 8px 12px; background: var(--surface-2); outline: none;
+  transition: border-color .15s, background .15s;
+}
+.chat-input:focus { border-color: var(--primary); background: var(--surface); }
+.chat-input:disabled { opacity: .6; }
 .redline {
   border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 14px 16px; background: var(--surface-2);

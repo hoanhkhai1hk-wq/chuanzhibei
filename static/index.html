@@ -176,6 +176,27 @@
     <p class="redline-week is-hidden" id="redline-week"></p>
   </section>
 
+  <section class="panel" id="chat-card">
+    <div class="panel-head">
+      <span class="label">问问 AI</span>
+      <span class="label-weak">基于你的报告回答，已脱敏，不编数字</span>
+    </div>
+
+    <div class="chat-quick" id="chat-quick">
+      <button type="button" class="chat-ask" data-q="尿酸高是怎么回事？">尿酸高是怎么回事？</button>
+      <button type="button" class="chat-ask" data-q="我今天能吃火锅吗？">我今天能吃火锅吗？</button>
+      <button type="button" class="chat-ask" data-q="血压高平时要注意什么？">血压高平时要注意什么？</button>
+    </div>
+
+    <div class="chat-log" id="chat-log"></div>
+
+    <form class="chat-form" id="chat-form">
+      <input type="text" class="chat-input" id="chat-input" maxlength="120"
+             placeholder="也可以自己问，比如：我这个要复查吗？" autocomplete="off">
+      <button type="submit" class="btn btn-primary btn-sm" id="btn-chat">提问</button>
+    </form>
+  </section>
+
   <section class="panel">
     <div class="panel-head"><span class="label">下次就诊，问医生这些</span></div>
     <ul class="ask" id="questions"></ul>

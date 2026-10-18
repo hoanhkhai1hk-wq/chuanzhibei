@@ -71,6 +71,79 @@ def _resolve(name: str) -> dict | None:
     return index.get(name.strip())
 
 
+def find_dishes_in_text(text: str, limit: int = 8) -> list[dict]:
+    """从一句自然语言里捞出「问题提到的菜」。
+
+    为什么不能直接用 search_dishes(整句)：
+        search_dishes 的判断是「查询串被菜品名包含」（菜品名里有"火锅"这两个字），
+        而用户问的是「我今天能吃火锅吗」——方向刚好相反，
+        需要的是「菜品名被问题包含」。直接复用命不中任何一条。
+
+    匹配顺序也是有讲究的：
+        先按**分类**捞（"火锅""饮品""酒类"），再按**名称**捞。
+        原因是分类里是这道菜的大多数真实吃法（鸭血、毛肚、肥牛），
+        而名称里常混进包装食品（"自嗨锅（麻辣火锅）"标签是低嘌呤，
+        拿它代表火锅会得出完全相反的结论）。
+    """
+    dishes, index = _load()
+    q = (text or "").strip()
+    if not q:
+        return []
+
+    out: list[dict] = []
+    seen: set[str] = set()
+
+    def take(d: dict) -> bool:
+        if d["name"] in seen:
+            return False
+        out.append(d)
+        seen.add(d["name"])
+        return len(out) < limit
+
+    for cat in {d["category"] for d in dishes}:
+        if len(cat) >= 2 and cat in q:
+            for d in dishes:
+                if d["category"] == cat and not take(d):
+                    return out
+
+    for key, d in index.items():
+        if len(key) >= 2 and key in q and not take(d):
+            return out
+
+    return out
+
+
+def dish_redline_hits(dishes: list[dict], redlines: list[dict]) -> list[dict]:
+    """菜品 × 红线 → 本地撞线结论。
+
+    返回形如::
+
+        [{"restriction": "限嘌呤", "nutrient_key": "purine", "action": "limit",
+          "level": "high", "foods": ["鸭血", "毛肚"]}]
+
+    只认 `high` 档：与日常层「high 才撞线，medium 不打扰」的口径保持一致，
+    否则问答会比三餐记录更严格，两处标准打架。
+    """
+    hits: list[dict] = []
+    for r in redlines or []:
+        key = r.get("nutrient_key")
+        if key == "iron" or r.get("action") == "boost":
+            names = [d["name"] for d in dishes
+                     if any(f in d["name"] for f in IRON_FOODS)]
+        else:
+            names = [d["name"] for d in dishes
+                     if (d.get("tags") or {}).get(key) == "high"]
+        if names:
+            hits.append({
+                "restriction": r.get("restriction", ""),
+                "nutrient_key": key,
+                "action": r.get("action", "limit"),
+                "level": "high",
+                "foods": names[:6],
+            })
+    return hits
+
+
 #: 血压偏高的判定阈值（收缩压 / 舒张压，mmHg）。
 #: 采用《中国高血压防治指南》的诊室血压标准 ≥140/90；家测标准更严（≥135/85），
 #: 这里用诊室标准并记录在案——判定口径必须有出处，不能自己拍一个数。

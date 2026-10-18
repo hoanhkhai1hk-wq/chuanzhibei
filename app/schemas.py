@@ -54,6 +54,8 @@ __all__ = [
     "DailyAdvice",
     "FamilyMessage",
     "StreamEvent",
+    "ChatRequest",
+    "ChatReply",
 ]
 
 
@@ -365,3 +367,55 @@ class StreamEvent(BaseModel):
     payload: Optional[dict] = Field(
         None, description="done 事件携带的完整结果对象"
     )
+
+
+# ==============================================================================
+# 报告问答（第四段表达层）
+# ==============================================================================
+
+
+class ChatRequest(_Strict):
+    """问答请求。
+
+    `analysis` 必须是 `/api/analyze` 的原样输出——本接口拒绝接收原始图片、
+    原始 OCR 文本或任何未经本地判定的四元组。理由和 `/api/explain` 一样：
+    数字在进入表达层之前必须已经定稿，否则问答就会变成"让模型看报告"。
+
+    注意这里**没有**姓名字段，也没有任何存放个人信息的入口：
+    判定结果里本来就不含姓名/身份证/医院，问答因此天然无法把它们送出去。
+    """
+
+    question: str = Field(..., min_length=1, max_length=500, description="用户问题（已脱敏）")
+    analysis: dict = Field(..., description="/api/analyze 的原始返回")
+
+
+class ChatReply(_Strict):
+    """问答回复。
+
+    `validated` 与 `attempts` 是刻意暴露给界面的事实：
+    用户能一眼看出这次回答的数字有没有通过回溯校验、模型是否被重写过一次。
+    「让校验过程可见」比「声称自己不会编」更有说服力。
+    """
+
+    answer: str = Field(..., description="给用户看的回答，纯文本，不含 markdown")
+    mode: Literal["llm", "template"] = Field(..., description="本次回答由谁生成")
+    model: str = Field(..., description="模型名；模板模式为「本地模板」")
+    validated: bool = Field(
+        ..., description="数字是否全部通过回溯校验（模板模式恒为 True）"
+    )
+    attempts: int = Field(..., description="实际生成次数；>1 表示触发过重写")
+    facts_used: list[str] = Field(
+        default_factory=list, description="本次回答依据的指标名，便于溯源"
+    )
+    numbers_used: list[str] = Field(
+        default_factory=list, description="回答中出现的、且有本地出处的数字"
+    )
+    foods: list[str] = Field(
+        default_factory=list, description="问题里识别到的菜品（来自本地菜品库）"
+    )
+    masked_fields: list[str] = Field(
+        default_factory=list,
+        description="提问中被抹掉的字段类型（id_card / phone / name 等），脱敏审计用",
+    )
+    disclaimer: str = Field(..., description="免责声明（必填）")
+

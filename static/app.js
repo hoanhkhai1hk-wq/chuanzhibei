@@ -439,6 +439,7 @@
   /* ─── 结果渲染 ─── */
   function renderResult(data) {
     renderCompare(state.compare);
+    chat.reset();          // 换了一份报告，旧的问答就作废了
     const report = data.report || {};
     const an = state.analysis || {};
     const judged = an.judged || [];
@@ -582,6 +583,116 @@
     return String(s ?? '').replace(/[&<>"']/g, c => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[c]));
+  }
+
+  /* ══════════════════ 问问 AI ══════════════════
+     只把「问题 + 已判定好的结果」发给后端，绝不发图片、不发原始 OCR 文本。
+     回答里的数字由后端回溯校验，前端只负责如实显示「校验过了没有、重写过几次」。
+     这一行 meta 不是装饰：用户能一眼看出这次是 AI 写的还是本地拼的。 */
+
+  const chat = {
+    busy: false,
+
+    reset() {
+      const log = $('#chat-log');
+      if (log) log.innerHTML = '';
+      chat.busy = false;
+      const btn = $('#btn-chat');
+      if (btn) btn.disabled = false;
+      const input = $('#chat-input');
+      if (input) { input.disabled = false; input.value = ''; }
+    },
+
+    turn(question) {
+      const wrap = document.createElement('div');
+      wrap.className = 'chat-turn';
+      wrap.innerHTML = '<p class="chat-q"></p>'
+        + '<div class="chat-a"><span class="chat-spin"></span>正在查这份报告…</div>';
+      wrap.querySelector('.chat-q').textContent = question;
+      $('#chat-log').appendChild(wrap);
+      wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      return wrap;
+    },
+
+    fill(wrap, reply) {
+      const a = wrap.querySelector('.chat-a');
+      a.textContent = reply.answer;      // 纯文本渲染，不解析 markdown
+
+      const bits = [];
+      if (reply.mode === 'llm') {
+        bits.push(`AI 解读 · ${reply.model}`);
+        bits.push(reply.validated
+          ? `数字已回溯 · ${reply.numbers_used.length} 个`
+          : '含报告外数字');
+        if (reply.attempts > 1) bits.push(`重写 ${reply.attempts - 1} 次`);
+      } else {
+        // 说「来自本地」而不是「来自报告」：阈值 140/90 这类本地常量不在报告上，
+        // 但它们同样不是模型编的，用「本地」才既不夸大也不贬低
+        bits.push('本地生成');
+        if (reply.numbers_used.length) {
+          bits.push(`数字全部来自本地 · ${reply.numbers_used.length} 个`);
+        }
+      }
+      if (reply.foods && reply.foods.length) {
+        bits.push(`菜名来自菜品库 · ${reply.foods.length} 道`);
+      }
+      // 提问里如果带了身份证/姓名，明确告诉用户已经抹掉了——「已脱敏」要看得见
+      const masked = reply.masked_fields || [];
+      if (masked.length) {
+        const cn = { id_card: '身份证', phone: '电话', name: '姓名', long_number: '长编号' };
+        bits.push('已抹除：' + [...new Set(masked.map(k => cn[k] || k))].join('、'));
+      }
+
+      const meta = document.createElement('p');
+      meta.className = 'chat-meta' + (reply.validated ? '' : ' is-warn');
+      meta.textContent = bits.join(' · ');
+      wrap.appendChild(meta);
+    },
+
+    async ask(question) {
+      const q = (question || '').trim();
+      if (!q || chat.busy) return;
+      if (!state.analysis) {
+        toast('先解读一份报告，我才能对着它回答');
+        return;
+      }
+
+      chat.busy = true;
+      $('#btn-chat').disabled = true;
+      $('#chat-input').disabled = true;
+      const wrap = chat.turn(q);
+
+      try {
+        const reply = await postJson('/api/chat', {
+          question: q,
+          analysis: state.analysis,
+        });
+        chat.fill(wrap, reply);
+      } catch (err) {
+        const a = wrap.querySelector('.chat-a');
+        a.classList.add('is-error');
+        a.textContent = `没答上来：${err.message}`;
+      } finally {
+        chat.busy = false;
+        $('#btn-chat').disabled = false;
+        $('#chat-input').disabled = false;
+      }
+    },
+  };
+
+  function bindChat() {
+    $$('#chat-quick .chat-ask').forEach(btn => {
+      btn.addEventListener('click', () => chat.ask(btn.dataset.q));
+    });
+
+    $('#chat-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = $('#chat-input');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+      chat.ask(q);
+    });
   }
 
   /* ─── 文件选择 ─── */
@@ -1012,6 +1123,7 @@
   async function boot() {
     bindEvents();
     bindDaily();
+    bindChat();
     try {
       const info = await (await fetch('/api/about')).json();
       const isLlm = info.explain_mode === 'llm';

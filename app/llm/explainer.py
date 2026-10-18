@@ -112,6 +112,21 @@ def allowed_numbers(analysis: dict) -> set[str]:
         v = j.get("value")
         if isinstance(v, float) and not v.is_integer():
             allowed.add(_fmt(round(v)))
+
+    # 计数类数字同样是本地事实：「共 13 项，其中 4 项需注意」。
+    # _BENIGN_NUMBERS 只覆盖了个位数，报告项数一多（13、22…），
+    # 自己模板里一句完全正确的话就会被自己的校验器判成幻觉——
+    # 问答框上线时这条先被踩了出来。计数不放行，等于校验器在冤枉本地结果。
+    counts = analysis.get("counts") if isinstance(analysis.get("counts"), dict) else {}
+    candidates = [
+        counts.get("total"), counts.get("matched"), counts.get("abnormal_count"),
+        analysis.get("total"), analysis.get("matched"), analysis.get("abnormal_count"),
+    ]
+    for v in candidates:
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            continue
+        if float(v).is_integer():
+            allowed.add(str(int(v)))
     return allowed
 
 
@@ -266,6 +281,23 @@ class Explainer:
                 ) from e
             self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
         return self._client
+
+    def complete(self, messages: list[dict], max_tokens: int = 512,
+                 temperature: float = 0.3) -> str:
+        """一次纯文本补全，返回正文。
+
+        给问答框（`app/llm/chat.py`）用：它需要的是自由文本而不是 JSON 契约，
+        但**必须复用同一份 Key 配置、同一个客户端、同一种重试纪律**。
+        让问答自己再建一个 OpenAI 客户端，迟早会出现
+        「解读走 A 模型、问答走 B 模型」这种不一致。
+        """
+        resp = self._get_client().chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,          # 显式截断，避免无限生成
+        )
+        return (resp.choices[0].message.content or "").strip()
 
     # ------------------------------------------------------------ 问诊清单
 

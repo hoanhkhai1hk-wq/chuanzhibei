@@ -34,11 +34,14 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.llm.explainer import Explainer
+from app.llm.chat import QaAnswerer
 from app.ocr.engine import extract_text
 from app.ocr.parser import parse_markers
 from app.pipeline import redact
 from app.rules.engine import RuleEngine
 from app.schemas import (
+    ChatReply,
+    ChatRequest,
     LabReport,
     StreamEvent,
 )
@@ -74,6 +77,7 @@ def about() -> dict:
             "档案层": "体检报告 → OCR → 指标字典归一 → 本地判定 → 红线档案",
             "日常层": "每日记录 → 菜品库/数值 → 本地累加 → 对照红线 → 提示/周报",
             "表达层": "大模型只写人话，不写数字",
+            "问答层": "提问 → 本地事实清单 → 模型只写措辞 → 数字回溯校验后重写",
         },
         "explain_mode": _EXPLAINER.mode,
         "explain_model": _EXPLAINER.model_name,
@@ -132,6 +136,7 @@ def stream_sample() -> list[StreamEvent]:
 
 _ENGINE = RuleEngine()
 _EXPLAINER = Explainer()
+_QA = QaAnswerer(explainer=_EXPLAINER, markers=_ENGINE.markers)
 _SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
 
 
@@ -287,6 +292,30 @@ def explain_stream(payload: dict) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/api/chat", summary="就这份报告提问", response_model=ChatReply)
+def chat(req: ChatRequest) -> ChatReply:
+    """回答用户针对本次报告提出的问题。
+
+    为什么单独成一个接口，而不是把问答塞进 /api/explain：
+        explain 是「一次把整份报告讲完」，输出必须是 LabReport 契约；
+        问答是「按需问一句」，一问一答、可以问很多次，输出是自由文本。
+        两者共用同一个校验器（`find_hallucinations`），但契约不同，
+        混在一个接口里会让 LabReport 的 extra="forbid" 立刻打架。
+
+    三段铁律在这里同样成立：
+        1. 数字只从 `req.analysis` 里取——本接口不接收图片、不接收原始 OCR 文本；
+        2. 提问先过 `mask_pii()` 再送模型，报告事实里本来就没有姓名字段；
+        3. 回答里的每个数字都要能在事实清单里找到出处，否则带着
+           「你多写了哪些数字」重写一次；两次都不过就退回本地模板并如实标注。
+    """
+    if not (req.analysis.get("judged") or []):
+        raise HTTPException(
+            status_code=400,
+            detail="analysis.judged 不能为空，请先调用 /api/analyze 再提问",
+        )
+    return ChatReply(**_QA.answer(req.question, req.analysis))
 
 
 # ==============================================================================
