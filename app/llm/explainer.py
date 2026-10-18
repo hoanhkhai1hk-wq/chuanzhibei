@@ -29,6 +29,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -36,6 +37,8 @@ from typing import Iterator
 
 from app.llm.provider import DEFAULT_MODEL_KEY, MODELS, call_llm
 from app.schemas import FamilyMessage, LabReport, LabTest, StreamEvent
+
+logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).parent
 APP = HERE.parent
@@ -451,10 +454,21 @@ class Explainer:
                     last_err = f"第 {attempt} 次输出含有无出处数字：{bad[:5]}"
                     continue
 
-                # 报告值由本地回填，绝不采信模型写的数值
+                # 报告值由本地回填，绝不采信模型写的数值。
+                # 顺带做一层过滤：模型偶尔会多写出事实 JSON 里根本不存在的指标，
+                # 这类指标拿不到本地值，留着必然撞上 reported_value 的必填校验，
+                # 于是整份报告被一次多余的指标拖回模板模式。
+                # 而它本来就是"模型自己编出来的指标"，剔除才是对的。
+                judged = analysis.get("judged", [])
+                known = {j.get("standard_name") for j in judged}
+                kept: list[dict] = []
                 for t in data.get("tests", []):
-                    for j in analysis.get("judged", []):
-                        if j.get("standard_name") == t.get("test_name"):
+                    name = t.get("test_name")
+                    if name not in known:
+                        logger.warning("模型输出了事实中不存在的指标，已剔除：%s", name)
+                        continue
+                    for j in judged:
+                        if j.get("standard_name") == name:
                             t["reported_value"] = str(j.get("reported_value", ""))
                             t["reference_range"] = (
                                 f"{_fmt(j['ref'][0])}-{_fmt(j['ref'][1])}"
@@ -462,17 +476,28 @@ class Explainer:
                                 else None
                             )
                             break
+                    kept.append(t)
+                data["tests"] = kept
+
+                # 免责声明恒为本地文案。契约里它是必填项，但不能指望模型写对——
+                # 写在校验之后再覆盖就已经晚了，模型漏写这个字段会直接把整份
+                # 报告判死。所以必须在 validate 之前注入。
+                data["disclaimer"] = DISCLAIMER
 
                 report = LabReport.model_validate(data)
-                report.disclaimer = DISCLAIMER        # 免责声明恒为本地文案
                 report.follow_up_questions = self.follow_up_questions(analysis)
                 return report
             except Exception as e:                    # noqa: BLE001
                 last_err = f"{type(e).__name__}: {e}"
 
-        # 两次都不过：退回模板，并如实记录原因（不静默失败）
+        # 两次都不过：退回模板，并如实告知（不静默失败）。
+        # 给用户看的是结论，不是堆栈：pydantic 的报错原文只进日志，不进界面。
+        if last_err:
+            logger.warning("大模型解读未通过校验，已退回模板模式：%s", last_err)
         report = self._template_report(analysis)
-        report.follow_up_questions.append(f"（本次解读由本地模板生成：{last_err}）")
+        report.follow_up_questions.append(
+            "（本次大模型输出未通过校验，已改用本地模板解读，结论不受影响）"
+        )
         return report
 
     @staticmethod

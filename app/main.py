@@ -46,6 +46,17 @@ from app.schemas import (
     LabReport,
     StreamEvent,
 )
+from app.env_loader import load_dotenv_once, status_line  # noqa: E402
+
+# 业务代码读配置只认 os.getenv，而它看不见磁盘上的 .env。
+# 所以在装配 app 之前补一次：把 .env 的键值灌进 os.environ，
+# 之后 provider / explainer / ocr 照常工作，一行都不用改。
+# 放在这里（而不是 provider.py）还有一个原因：测试是自运行脚本，
+# 它们 import provider 但不 import main，因此不会被本机 .env 影响，
+# 「无 Key → 模板模式」这组守门断言得以保持确定性。
+# 幂等、只补不盖、文件缺失也不报错——没 Key 时模板模式照样能跑。
+load_dotenv_once()
+print(f"[配置] {status_line()}")
 
 app = FastAPI(
     title="体检之后",
