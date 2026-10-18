@@ -11,8 +11,9 @@
      · 过度饱和的医疗蓝绿 / 橙黄配色
 
    改成：
-     · 暖纸白底 + 墨色文字；主色用低饱和深墨绿，强调色只用铜色一点点
-     · 1px 细线分区代替卡片阴影，圆角统一收到 2-3px
+     · 暖纸白底 + 墨色文字；主色用深青，强调色只用铜色一点点
+     · 1px 细线分区代替卡片阴影，容器圆角收到 2-3px
+     · 按钮单独一套规格：36px 高 / 6px 圆角 / 8px 间距 / 纯色无阴影
      · 左对齐、上下分层，靠字重与字号拉开层级而不是靠色块
      · 数字统一 tabular-nums 等宽对齐，像真实检验报告那样可扫读
    ============================================================================= */
@@ -32,10 +33,12 @@
   --line: #e6e3db;
   --line-2: #d3d0c6;
 
-  /* 主色：低饱和深墨绿；强调：铜 */
-  --primary: #24423a;
-  --primary-deep: #162b25;
-  --primary-soft: #eaefe9;
+  /* 主色：深青；强调：铜。
+     按钮实心色就是 --primary，两个值必须是同一个，
+     否则页面上会出现"选中态一种绿、按钮另一种绿"的缝合感。 */
+  --primary: #0f766e;
+  --primary-deep: #0b5c56;
+  --primary-soft: #e6f3f1;
 
   --accent: #8a5a2f;
   --accent-soft: #f6f0e7;
@@ -50,6 +53,20 @@
 
   --r: 2px;
   --r-sm: 3px;
+
+  /* 按钮规格（工具风，一处改全局生效）
+     高度 36、圆角 6、间距 8；纯色填充、1px 细线、无渐变无阴影无发光。
+     主次只靠"实心 / 描边"区分，不靠尺寸和颜色堆叠。 */
+  --btn-h: 36px;
+  --btn-r: 6px;
+  --btn-gap: 8px;
+  --btn-primary: #0f766e;
+  --btn-primary-hover: #0b5c56;
+  --btn-primary-press: #094a45;
+  --btn-border: #d1d5db;
+  --btn-text: #111827;
+  --btn-line: #b91c1c;        /* 红线相关动作：暗红，不用亮红 */
+  --btn-line-hover: #991b1b;
 
   --font: system-ui, -apple-system, "Segoe UI", "PingFang SC",
           "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
@@ -96,13 +113,15 @@ p { margin: 0; }
 }
 
 .topnav { display: flex; gap: 2px; justify-self: center; }
+/* 顶部标签是导航不是动作按钮，保持紧凑，只把圆角对齐到 6px */
 .nav-tab {
   font: inherit; font-size: 13px; cursor: pointer;
   border: 0; background: transparent; color: var(--ink-2);
-  padding: 6px 13px; border-radius: var(--r-sm); transition: all .15s;
+  padding: 6px 13px; border-radius: var(--btn-r);
+  transition: background-color .14s, color .14s;
 }
 .nav-tab:hover { color: var(--ink); }
-.nav-tab.is-active { background: var(--primary); color: #fff; }
+.nav-tab.is-active { background: var(--btn-primary); color: #fff; }
 
 .topbar-right { display: flex; align-items: center; gap: 12px; justify-self: end; }
 
@@ -117,8 +136,9 @@ p { margin: 0; }
 }
 .model-select {
   font: inherit; font-size: 12px; color: var(--ink-2);
-  border: 1px solid var(--line-2); border-radius: var(--r-sm);
-  background: var(--surface); padding: 4px 8px; cursor: pointer; outline: none;
+  border: 1px solid var(--btn-border); border-radius: var(--btn-r);
+  background: var(--surface); height: 28px; padding: 0 8px;
+  cursor: pointer; outline: none;
   transition: border-color .15s, color .15s;
 }
 .model-select:hover { border-color: var(--primary); color: var(--primary); }
@@ -137,7 +157,7 @@ p { margin: 0; }
   font-size: 11px; letter-spacing: .06em;
   padding: 3px 9px; border-radius: var(--r-sm);
   background: var(--primary-soft); color: var(--primary-deep);
-  border: 1px solid #d3e0d8;
+  border: 1px solid #cde5e1;
 }
 
 /* ─── 页面 ─── */
@@ -182,7 +202,7 @@ p { margin: 0; }
   font-size: 10.5px; letter-spacing: .06em; padding: 2px 8px;
   border-radius: var(--r-sm);
   background: var(--primary-soft); color: var(--primary-deep);
-  border: 1px solid #d3e0d8;
+  border: 1px solid #cde5e1;
 }
 .badge.is-template {
   background: var(--accent-soft); color: var(--accent); border-color: #e8d7bd;
@@ -221,35 +241,61 @@ p { margin: 0; }
 .field-hint { font-size: 12px; color: var(--ink-3); }
 .chosen-file { font-size: 13.5px; max-width: 340px; word-break: break-all; }
 
+/* 分段选择器：外框 36px 高（和按钮同一条基线），内块 30px，圆角外 6 内 5 */
 .segmented {
-  display: inline-flex; background: var(--surface-2);
-  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 2px;
+  display: inline-flex; align-items: center;
+  height: var(--btn-h); padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: var(--btn-r);
 }
 .seg {
   border: 0; background: transparent; cursor: pointer;
   font: inherit; font-size: 13px; color: var(--ink-2);
-  padding: 5px 15px; border-radius: var(--r-sm); transition: all .14s;
+  height: 30px; padding: 0 15px; border-radius: 5px;
+  transition: background-color .14s, color .14s;
 }
-.seg.is-active { background: var(--primary); color: #fff; font-weight: 600; }
+.seg:hover:not(.is-active) { color: var(--ink); background: #ebe9e2; }
+.seg.is-active { background: var(--btn-primary); color: #fff; font-weight: 500; }
 
 .form-actions {
-  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  display: flex; flex-wrap: wrap; gap: var(--btn-gap); align-items: center;
   margin-top: 16px;
 }
 
+/* ─── 按钮 ───
+   规格来源：--btn-* 一组变量。改风格只改 :root，不用翻遍全文。
+   刻意没有的东西：渐变、box-shadow、发光、emoji、粗细不一的字重。
+   主按钮实心、次按钮白底描边，两者同为 36px —— 靠填充区分主次，不靠大小。 */
 .btn {
-  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
-  border-radius: var(--r-sm); padding: 9px 18px;
-  border: 1px solid transparent; transition: all .15s; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: inherit; font-size: 14px; font-weight: 400;
+  line-height: 1; height: var(--btn-h); padding: 0 16px;
+  border: 1px solid transparent; border-radius: var(--btn-r);
+  background: var(--surface); color: var(--btn-text);
+  cursor: pointer; white-space: nowrap;
+  box-shadow: none; text-shadow: none;
+  -webkit-appearance: none; appearance: none;
+  transition: background-color .12s, border-color .12s, color .12s;
 }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:not(:disabled):hover { background: var(--primary-deep); }
-.btn-ghost {
-  background: var(--surface); border-color: var(--line-2); color: var(--ink-2);
-}
-.btn-ghost:not(:disabled):hover { border-color: var(--primary); color: var(--primary); }
-.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* 主按钮：纯色深青，无渐变无发光 */
+.btn-primary { background: var(--btn-primary); border-color: var(--btn-primary); color: #fff; }
+.btn-primary:not(:disabled):hover { background: var(--btn-primary-hover); border-color: var(--btn-primary-hover); }
+.btn-primary:not(:disabled):active { background: var(--btn-primary-press); border-color: var(--btn-primary-press); }
+
+/* 次按钮：白底 + 1px 细灰边框 + 近黑字 */
+.btn-ghost { background: #fff; border-color: var(--btn-border); color: var(--btn-text); }
+.btn-ghost:not(:disabled):hover { background: #f9fafb; border-color: #9ca3af; color: var(--btn-text); }
+.btn-ghost:not(:disabled):active { background: #f3f4f6; }
+
+/* 红线相关动作（记录一餐 / 记一次测量）：暗红实心，不用亮红 */
+.btn-line { background: var(--btn-line); border-color: var(--btn-line); color: #fff; }
+.btn-line:not(:disabled):hover { background: var(--btn-line-hover); border-color: var(--btn-line-hover); }
+
+/* 小号只收内边距和字号，高度仍是 36px —— 一排里不能有高有矮 */
+.btn-sm { padding: 0 12px; font-size: 13px; }
 
 /* ─── 提示折叠 ─── */
 .tips {
@@ -414,17 +460,21 @@ p { margin: 0; }
    刻意不做气泡：这是一个「问一句、拿一句」的工具区，
    气泡的圆角和背景只会让本来就窄的内容区更挤。
    改用「问」字前缀 + 细线分隔，和逐项结果、红线卡片是同一套语言。 */
-.chat-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.chat-quick { display: flex; flex-wrap: wrap; gap: var(--btn-gap); }
+/* 快捷问题也是按钮：白底细边、6px 圆角、32px 高（比主按钮矮一档，因为它是"建议"不是"动作"）。
+   原先的 999px 胶囊是页面里唯一的全圆角，正是最像模板的一处。 */
 .chat-ask {
-  font: inherit; font-size: 12.5px; cursor: pointer;
-  border: 1px solid var(--line-2); background: var(--surface);
-  color: var(--ink-2); border-radius: 999px; padding: 6px 14px;
-  transition: border-color .15s, color .15s, background .15s;
+  display: inline-flex; align-items: center;
+  font: inherit; font-size: 13px; font-weight: 400; line-height: 1;
+  height: 32px; padding: 0 13px; cursor: pointer;
+  border: 1px solid var(--btn-border); background: #fff;
+  color: var(--btn-text); border-radius: var(--btn-r);
+  transition: border-color .12s, color .12s, background-color .12s;
 }
 .chat-ask:hover:not(:disabled) {
-  border-color: var(--primary); color: var(--primary); background: var(--primary-soft);
+  border-color: var(--btn-primary); color: var(--btn-primary); background: var(--primary-soft);
 }
-.chat-ask:disabled { opacity: .5; cursor: not-allowed; }
+.chat-ask:disabled { opacity: .45; cursor: not-allowed; }
 
 .chat-log { margin-top: 14px; }
 .chat-turn { border-top: 1px dashed var(--line); padding: 13px 0; }
@@ -458,14 +508,15 @@ p { margin: 0; }
 }
 
 .chat-form {
-  display: flex; gap: 8px;
+  display: flex; gap: var(--btn-gap);
   margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
 }
+/* 输入框与旁边的「提问」按钮同高，行才不会一高一低 */
 .chat-input {
-  flex: 1; min-width: 0;
+  flex: 1; min-width: 0; height: var(--btn-h); padding: 0 12px;
   font: inherit; font-size: 13.5px; color: var(--ink);
-  border: 1px solid var(--line-2); border-radius: var(--r-sm);
-  padding: 8px 12px; background: var(--surface-2); outline: none;
+  border: 1px solid var(--btn-border); border-radius: var(--btn-r);
+  background: var(--surface-2); outline: none;
   transition: border-color .15s, background .15s;
 }
 .chat-input:focus { border-color: var(--primary); background: var(--surface); }
@@ -664,18 +715,21 @@ p { margin: 0; }
 .search:focus { border-color: var(--primary); background: #fff; }
 
 .dish-grid {
-  display: flex; flex-wrap: wrap; gap: 7px;
+  display: flex; flex-wrap: wrap; gap: var(--btn-gap);
   margin-bottom: 14px; max-height: 230px; overflow-y: auto; padding: 2px;
 }
+/* 菜品是可点选的开关，圆角与按钮统一为 6px，选中态用主按钮同色实心 */
 .dish-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12.5px; padding: 5px 11px; border-radius: var(--r-sm);
-  border: 1px solid var(--line-2); background: var(--surface);
-  color: var(--ink-2); cursor: pointer; transition: all .14s;
+  font-size: 12.5px; height: 28px; padding: 0 11px;
+  border-radius: var(--btn-r);
+  border: 1px solid var(--btn-border); background: #fff;
+  color: var(--btn-text); cursor: pointer;
+  transition: background-color .12s, border-color .12s, color .12s;
 }
-.dish-chip:hover { border-color: var(--primary); color: var(--primary); }
+.dish-chip:hover { border-color: var(--btn-primary); color: var(--btn-primary); }
 .dish-chip.is-picked {
-  background: var(--primary); border-color: var(--primary); color: #fff;
+  background: var(--btn-primary); border-color: var(--btn-primary); color: #fff;
 }
 .dish-chip .dot { width: 5px; height: 5px; border-radius: 50%; flex: none; }
 .dot-high { background: var(--warn); }
