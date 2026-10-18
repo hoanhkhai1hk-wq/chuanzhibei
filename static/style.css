@@ -19,12 +19,13 @@
    ============================================================================= */
 
 :root {
-  /* 底色：中性浅灰，不再用奶油黄。
-     原来是 #faf9f6（奶油）+ #8a5a2f（铜）的组合，
-     这正是模板化前端最典型的"暖调补救"配色：
-     AI 生成器发现紫色渐变被识破了，集体改成"奶油底 + 赤陶/铜"，
-     现在这套比原来的紫渐变更容易被认出来。 */
-  --paper: #fbfdfc;
+  /* 底色：暖纸。
+     曾经有一版把它改成中性冷白（#fbfdfc），理由是"奶油底 + 赤陶色"
+     是模板化前端最典型的暖调补救配色。这个判断没错，但结论走反了——
+     要避开的不是"暖"，而是"奶油底 + 铜色 + 大圆角"那一整套组合。
+     现在纸面回到 #faf8f4，主色仍是深青、强调色仍只有一点点，
+     页面读起来是"一张纸"而不是"一杯拿铁"。 */
+  --paper: #faf8f4;
   --surface: #ffffff;
   --surface-2: #eef1f2;
 
@@ -78,6 +79,9 @@
 
   --font: system-ui, -apple-system, "Segoe UI", "PingFang SC",
           "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  /* 标题栈：宋体。纯系统 fallback，不引任何外部字体文件——
+     一个离线也要能跑的产品，不该因为字体 CDN 挂掉就变回黑体。 */
+  --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
   --mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
 }
 
@@ -100,43 +104,46 @@ p { margin: 0; }
 
 .is-hidden { display: none !important; }
 
-/* ─── 顶栏 ─── */
+/* ─── 顶栏 ───
+   左：品牌 + 副标；右：今日记录 / 使用说明。
+   品牌同时是「回到报告解读」的入口（app.js 把 #tab-report 的点击绑在它身上），
+   所以这里显式给了手型光标。 */
 .topbar {
   position: sticky; top: 0; z-index: 50;
-  /* 原来用半透明 + 毛玻璃，是"玻璃拟态"的典型；
-     工具界面的顶栏不需要透出后面的内容，纯色更稳也更省性能 */
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  /* 顶栏底下是 mesh，透一点点暖色比压一条纯白更贴纸面 */
+  background: rgba(250, 248, 244, .88);
+  -webkit-backdrop-filter: saturate(1.1) blur(10px);
+  backdrop-filter: saturate(1.1) blur(10px);
+  border-bottom: 1px solid rgba(232, 224, 210, .9);
 }
 .topbar-inner {
-  max-width: 980px; margin: 0 auto; padding: 13px 24px;
-  display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center; gap: 16px;
+  max-width: 1120px; margin: 0 auto; padding: 15px 28px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
 }
 .brand { display: flex; align-items: baseline; gap: 10px; }
 .brand-mark {
-  font-size: 15px; font-weight: 700; letter-spacing: .02em; color: var(--ink);
+  font-family: var(--serif);
+  font-size: 19px; font-weight: 700; letter-spacing: .04em;
+  color: #1b2420; cursor: pointer;
 }
-.brand-sub {
-  font-size: 12px; letter-spacing: .01em; color: var(--ink-3);
-}
+.brand-mark:hover { color: var(--primary); }
+.brand-sub { font-size: 12px; letter-spacing: .04em; color: #8c8578; }
 
-.topnav { display: flex; gap: 2px; justify-self: center; }
-/* 顶部标签是导航不是动作按钮，保持紧凑，只把圆角对齐到 6px */
-.nav-tab {
-  font: inherit; font-size: 13px; cursor: pointer;
-  border: 0; background: transparent; color: var(--ink-2);
-  padding: 6px 13px; border-radius: var(--btn-r);
-  transition: background-color .14s, color .14s;
+.topnav { display: flex; align-items: center; gap: 20px; }
+/* 顶栏右侧是导航文字链，不是动作按钮：不加底、不加边框，靠颜色分主次 */
+.nav-link {
+  font: inherit; font-size: 13.5px; color: #55534c;
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+  text-decoration: none; white-space: nowrap;
+  transition: color .14s;
 }
-.nav-tab:hover { color: var(--ink); }
-.nav-tab.is-active { background: var(--btn-primary); color: #fff; }
+.nav-link:hover { color: var(--primary); }
+.nav-link.is-active { color: var(--primary); font-weight: 600; }
 
 .topbar-right { display: flex; align-items: center; gap: 12px; justify-self: end; }
 
-/* 这里删过「模型」下拉框（.model-pick / .model-select / .model-note）：
-   三个模型里两个是占位，选中有回落提示，是个没做完的控件。
-   现在顶栏只说一件事——当前是 AI 解读还是本地模板。 */
+/* 这里删过「模型」下拉框：三个模型里两个是占位，选中有回落提示，
+   是个没做完的控件。现在顶栏只说一件事——当前是 AI 解读还是本地模板。 */
 
 .topbar-link {
   font-size: 12px; letter-spacing: .01em;
@@ -144,11 +151,11 @@ p { margin: 0; }
 }
 .topbar-link:hover { color: var(--primary); }
 
+/* 模式徽标：退成一行小字，不再是胶囊。
+   它是"状态注脚"，不是导航，也不该和右边两个链接抢位置。 */
 .mode-chip {
-  font-size: 12px; letter-spacing: .06em;
-  padding: 3px 9px; border-radius: var(--r-sm);
-  background: var(--primary-soft); color: var(--primary-deep);
-  border: 1px solid #cde5e1;
+  font-size: 11.5px; letter-spacing: .02em;
+  color: #9a9284;
 }
 
 /* ─── 页面 ─── */
@@ -204,22 +211,8 @@ p { margin: 0; }
 .prose { font-size: 15px; line-height: 1.85; color: var(--ink); }
 .prose-warm { color: #46341d; }
 
-/* ─── 上传区 ─── */
-.dropzone {
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-sm);
-  padding: 26px 20px;
-  text-align: center;
-  cursor: pointer;
-  background: var(--surface-2);
-  transition: border-color .16s, background .16s;
-}
-.dropzone:hover, .dropzone:focus-visible {
-  border-color: var(--primary); background: var(--primary-soft); outline: none;
-}
-.dropzone.is-drag { border-color: var(--primary); background: var(--primary-soft); }
-.dz-title { font-size: 15px; font-weight: 600; }
-.dz-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+/* ─── 上传区 ───
+   .dropzone 只在首页用，样式统一写在首页那一段，这里不再重复定义。 */
 
 /* ─── 表单 ─── */
 .form-row {
@@ -834,98 +827,272 @@ p { margin: 0; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   首页改版（2026-10-18）—— 参考 deepseek.com 的观感
+   首页 · 100 分版（2026-10-19）—— 暖纸 + 静态 mesh + 宋体标题
    ======================================================================
-   后端 app/ 一行没动，app.js 一行没动；这里只是把首页的骨架换掉。
-   结果页（view-result）与今日记录（view-daily）的既有样式不动，
-   所以下面所有新类都以 .view-home 或首页专属类名为作用域，
-   只有颜色令牌是全局的——那是改版要求的主色切换。
+   上一版是「流动光晕 + 居中大字 + 毛玻璃」，热闹，但三件事不对：
+     1. 三团 blur 动画在演示录屏里一直在动，压完码就是一片噪点，还抢标题；
+     2. 居中布局把所有东西摆在一条中轴上，扫读效率低；
+     3. 冷白底 + 玻璃拟态是通用 AI 模板的长相，看不出这是个「纸」产品。
+   这一版：暖纸 #faf8f4 + 顶部三分之一的静态 mesh + 纸纹噪点；
+   标题用宋体压住整页，正文仍是黑体，数字一律 tabular-nums。
+   **全站只有 hero 右侧那张演示卡用阴影**，其他卡片一律扁平——
+   阴影一多，页面就变成「一堆浮起来的卡片」，反而没有主次。
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── 环境光背景：三层淡蓝晕染 + 冷白底 ───────────────────────────────
-   不用单一纯色，也不用一张图：三团径向渐变叠在 #fbfdfc 上，
-   让页面有"光从右上打过来"的方向感，但始终保持白底的克制。 */
-body {
-  min-height: 100vh;
+/* ── 顶部 mesh：静态，一帧不动 ───────────────────────────────────────
+   三层 radial 分别对应深青（品牌）、玉色（过渡）、米黄（纸的温度）。
+   底部用 mask 淡出，让「上三分之一有气氛、下面回到干净纸面」有过渡，
+   而不是切成一条硬边。 */
+.bg-mesh {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 46vh;
+  min-height: 420px;
+  z-index: 0;
+  pointer-events: none;
   background:
-    radial-gradient(900px 620px at 78% -10%,  rgba(15, 118, 110, .12), transparent 62%),
-    radial-gradient(760px 540px at 10%  2%,   rgba(15, 118, 110, .08), transparent 64%),
-    radial-gradient(1200px 720px at 50% 118%, rgba(15, 118, 110, .06), transparent 62%),
-    #fbfdfc;
-  background-attachment: fixed;
+    radial-gradient(58% 52% at 16% 4%, rgba(15, 118, 110, .16), transparent 62%),
+    radial-gradient(52% 46% at 84% -2%, rgba(196, 224, 208, .55), transparent 66%),
+    radial-gradient(74% 58% at 46% 28%, rgba(242, 231, 198, .60), transparent 70%);
+  -webkit-mask-image: linear-gradient(#000 56%, rgba(0, 0, 0, .35) 82%, transparent 100%);
+  mask-image: linear-gradient(#000 56%, rgba(0, 0, 0, .35) 82%, transparent 100%);
+}
+/* 纸纹：SVG 湍流噪声，纯 data URI，不发额外请求。
+   0.05 是压过一轮的数——再高就像脏了，再低等于没有。 */
+.bg-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .05;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
-/* 顶栏跟着变半透明：底色有了光之后，一条纯白的实色栏会显得很"贴上去" */
-.topbar {
-  background: rgba(251, 252, 255, .82);
-  -webkit-backdrop-filter: saturate(1.2) blur(12px);
-  backdrop-filter: saturate(1.2) blur(12px);
-  border-bottom: 1px solid var(--line);
-}
-.brand-mark {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: .02em;
-}
-/* API 入口在结果页也用不上，首页要极简，收掉 */
-.topbar-link { display: none; }
+/* 内容压在 mesh 之上 */
+.view { position: relative; z-index: 1; }
 
-/* 这里删过一枚「中 / EN」小胶囊：产品只有中文一种语言，没有 i18n 系统，
-   那东西是 aria-hidden 的纯装饰，点上去毫无反应。装饰性的假控件比留白更掉分。 */
-
-/* 导航选中态：从实心块改成淡蓝底 + 蓝字。
-   原来的实心深青块在有了环境光之后太重，压住了整个页面。 */
-.nav-tab.is-active {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-/* ── 标题区 ──────────────────────────────────────────────────────── */
+/* ── 首页栅格 ─────────────────────────────────────────────────────── */
 .view-home {
-  max-width: 880px;
-  padding: 76px 24px 88px;
-  text-align: center;
+  max-width: 1120px;
+  padding: 76px 28px 0;
+  text-align: left;
 }
-.hero { margin-bottom: 44px; }
+
+/* ── Hero：不对称 7 : 5 ────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 64px;
+  align-items: center;
+  padding-bottom: 68px;
+}
+
+/* 眼眉：一枚小胶囊，只放「给爸妈的体检翻译官」。
+   原来的「第九届传智杯 · AI 创新应用」删掉了——评委不用在这里被提醒
+   这是个比赛作品，用户更不需要。 */
 .hero-pill {
   display: inline-block;
-  font-size: 12px;
-  line-height: 1.5;
-  padding: 6px 15px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, .72);
-  color: var(--ink-2);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-}
-.hero-title {
-  margin-top: 30px;
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  line-height: 1.55;
-  color: #141b2e;
+  font-size: 12.5px;
+  line-height: 1;
+  padding: 8px 15px;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 118, 110, .38);
+  background: rgba(255, 255, 255, .55);
+  color: var(--primary-deep);
+  letter-spacing: .02em;
+  white-space: nowrap;
 }
 
-/* ── 上传框：核心，对标官网那个大圆角搜索框 ─────────────────────────── */
-.upload-card {
-  background: #fff;
-  border: 1px solid #e2e8e4;
-  border-radius: 24px;
-  padding: 24px;
-  text-align: left;
-  box-shadow:
-    0 18px 48px rgba(15, 118, 110, .10),
-    0 3px 10px rgba(15, 118, 110, .05);
+/* 主标题：宋体 900，两行死死钉住。
+   nowrap 是必须的——中文标题一旦折行，44px 的节奏就散了。 */
+.hero-title {
+  margin-top: 26px;
+  font-family: var(--serif);
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.34;
+  letter-spacing: .02em;
+  color: #1b2420;
+  white-space: nowrap;
 }
-.upload-card .dropzone,
+
+.hero-sub {
+  margin-top: 22px;
+  max-width: 30em;
+  font-size: 15px;
+  line-height: 1.9;
+  color: #4a4a45;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 34px;
+  flex-wrap: wrap;
+}
+
+/* 全站唯一一颗带辉光的按钮。
+   辉光是 0 8px 24px，只往下走——往上发光会像"霓虹"，往下才像"落在纸上的影子"。 */
+.btn-hero {
+  height: 46px;
+  padding: 0 30px;
+  font-size: 15px;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(15, 118, 110, .28);
+}
+.btn-hero:not(:disabled):hover {
+  box-shadow: 0 10px 28px rgba(15, 118, 110, .34);
+}
+
+.hero-demo {
+  font: inherit;
+  font-size: 14px;
+  color: #55534c;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(15, 118, 110, .35);
+  transition: color .14s;
+}
+.hero-demo:hover { color: var(--primary); }
+
+/* ── Hero 右侧：静态演示卡 ────────────────────────────────────────────
+   阴影只有这一组：暖调、负扩展把两侧收紧，像一个纸盒轻轻压在桌面上，
+   而不是"浮在空中的卡片"。 */
+.demo-card {
+  background: #fffdf9;
+  border: 1px solid #e8e0d2;
+  border-radius: 14px;
+  padding: 16px 20px 6px;
+  box-shadow:
+    0 1px 2px rgba(90, 70, 50, .06),
+    0 16px 40px -12px rgba(90, 70, 50, .16);
+}
+.demo-card-head {
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  color: #8d8170;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #efe7d9;
+}
+
+.demo-rows { list-style: none; margin: 0; padding: 0; }
+
+/* 每行左侧 4px 色条：红=要限制，绿=要补。
+   行与行之间一条极淡的分隔线，让三根色条读起来是三段，不是一整条。 */
+.demo-row {
+  padding: 15px 0 15px 15px;
+  border-left: 4px solid #9e422a;
+  border-top: 1px solid #f2ebdf;
+}
+.demo-row:first-child { border-top: 0; }
+.demo-row.is-ok { border-left-color: #3a6f52; }
+
+.dr-line {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 10px;
+  flex-wrap: wrap;
+}
+.dr-name {
+  flex: none;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #2b2a26;
+}
+.dr-val {
+  font-size: 12.5px;
+  color: #6a655c;
+  font-variant-numeric: tabular-nums;
+}
+/* 单位不许断行 —— μmol/L 被拆成 "μmol/" 和 "L" 是最典型的排版事故 */
+.dr-val .unit { white-space: nowrap; }
+
+.dr-advice {
+  margin-top: 7px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #2f3b35;
+}
+
+/* ── 信任数字条 ─────────────────────────────────────────────────────
+   上下两条细线，四条数字。这里每个数都能在仓库里找到出处：
+   92% 是 tests/ocr_bench 的实测命中率，80 是指标字典条数，
+   0 是原图不落盘的架构事实，420 是断言数。 */
+.trust-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  padding: 26px 0 24px;
+  margin: 0 0 76px;
+  border-top: 1px solid #e8e0d2;
+  border-bottom: 1px solid #e8e0d2;
+}
+.trust-item { text-align: center; }
+.trust-num {
+  display: block;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  color: #1b2420;
+  font-variant-numeric: tabular-nums;
+}
+.trust-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: #7d776c;
+}
+
+/* ── 三步 ─────────────────────────────────────────────────────────── */
+.steps { margin-bottom: 76px; scroll-margin-top: 90px; }
+
+.step-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 44px;
+  margin: 0;
+  padding: 0;
+}
+.step-no {
+  display: block;
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: .16em;
+  color: rgba(15, 118, 110, .7);
+}
+.step-name {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #1b2420;
+  margin: 9px 0 9px;
+}
+.step-text {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #55534c;
+}
+
+/* ── 上传区 ───────────────────────────────────────────────────────────
+   虚线框是这一页唯一"等待你动手"的地方，所以给它最多留白。 */
+.upload-box { margin-bottom: 84px; }
+
 .dropzone {
-  border: 1.5px dashed #d7e8e4;
-  border-radius: 16px;
-  background: #fbfdfc;
-  padding: 46px 20px;
+  border: 1.5px dashed #d9cfbd;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .55);
+  padding: 52px 24px 46px;
   text-align: center;
   cursor: pointer;
   transition: border-color .16s, background-color .16s;
@@ -933,315 +1100,154 @@ body {
 .dropzone:hover,
 .dropzone:focus-visible {
   border-color: var(--primary);
-  background: #f5faf8;
+  background: rgba(255, 255, 255, .88);
   outline: none;
 }
-.dz-title {
-  font-size: 15px;
-  font-weight: 650;
-  color: #141b2e;
+.dropzone.is-drag {
+  border-color: var(--primary);
+  background: var(--primary-soft);
 }
-.dz-sub {
-  font-size: 13px;
-  color: var(--ink-3);
-  margin-top: 9px;
+.dz-icon {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 14px;
+  color: #9a9284;
 }
+.dz-title { font-size: 15px; font-weight: 650; color: #23261f; }
+.dz-sub { font-size: 12.5px; color: #8c8578; margin-top: 7px; }
 
-/* 底部一行：左边两个小胶囊，右边蓝色圆形发送按钮 */
-.upload-bar {
+.upload-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
-}
-.upload-bar-left { display: flex; gap: 8px; flex-wrap: wrap; }
-.mini-pill {
-  font: inherit;
-  font-size: 13px;
-  padding: 7px 15px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color .14s, color .14s;
-}
-.mini-pill:hover { border-color: var(--primary); color: var(--primary); }
-
-.send-btn {
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 0;
-  background: var(--primary);
-  color: #fff;
-  font-size: 17px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(15, 118, 110, .32);
-  transition: background-color .14s, box-shadow .14s, transform .14s;
-}
-.send-btn:hover:not(:disabled) {
-  background: var(--primary-deep);
-  transform: translateY(-1px);
-}
-.send-btn:disabled {
-  background: #9db8b2;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-.send-arrow { display: block; transform: translateY(-1px); }
-
-/* 性别与已选文件：折叠进上传框底部一条细分隔线下面，不再单独占一块面板 */
-.upload-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
   flex-wrap: wrap;
   margin-top: 18px;
-  padding-top: 15px;
-  border-top: 1px solid var(--line);
 }
-.field-inline {
-  flex-direction: row;
+.sex-row {
+  display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   flex-wrap: wrap;
 }
 .view-home .chosen-file {
   font-size: 13px;
-  color: var(--ink-3);
-  max-width: 320px;
+  color: #8c8578;
+  max-width: 280px;
+  word-break: break-all;
 }
 
-/* ── 上传框下面的三个快捷入口 ─────────────────────────────────────── */
-.quick-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 30px;
-  flex-wrap: wrap;
-}
-.quick-pill {
-  font: inherit;
-  font-size: 13px;
-  padding: 9px 19px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink);
-  cursor: pointer;
-  transition: border-color .14s, color .14s, box-shadow .14s;
-}
-.quick-pill:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  box-shadow: 0 4px 14px rgba(15, 118, 110, .14);
+/* ── 为爸妈设计 ───────────────────────────────────────────────────── */
+.parents { margin-bottom: 72px; }
+
+.section-title {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: #1b2420;
+  margin-bottom: 30px;
 }
 
-/* 拍照提示收成极简折叠，展开才占地方 */
-.home-tips {
-  max-width: 620px;
-  margin: 40px auto 0;
-  text-align: left;
-  font-size: 13px;
-  color: var(--ink-3);
-}
-.home-tips summary {
-  cursor: pointer;
-  color: var(--ink-2);
-  font-size: 13px;
-  padding: 6px 0;
-}
-.home-tips ol {
-  margin: 10px 0 0;
-  padding-left: 20px;
-  color: var(--ink-2);
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.home-foot {
-  margin-top: 40px;
-  font-size: 12px;
-  color: var(--ink-3);
-  text-align: center;
-}
-
-@media (max-width: 640px) {
-  .view-home { padding: 48px 18px 64px; }
-  .hero-title { font-size: 28px; letter-spacing: .08em; }
-  .upload-card { padding: 18px; }
-  .dropzone { padding: 34px 14px; }
-}
-
-/* 移动端：顶栏只留 brand + 两个导航。
-   模式芯片在这宽度下会把品牌挤成竖排，而它不是移动端必须的信息
-   （模式在结果页顶部另有提示），收起来。 */
-@media (max-width: 720px) {
-  .topbar-inner { gap: 10px; }
-  .brand-mark { white-space: nowrap; font-size: 16px; }
-  .nav-tab { white-space: nowrap; padding: 6px 10px; }
-  .mode-chip { display: none; }
-  .hero-title { font-size: 26px; letter-spacing: .06em; line-height: 1.6; }
-  .upload-bar { gap: 8px; }
-  .mini-pill { padding: 7px 12px; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   首页定稿版（2026-10-18）—— 居中 + 深青 + 流动背景
-   ======================================================================
-   这一版回到深青 #0f766e：上一版用的 DeepSeek 蓝，
-   但那是 deepseek.com 的品牌色，撞脸不说，和"医疗/体检"这个题材也不搭。
-   布局沿用上一版的居中结构，只换视觉。
-   ═══════════════════════════════════════════════════════════════════════ */
-
-/* ── 背景：底色 + 三团缓慢漂移的光晕 ──────────────────────────────────
-   光晕是真实的 div（不是 body 的伪元素），因为需要三个，
-   而伪元素只有 ::before / ::after 两个。 */
-body {
-  min-height: 100vh;
-  background: #fbfdfc;
-}
-
-.bg-glow {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(70px);
-  pointer-events: none;
-  z-index: 0;
-  will-change: transform;
-}
-.glow-1 {
-  width: 420px; height: 420px;
-  top: -120px; left: -90px;
-  background: rgba(15, 118, 110, .17);
-  animation: drift-1 18s ease-in-out infinite;
-}
-.glow-2 {
-  width: 500px; height: 500px;
-  top: -140px; right: -110px;
-  background: rgba(64, 170, 160, .13);
-  animation: drift-2 24s ease-in-out infinite;
-}
-.glow-3 {
-  width: 440px; height: 440px;
-  bottom: -150px; left: 30%;
-  background: rgba(120, 200, 185, .11);
-  animation: drift-3 21s ease-in-out infinite;
-}
-
-/* 位移刻意压在 50–90px：光晕是背景，不是主角，
-   动得太明显会把注意力从标题和上传框上抢走。 */
-@keyframes drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(70px, 55px) scale(1.08); }
-}
-@keyframes drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-60px, 70px) scale(1.06); }
-}
-@keyframes drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(50px, -60px) scale(1.09); }
-}
-
-/* 系统里开了"减少动态效果"就停——有人在动背景上会头晕 */
-@media (prefers-reduced-motion: reduce) {
-  .bg-glow { animation: none; }
-}
-
-/* 内容浮在光晕之上 */
-.view { position: relative; z-index: 1; }
-
-/* ── 公告胶囊 ────────────────────────────────────────────────────── */
-.hero-pill { border: 1px solid #d7e8e4; }
-
-/* ── 上传卡片：560px 居中 + 毛玻璃 ──────────────────────────────────
-   上一版是满宽的，这一版收窄到 560px，让"一个框"成为页面焦点。
-   毛玻璃必须带 -webkit- 前缀：Chrome/Edge 认带前缀的，Safari 只认带前缀的。 */
-.view-home .upload-card {
-  max-width: 560px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, .82);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid #e2e8e4;
-}
-
-/* ── 红线预览卡片 ─────────────────────────────────────────────────
-   这是**示例**，不是真实结果：上传之前系统拿不到任何数字。
-   所以标题上挂了一个"示例"标签，避免被当成针对本人的结论。 */
-.preview-block {
-  max-width: 560px;
-  margin: 26px auto 0;
-  text-align: left;
-}
-.preview-head {
-  text-align: center;
-  font-size: 13px;
-  color: var(--ink-2);
-  margin-bottom: 14px;
-}
-.preview-tag {
-  display: inline-block;
-  margin-left: 7px;
-  padding: 1px 8px;
-  font-size: 11px;
-  border-radius: 999px;
-  border: 1px solid #d7e8e4;
-  color: var(--ink-3);
-  vertical-align: 1px;
-}
-.preview-cards {
+.parent-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
-.preview-card {
-  background: rgba(255, 255, 255, .85);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid #e2e8e4;
-  border-left-width: 3px;
-  border-radius: 4px;
-  padding: 12px 14px;
+/* 扁平：只有 1px 描边和一层极浅的纸色，没有阴影 */
+.parent-card {
+  background: rgba(255, 253, 249, .72);
+  border: 1px solid #ece4d6;
+  border-radius: 12px;
+  padding: 22px 22px 20px;
 }
-.preview-card.is-warn { border-left-color: #9e422a; }
-.preview-card.is-ok   { border-left-color: #3a6f52; }
+.pcard-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: #1b2420;
+  margin-bottom: 10px;
+}
+.pcard-text {
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: #55534c;
+}
+.pcard-note {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px dashed #e7ddcc;
+  font-size: 12px;
+  color: #918a7c;
+}
 
-.pc-top {
+/* ── 页脚 ─────────────────────────────────────────────────────────── */
+.home-footer {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-}
-.pc-name {
-  font-size: 14px;
-  font-weight: 650;
-  color: #141b2e;
-}
-.pc-value {
-  font-size: 13px;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-}
-.pc-note {
-  margin-top: 5px;
-  font-size: 12px;
-  color: var(--ink-3);
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 22px 0 34px;
+  border-top: 1px solid #e8e0d2;
+  font-size: 12.5px;
+  color: #8c8578;
 }
 
-@media (max-width: 640px) {
-  .glow-1 { width: 300px; height: 300px; }
-  .glow-2 { width: 340px; height: 340px; }
-  .glow-3 { width: 320px; height: 320px; }
+/* ── 响应式 ───────────────────────────────────────────────────────────
+   900px 以下：hero 收成单列，演示卡挪到标题下面（顺序按 DOM 自然下移）。
+   390px 还要再收一档，否则 44px 的标题会顶破屏幕。 */
+@media (max-width: 900px) {
+  .view-home { padding: 56px 22px 0; }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-bottom: 52px;
+  }
+  .hero-title { font-size: 34px; }
+  .hero-sub { margin-top: 18px; }
+  .trust-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 0;
+    padding: 22px 0;
+    margin-bottom: 56px;
+  }
+  .step-list,
+  .parent-grid { grid-template-columns: 1fr; gap: 28px; }
+  .steps { margin-bottom: 56px; }
+  .upload-box { margin-bottom: 60px; }
+  .section-title { font-size: 25px; margin-bottom: 22px; }
+}
+
+@media (max-width: 820px) {
+  .topbar-inner { padding: 12px 18px; gap: 12px; }
+  .topnav { gap: 14px; }
+  .mode-chip { display: none; }
+}
+
+@media (max-width: 480px) {
+  .view-home { padding: 42px 18px 0; }
+  .hero-title { font-size: 29px; letter-spacing: .01em; }
+  .hero-pill { font-size: 11.5px; padding: 7px 13px; }
+  .hero-sub { font-size: 14px; }
+  .btn-hero { height: 44px; padding: 0 24px; }
+  .trust-num { font-size: 26px; }
+  .dropzone { padding: 40px 16px 36px; }
+  .upload-foot { flex-direction: column; align-items: stretch; gap: 14px; }
+  .upload-actions { justify-content: space-between; }
+  .demo-card { padding: 14px 16px 4px; }
+  .home-footer { padding-bottom: 28px; }
+  /* 顶栏在 390px 下会挤成三行（实测 92px 高）：先收徽标、再收副标，
+     两个都是锦上添花，导航链接一个都不能少。 */
+  .brand-sub { display: none; }
+  .brand-mark { font-size: 17px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

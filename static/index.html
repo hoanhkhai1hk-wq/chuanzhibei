@@ -11,53 +11,130 @@
 </head>
 <body>
 
-<!-- 背景光晕：三层缓慢漂移的青绿高光，纯装饰，不参与交互也不影响布局 -->
-<div class="bg-glow glow-1" aria-hidden="true"></div>
-<div class="bg-glow glow-2" aria-hidden="true"></div>
-<div class="bg-glow glow-3" aria-hidden="true"></div>
+<!-- 背景：页面上三分之一的静态 mesh + 纸纹噪点。
+     静态、无动画：这是一个要反复看的产品页，不是一次性的宣传页。 -->
+<div class="bg-mesh" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <span class="brand-mark">体检之后</span>
+      <span class="brand-mark" id="tab-report" role="button" tabindex="0"
+            aria-label="回到报告解读">体检之后</span>
+      <span class="brand-sub">家庭健康助手</span>
     </div>
     <nav class="topnav">
-      <button type="button" class="nav-tab is-active" id="tab-report" data-tab="report">报告解读</button>
-      <button type="button" class="nav-tab" id="tab-daily" data-tab="daily">今日记录</button>
+      <button type="button" class="nav-link" id="tab-daily">今日记录</button>
+      <a class="nav-link" href="#how">使用说明</a>
+      <span class="mode-chip" id="mode-chip">…</span>
     </nav>
-    <div class="topbar-right">
-      <span class="mode-chip" id="mode-chip" title="表达层当前工作模式">…</span>
-      <a class="topbar-link" href="/docs" target="_blank" rel="noopener">API</a>
-    </div>
   </div>
 </header>
 
 <!-- ══════════════════════════ 报告解读 ════════════════════════════ -->
 <main id="view-home" class="view view-home">
 
+  <!-- ── Hero：不对称 7:5 分栏 ─────────────────────────────────────── -->
   <section class="hero">
-    <span class="hero-pill">AI 解读 · 本地规则引擎 · 隐私脱敏</span>
-    <h1 class="hero-title">把体检报告，<br>变成每天的三件事。</h1>
+    <div class="hero-copy">
+      <span class="hero-pill">给爸妈的体检翻译官</span>
+      <h1 class="hero-title">我们不诊断，<br>我们只翻译。</h1>
+      <p class="hero-sub">体检报告里上百个数字，翻成每天三件事：哪三条线要盯、每餐怎么吃、为什么。数字本地判定，大模型只负责说人话。</p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-primary btn-hero" id="btn-goto-upload">上传报告</button>
+        <button type="button" class="hero-demo" id="btn-demo">看看演示</button>
+      </div>
+    </div>
+
+    <!-- 静态演示卡：内容写死，不接后端。上传之前系统拿不到任何真实数字，
+         所以必须标明「合成演示数据」，否则会被当成针对本人的结论。 -->
+    <aside class="demo-card" aria-label="解读结果示例">
+      <p class="demo-card-head">解读结果 · 合成演示数据</p>
+      <ul class="demo-rows">
+        <li class="demo-row is-warn">
+          <p class="dr-line">
+            <span class="dr-name">限嘌呤</span>
+            <span class="dr-val">尿酸 520 <span class="unit">μmol/L</span> 偏高</span>
+          </p>
+          <p class="dr-advice">火锅先缓缓。</p>
+        </li>
+        <li class="demo-row is-warn">
+          <p class="dr-line">
+            <span class="dr-name">限钠</span>
+            <span class="dr-val">血压 142/92 偏高</span>
+          </p>
+          <p class="dr-advice">盐少放一勺。</p>
+        </li>
+        <li class="demo-row is-ok">
+          <p class="dr-line">
+            <span class="dr-name">补铁</span>
+            <span class="dr-val">血红蛋白 98 <span class="unit">g/L</span> 偏低</span>
+          </p>
+          <p class="dr-advice">瘦肉安排上。</p>
+        </li>
+      </ul>
+    </aside>
   </section>
 
-  <section class="upload-card">
+  <!-- ── 信任数字条 ──────────────────────────────────────────────── -->
+  <section class="trust-bar" aria-label="关键数字">
+    <div class="trust-item">
+      <span class="trust-num">92%</span>
+      <span class="trust-label">OCR 指标行命中率</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-num">80</span>
+      <span class="trust-label">项指标字典</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-num">0</span>
+      <span class="trust-label">张报告原图被保存</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-num">420</span>
+      <span class="trust-label">项自动化测试断言</span>
+    </div>
+  </section>
+
+  <!-- ── 三步 ──────────────────────────────────────────────────────── -->
+  <section class="steps" id="how" aria-label="使用流程">
+    <ol class="step-list">
+      <li class="step-item">
+        <span class="step-no">01</span>
+        <h2 class="step-name">上传</h2>
+        <p class="step-text">拍照或传 PDF。原图阅后即焚，不保存、不上传，隐私写在架构里。</p>
+      </li>
+      <li class="step-item">
+        <span class="step-no">02</span>
+        <h2 class="step-name">翻译</h2>
+        <p class="step-text">本地规则引擎对照指标字典，圈出三条红线，一句话讲清。</p>
+      </li>
+      <li class="step-item">
+        <span class="step-no">03</span>
+        <h2 class="step-name">照做</h2>
+        <p class="step-text">每天记一餐，语音也行。撞了哪条线，实时提醒。</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ── 上传区 ──────────────────────────────────────────────────── -->
+  <section class="upload-box" id="upload-box">
     <div class="dropzone" id="dropzone" tabindex="0" role="button"
-       aria-label="选择或拖入体检报告图片">
+         aria-label="选择或拖入体检报告图片">
+      <svg class="dz-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" fill="none"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+              stroke-linejoin="round"/>
+        <path d="M4 15v2.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V15"
+              fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round"/>
+      </svg>
       <p class="dz-title">把体检报告拖到这里，或点击上传</p>
-      <p class="dz-sub">支持拍照 / PDF，报告原图不保存</p>
+      <p class="dz-sub">支持拍照 / PDF</p>
       <input type="file" id="file-input" accept="image/*,.pdf" hidden>
     </div>
 
-    <div class="upload-bar">
-      <div class="upload-bar-left">
-        <button type="button" class="mini-pill" id="btn-pick">拍照上传</button>
-        <button type="button" class="mini-pill" id="btn-demo">演示数据</button>
-      </div>
-      <button type="button" class="btn btn-primary" id="btn-start" disabled>开始解读</button>
-    </div>
-
-    <div class="upload-meta">
-      <div class="field field-inline">
+    <div class="upload-foot">
+      <div class="sex-row">
         <span class="field-label">性别</span>
         <div class="segmented" id="sex-seg" role="radiogroup" aria-label="性别">
           <button type="button" class="seg is-active" data-sex="male"
@@ -65,60 +142,41 @@
           <button type="button" class="seg" data-sex="female"
                   role="radio" aria-checked="false">女</button>
         </div>
-        <span class="field-hint">肌酐、血红蛋白等指标的参考区间男女不同</span>
+        <span class="field-hint">肌酐、血红蛋白等参考区间男女不同</span>
       </div>
-      <p class="chosen-file" id="chosen-file">尚未选择文件</p>
-    </div>
-  </section>
-
-  <section class="preview-block">
-    <p class="preview-head">
-      上传后，你会得到这样的三条红线 ↓
-      <span class="preview-tag">示例</span>
-    </p>
-    <div class="preview-cards">
-      <div class="preview-card is-warn">
-        <div class="pc-top">
-          <span class="pc-name">限嘌呤</span>
-          <span class="pc-value">520 μmol/L</span>
-        </div>
-        <p class="pc-note">尿酸偏高，火锅先缓缓</p>
-      </div>
-      <div class="preview-card is-warn">
-        <div class="pc-top">
-          <span class="pc-name">限钠</span>
-          <span class="pc-value">142/92</span>
-        </div>
-        <p class="pc-note">血压偏高，盐少放一勺</p>
-      </div>
-      <div class="preview-card is-ok">
-        <div class="pc-top">
-          <span class="pc-name">补铁</span>
-          <span class="pc-value">98 g/L</span>
-        </div>
-        <p class="pc-note">血红蛋白偏低，瘦肉安排上</p>
+      <div class="upload-actions">
+        <p class="chosen-file" id="chosen-file">尚未选择文件</p>
+        <button type="button" class="btn btn-primary" id="btn-start" disabled>开始解读</button>
       </div>
     </div>
   </section>
 
-  <div class="quick-row">
-    <button type="button" class="quick-pill" data-jump="redlines">三条红线</button>
-    <button type="button" class="quick-pill" data-jump="daily">今日记餐</button>
-    <button type="button" class="quick-pill" data-jump="chat">问问 AI</button>
-  </div>
+  <!-- ── 为爸妈设计 ──────────────────────────────────────────────── -->
+  <section class="parents" aria-label="为爸妈设计">
+    <h2 class="section-title">不用打字，听得懂，发得出去。</h2>
+    <div class="parent-grid">
+      <article class="parent-card">
+        <h3 class="pcard-title">语音记一餐</h3>
+        <p class="pcard-text">按住说话，「中午吃了红烧肉」，自动匹配菜品、对照红线。</p>
+        <p class="pcard-note">识别文本只查菜品库，不送大模型</p>
+      </article>
+      <article class="parent-card">
+        <h3 class="pcard-title">一键朗读</h3>
+        <p class="pcard-text">把「给爸妈的话」念出来。字可以不看，话一定要听到。</p>
+        <p class="pcard-note">只念文字，不碰数字</p>
+      </article>
+      <article class="parent-card">
+        <h3 class="pcard-title">存成图片</h3>
+        <p class="pcard-text">健康小结一键存图，发家庭群，爸妈看得懂。</p>
+        <p class="pcard-note">纯前端绘制，数据不离页</p>
+      </article>
+    </div>
+  </section>
 
-  <details class="home-tips">
-    <summary>拍不清楚？先看这四条</summary>
-    <ol>
-      <li><strong>放平</strong>：把报告摊在桌面拍，不要手持悬空——倾斜会让表格线干扰识别。</li>
-      <li><strong>光线足</strong>：在自然光或顶灯下拍，避免台灯在纸面上留下一道亮斑。</li>
-      <li><strong>对准一行</strong>：让指标名称、数值、参考区间三列都在画面里，不要裁掉右侧。</li>
-      <li><strong>一次一页</strong>：多页报告请分开拍，本产品按单页处理。</li>
-    </ol>
-    <p class="tips-note">识别不完整的指标会在结果里标为「待确认」，并告诉你下一步怎么办——不会静默编一个数。</p>
-  </details>
-
-  <p class="home-foot">数字本地判定 · 大模型只写人话 · 绝不编造指标</p>
+  <footer class="home-footer">
+    <span>体检之后 · 家庭健康助手</span>
+    <span>数字本地判定 · 报告原图不保存 · 绝不编造指标</span>
+  </footer>
 </main>
 
 <!-- ══════════════════════════ 处理中 ══════════════════════════ -->
@@ -361,54 +419,33 @@
 
 <script src="/static/app.js"></script>
 <script>
-/* 首页改版新增的两个交互。app.js 一个字没改，这里只调用已经存在的元素与事件。
-   1. 「拍照上传」胶囊：转发点击给隐藏的 file-input
-      —— 与点击拖拽区是同一个行为，不另起一条路径。
-   2. 三个快捷胶囊：三条红线 / 问问 AI 都在结果页，还没解读过就先用演示数据跑一遍，
-      免得点了没反应；「今日记餐」直接切到今日记录。 */
+/* 首页 100 分版新增的两个交互。app.js 一个字没改，这里只调用已有元素。
+   1. CTA「上传报告」不直接弹文件框：拖拽框在三个步骤下面，
+      先滚过去，用户才知道待会儿还要点「开始解读」。
+   2. 顶栏品牌兼作「回到报告解读」——点击由 app.js 绑在 #tab-report 上，
+      这里只补键盘可达性，免得只用 Tab 键的人过不去。
+   （原来还有三个快捷胶囊，这一版连同它们的跳转逻辑一起删了：
+     导航里已经有「今日记录」，另两个入口在结果页，首页不需要第三条路径。） */
 (function () {
   var fileInput = document.getElementById('file-input');
-  var pick      = document.getElementById('btn-pick');
-  if (pick && fileInput) {
-    pick.addEventListener('click', function () { fileInput.click(); });
+  if (!fileInput) { return; }
+
+  var goto = document.getElementById('btn-goto-upload');
+  var box  = document.getElementById('upload-box');
+  if (goto && box) {
+    goto.addEventListener('click', function () {
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      var dz = document.getElementById('dropzone');
+      if (dz) { setTimeout(function () { dz.focus({ preventScroll: true }); }, 420); }
+    });
   }
 
-  var result   = document.getElementById('view-result');
-  var tabDaily = document.getElementById('tab-daily');
-  var btnDemo  = document.getElementById('btn-demo');
-
-  function scrollTo_(target) {
-    var sel = target === 'redlines' ? '#redlines' : '#chat-form';
-    var el = document.querySelector(sel);
-    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  var brand = document.getElementById('tab-report');
+  if (brand) {
+    brand.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); brand.click(); }
+    });
   }
-
-  function go(target) {
-    if (target === 'daily') {
-      if (tabDaily) { tabDaily.click(); }
-      return;
-    }
-    if (!result || result.classList.contains('is-hidden')) {
-      if (btnDemo) { btnDemo.click(); }
-      var tries = 0;
-      var timer = setInterval(function () {
-        tries += 1;
-        if (result && !result.classList.contains('is-hidden')) {
-          clearInterval(timer);
-          setTimeout(function () { scrollTo_(target); }, 300);
-        } else if (tries > 60) {
-          clearInterval(timer);
-        }
-      }, 400);
-      return;
-    }
-    scrollTo_(target);
-  }
-
-  var pills = document.querySelectorAll('.quick-pill');
-  Array.prototype.forEach.call(pills, function (b) {
-    b.addEventListener('click', function () { go(b.getAttribute('data-jump')); });
-  });
 })();
 </script>
 <script>
