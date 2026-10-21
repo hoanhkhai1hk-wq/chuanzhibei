@@ -1,0 +1,430 @@
+{
+  "version": "1.0",
+  "created": "2026-10-21",
+  "purpose": "红线判定的机器可读对照用例。每条用例的输入值、预期 flag、预期 rule_id / action / nutrient_key 都能回溯到 app/dict/markers.json 与 app/rules/redlines.json 的实际内容，没有一条是为了让测试通过临时编的阈值。",
+
+  "how_to_read": [
+    "kind=report：走 RuleEngine.evaluate(报告指标四元组) → 归一 → 高低判定 → 红线匹配，即真实报告链路。",
+    "kind=daily：R03_BP_HIGH 的 marker_id 是 bp_systolic，它**不在** markers.json 里（血压是测量值不是检验项），所以无法经 evaluate 触发。这类用例单独用临时 SQLite 调 daily.record_numeric，断言 activated_redline 与 active_redlines 表的内容。禁止把它硬塞进 evaluate。",
+    "expect.flag：目标指标（expect.target_marker_id）应判出的高/低/正常；未收录指标为 null。",
+    "expect.rule_ids：本次输入应触发的**完整**红线集合（排序后比较）。空数组表示一条都不该触发——阴性用例靠它证明「没有误报」。",
+    "expect.abnormal_count：本次应判为 high/low 的指标个数，用于确认整组输入的判定结果，而不只是目标那一项。",
+    "basis：该条预期的依据，写明用的是哪个字典区间、哪条规则。"
+  ],
+
+  "cases": [
+    {
+      "case_id": "RL-01",
+      "kind": "report",
+      "category": "positive",
+      "title": "尿酸偏高 → 限嘌呤",
+      "inputs": [{ "name": "尿酸(UA)", "value": "512", "unit": "μmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "ua",
+        "rule_ids": ["R01_UA_HIGH"],
+        "action": "limit", "nutrient_key": "purine", "restriction": "限嘌呤",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#ua 男性参考区间 208-428 μmol/L；512 > 428 → high。redlines.json#R01_UA_HIGH 以 marker_id=ua / flag=high 为键，映射 purine / limit / 限嘌呤。"
+    },
+    {
+      "case_id": "RL-02",
+      "kind": "report",
+      "category": "positive",
+      "title": "空腹血糖偏高 → 控精制碳水",
+      "inputs": [{ "name": "空腹血糖(GLU)", "value": "7.2", "unit": "mmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "glu",
+        "rule_ids": ["R02_GLU_HIGH"],
+        "action": "limit", "nutrient_key": "sugar", "restriction": "控精制碳水",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#glu 参考区间 3.9-6.1 mmol/L；7.2 > 6.1 → high。redlines.json#R02_GLU_HIGH → sugar / limit。"
+    },
+    {
+      "case_id": "RL-03",
+      "kind": "report",
+      "category": "positive",
+      "title": "糖化血红蛋白偏高 → 控精制碳水",
+      "inputs": [{ "name": "糖化血红蛋白(HbA1c)", "value": "7.4", "unit": "%" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "hba1c",
+        "rule_ids": ["R02_HBA1C_HIGH"],
+        "action": "limit", "nutrient_key": "sugar", "restriction": "控精制碳水",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#hba1c 参考区间 4.0-6.0 %；7.4 > 6.0 → high。redlines.json#R02_HBA1C_HIGH → sugar / limit。它与 R02_GLU_HIGH 共用 nutrient_key，但 rule_id 不同——一条讲当下血糖、一条讲近三个月。"
+    },
+    {
+      "case_id": "RL-04",
+      "kind": "report",
+      "category": "positive",
+      "title": "尿糖阳性（定性）→ 控精制碳水",
+      "inputs": [{ "name": "尿糖", "value": "阳性（+）", "unit": "定性" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "u_glucose",
+        "rule_ids": ["R02_U_GLU_POS"],
+        "action": "limit", "nutrient_key": "sugar", "restriction": "控精制碳水",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#u_glucose unit=定性、ref 全为 null → 走定性分支；括号内标记为 + → 阳性 → high。redlines.json#R02_U_GLU_POS 的 flag=high → sugar / limit。"
+    },
+    {
+      "case_id": "RL-05",
+      "kind": "daily",
+      "category": "positive",
+      "title": "血压 150/90（日常测量）→ 限钠",
+      "inputs": [{ "kind": "blood_pressure", "systolic": 150, "diastolic": 90, "unit": "mmHg" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "bp_systolic",
+        "rule_ids": ["R03_BP_HIGH"],
+        "action": "limit", "nutrient_key": "sodium", "restriction": "限钠",
+        "activated_redline": "限钠",
+        "abnormal_count": 1
+      },
+      "basis": "血压不是检验项，markers.json 里没有 bp_systolic（已核实 80 条字典中不存在）→ 只能由 daily.record_numeric 触发。阈值写在 app/daily/service.py 的 BP_THRESHOLD=(140, 90)，取自《中国高血压防治指南》诊室标准；150>=140 且 90>=90 → high。redlines.json#R03_BP_HIGH → sodium / limit / 限钠。"
+    },
+    {
+      "case_id": "RL-06",
+      "kind": "report",
+      "category": "positive",
+      "title": "总胆固醇偏高 → 限脂肪",
+      "inputs": [{ "name": "总胆固醇(TC)", "value": "6.2", "unit": "mmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "tc",
+        "rule_ids": ["R04_TC_HIGH"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "限脂肪",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#tc 参考区间 3.1-5.2 mmol/L；6.2 > 5.2 → high。redlines.json#R04_TC_HIGH → fat / limit。"
+    },
+    {
+      "case_id": "RL-07",
+      "kind": "report",
+      "category": "positive",
+      "title": "甘油三酯偏高 → 限脂肪",
+      "inputs": [{ "name": "甘油三酯(TG)", "value": "2.4", "unit": "mmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "tg",
+        "rule_ids": ["R04_TG_HIGH"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "限脂肪",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#tg 参考区间 0.45-1.70 mmol/L；2.4 > 1.7 → high。redlines.json#R04_TG_HIGH → fat / limit。"
+    },
+    {
+      "case_id": "RL-08",
+      "kind": "report",
+      "category": "positive",
+      "title": "低密度脂蛋白偏高 → 限脂肪",
+      "inputs": [{ "name": "低密度脂蛋白胆固醇(LDL-C)", "value": "4.1", "unit": "mmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "ldl",
+        "rule_ids": ["R04_LDL_HIGH"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "限脂肪",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#ldl 参考区间 1.5-3.4 mmol/L；4.1 > 3.4 → high。redlines.json#R04_LDL_HIGH → fat / limit。"
+    },
+    {
+      "case_id": "RL-09",
+      "kind": "report",
+      "category": "positive",
+      "title": "高密度脂蛋白偏低 → 限脂肪（方向相反的同一族）",
+      "inputs": [{ "name": "高密度脂蛋白胆固醇(HDL-C)", "value": "0.8", "unit": "mmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "low", "target_marker_id": "hdl",
+        "rule_ids": ["R04_HDL_LOW"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "限脂肪",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#hdl 参考区间 1.04-1.55 mmol/L；0.8 < 1.04 → low。redlines.json#R04_HDL_LOW 的 flag=low——同一指标升高与降低含义不同，所以规则的键必须带方向。"
+    },
+    {
+      "case_id": "RL-10",
+      "kind": "report",
+      "category": "positive",
+      "title": "血红蛋白偏低 → 补铁（唯一一条 boost）",
+      "inputs": [{ "name": "血红蛋白(Hb)", "value": "98", "unit": "g/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "low", "target_marker_id": "hb",
+        "rule_ids": ["R05_HB_LOW"],
+        "action": "boost", "nutrient_key": "iron", "restriction": "补铁 + 维C",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#hb 男性参考区间 130-175 g/L；98 < 130 → low。redlines.json#R05_HB_LOW 是 16 条规则里唯一 action=boost 的一条，nutrient_key=iron。方向搞反会变成「限铁」，给出完全错误的建议。"
+    },
+    {
+      "case_id": "RL-11",
+      "kind": "report",
+      "category": "positive",
+      "title": "谷丙转氨酶偏高 → 限酒精",
+      "inputs": [{ "name": "谷丙转氨酶(ALT)", "value": "68", "unit": "U/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "alt",
+        "rule_ids": ["R06_ALT_HIGH"],
+        "action": "limit", "nutrient_key": "alcohol", "restriction": "限酒精",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#alt 参考区间 9-50 U/L；68 > 50 → high。redlines.json#R06_ALT_HIGH → alcohol / limit。"
+    },
+    {
+      "case_id": "RL-12",
+      "kind": "report",
+      "category": "positive",
+      "title": "谷草转氨酶偏高 → 限酒精",
+      "inputs": [{ "name": "谷草转氨酶(AST)", "value": "52", "unit": "U/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "ast",
+        "rule_ids": ["R06_AST_HIGH"],
+        "action": "limit", "nutrient_key": "alcohol", "restriction": "限酒精",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#ast 参考区间 15-40 U/L；52 > 40 → high。redlines.json#R06_AST_HIGH → alcohol / limit。"
+    },
+    {
+      "case_id": "RL-13",
+      "kind": "report",
+      "category": "positive",
+      "title": "谷氨酰转肽酶偏高（男性区间）→ 限酒精",
+      "inputs": [{ "name": "谷氨酰转肽酶(GGT)", "value": "88", "unit": "U/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "ggt",
+        "rule_ids": ["R06_GGT_HIGH"],
+        "action": "limit", "nutrient_key": "alcohol", "restriction": "限酒精",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#ggt 男性区间 11-61 U/L（女性 8-40，男女不同）；88 > 61 → high。redlines.json#R06_GGT_HIGH → alcohol / limit。"
+    },
+    {
+      "case_id": "RL-14",
+      "kind": "report",
+      "category": "positive",
+      "title": "肌酐偏高（男性区间）→ 控蛋白总量",
+      "inputs": [{ "name": "肌酐(Cr)", "value": "120", "unit": "μmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "cr",
+        "rule_ids": ["R07_CR_HIGH"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "控蛋白总量",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#cr 男性区间 57-111 μmol/L；120 > 111 → high。redlines.json#R07_CR_HIGH → fat / limit（restriction 写的是控蛋白总量，nutrient_key 复用了 fat）。"
+    },
+    {
+      "case_id": "RL-15",
+      "kind": "report",
+      "category": "positive",
+      "title": "估算肾小球滤过率偏低 → 控蛋白总量",
+      "inputs": [{ "name": "估算肾小球滤过率(eGFR)", "value": "72", "unit": "mL/min" }],
+      "sex": "male",
+      "expect": {
+        "flag": "low", "target_marker_id": "egfr",
+        "rule_ids": ["R07_EGFR_LOW"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "控蛋白总量",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#egfr 参考区间 90-120 mL/min；72 < 90 → low。redlines.json#R07_EGFR_LOW 的 flag=low → fat / limit。"
+    },
+    {
+      "case_id": "RL-16",
+      "kind": "report",
+      "category": "positive",
+      "title": "尿蛋白阳性（定性）→ 控蛋白总量",
+      "inputs": [{ "name": "尿蛋白(PRO)", "value": "阳性（+）", "unit": "定性" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "u_protein",
+        "rule_ids": ["R07_UPRO_POS"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "控蛋白总量",
+        "abnormal_count": 1
+      },
+      "basis": "markers.json#u_protein unit=定性、ref 全为 null → 定性分支；括号内 + → 阳性 → high。redlines.json#R07_UPRO_POS → fat / limit。"
+    },
+
+    {
+      "case_id": "NEG-01",
+      "kind": "report",
+      "category": "negative",
+      "title": "三项都在区间内 → 一条红线都不触发",
+      "inputs": [
+        { "name": "尿酸(UA)", "value": "300", "unit": "μmol/L" },
+        { "name": "空腹血糖(GLU)", "value": "5.0", "unit": "mmol/L" },
+        { "name": "总胆固醇(TC)", "value": "4.2", "unit": "mmol/L" }
+      ],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "ua",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0
+      },
+      "basis": "300 落在 ua 男性 208-428 内、5.0 落在 glu 3.9-6.1 内、4.2 落在 tc 3.1-5.2 内 → 三项均 normal，无 high/low 就匹配不到任何规则。这条证明「正常值不会误报」。"
+    },
+    {
+      "case_id": "NEG-02",
+      "kind": "report",
+      "category": "negative",
+      "title": "字典未收录的指标 → 不猜，进 unmatched",
+      "inputs": [{ "name": "某某没收录的指标", "value": "999", "unit": "" }],
+      "sex": "male",
+      "expect": {
+        "flag": null, "target_marker_id": null,
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0,
+        "unmatched": ["某某没收录的指标"]
+      },
+      "basis": "markers.json 共 80 条，其中没有这个名称，别名表也命中不了 → normalize_name 返回 None → 该行进 unmatched，不产生判定，也不产生红线。宁可少判一项，也不拿最像的那一项硬套。"
+    },
+    {
+      "case_id": "NEG-03",
+      "kind": "report",
+      "category": "negative",
+      "title": "尿蛋白阴性（-）→ 不触发控蛋白总量",
+      "inputs": [{ "name": "尿蛋白(PRO)", "value": "阴性（-）", "unit": "定性" }],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "u_protein",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0
+      },
+      "basis": "「阴性（-）」是中国检验报告最常见的写法；定性分支会先抓括号里的符号 - → normal。这条曾经是缺陷：修复前它被判成 unknown，而「阳性（+）」却能正确识别，两边不对称。"
+    },
+    {
+      "case_id": "NEG-04",
+      "kind": "report",
+      "category": "negative",
+      "title": "肌酐 100（男性）→ 正常，不触发",
+      "inputs": [{ "name": "肌酐(Cr)", "value": "100", "unit": "μmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "cr",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0
+      },
+      "basis": "同样的 100，男性区间 57-111 → normal。与 EDGE-05（女性 44-97 → high）成对，证明参考区间确实按性别取，而不是只用 default。"
+    },
+    {
+      "case_id": "EDGE-05",
+      "kind": "report",
+      "category": "boundary",
+      "title": "肌酐 100（女性）→ 偏高，触发 R07_CR_HIGH",
+      "inputs": [{ "name": "肌酐(Cr)", "value": "100", "unit": "μmol/L" }],
+      "sex": "female",
+      "expect": {
+        "flag": "high", "target_marker_id": "cr",
+        "rule_ids": ["R07_CR_HIGH"],
+        "action": "limit", "nutrient_key": "fat", "restriction": "控蛋白总量",
+        "abnormal_count": 1
+      },
+      "basis": "女性区间 44-97 μmol/L；100 > 97 → high。与 NEG-04 是同一个数值、唯一变量是性别——这是「参考区间分性别」这条设计的直接证据。"
+    },
+    {
+      "case_id": "EDGE-06",
+      "kind": "report",
+      "category": "boundary",
+      "title": "尿酸 428 正好等于上界 → 正常（区间是闭区间）",
+      "inputs": [{ "name": "尿酸(UA)", "value": "428", "unit": "μmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "ua",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0
+      },
+      "basis": "judge() 用 val > hi 判偏高（不是 >=），所以 428 恰好落在界内 → normal、不触发。这条钉住边界口径，避免以后有人改成 >= 导致大量临界值被误报。"
+    },
+    {
+      "case_id": "EDGE-07",
+      "kind": "report",
+      "category": "boundary",
+      "title": "尿酸 429（上界 +1）→ 偏高，触发限嘌呤",
+      "inputs": [{ "name": "尿酸(UA)", "value": "429", "unit": "μmol/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "ua",
+        "rule_ids": ["R01_UA_HIGH"],
+        "action": "limit", "nutrient_key": "purine", "restriction": "限嘌呤",
+        "abnormal_count": 1
+      },
+      "basis": "与 EDGE-06 只差 1 μmol/L，必须从 normal 翻成 high——两条一起证明边界判定是精确比较而不是四舍五入或误差带。"
+    },
+    {
+      "case_id": "EDGE-08",
+      "kind": "report",
+      "category": "boundary",
+      "title": "血红蛋白 129（下界 -1）→ 偏低且 action 必须是 boost",
+      "inputs": [{ "name": "血红蛋白(Hb)", "value": "129", "unit": "g/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "low", "target_marker_id": "hb",
+        "rule_ids": ["R05_HB_LOW"],
+        "action": "boost", "nutrient_key": "iron", "restriction": "补铁 + 维C",
+        "abnormal_count": 1
+      },
+      "basis": "男性下界 130；129 < 130 → low。红线的 action 必须是 boost（建议多吃），不是 limit——方向错了建议就完全相反。bench 里另有一条断言：boost 规则的 advice 文案不含「少吃」。"
+    },
+    {
+      "case_id": "EDGE-09",
+      "kind": "report",
+      "category": "boundary",
+      "title": "血红蛋白 176（偏高）→ flag=high，但一条红线都不触发",
+      "inputs": [{ "name": "血红蛋白(Hb)", "value": "176", "unit": "g/L" }],
+      "sex": "male",
+      "expect": {
+        "flag": "high", "target_marker_id": "hb",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 1
+      },
+      "basis": "男性上界 175；176 > 175 → high。但 redlines.json 里 R05_HB_LOW 的 flag 是 low，没有 hb/high 的规则 → 不触发任何红线。这条证明「判定为异常」与「给出饮食约束」是两件事：血红蛋白偏高不是补铁问题，不能硬塞一条建议。"
+    },
+    {
+      "case_id": "NEG-10",
+      "kind": "report",
+      "category": "negative",
+      "title": "尿糖阴性（-）→ 不触发控精制碳水",
+      "inputs": [{ "name": "尿糖", "value": "阴性（-）", "unit": "定性" }],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "u_glucose",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "abnormal_count": 0
+      },
+      "basis": "与 RL-04 成对：同一条 R02_U_GLU_POS，阳性触发、阴性不触发。定性项是真实尿检报告（github_urine_hepb_redacted）里出现的主要形式，阴性用例必须覆盖。"
+    },
+    {
+      "case_id": "NEG-11",
+      "kind": "daily",
+      "category": "boundary",
+      "title": "血压 139/89（阈值下 1 mmHg）→ 不激活限钠",
+      "inputs": [{ "kind": "blood_pressure", "systolic": 139, "diastolic": 89, "unit": "mmHg" }],
+      "sex": "male",
+      "expect": {
+        "flag": "normal", "target_marker_id": "bp_systolic",
+        "rule_ids": [],
+        "action": null, "nutrient_key": null, "restriction": null,
+        "activated_redline": null,
+        "abnormal_count": 0
+      },
+      "basis": "BP_THRESHOLD=(140, 90)；139 < 140 且 89 < 90 → normal，不激活任何红线。与 RL-05（150/90）成对，证明阈值确实是 140/90 且比较用的是 >=。"
+    }
+  ]
+}
