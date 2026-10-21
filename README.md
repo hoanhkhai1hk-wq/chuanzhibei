@@ -113,7 +113,7 @@
 | 项 | 要求 | 说明 |
 |---|---|---|
 | 系统 | Windows / macOS / Linux | Windows 有双击启动脚本，最省事 |
-| Python | **3.11+**（本项目在 3.11.15 实测） | 3.12 / 3.13 未实测，见 3.5 |
+| Python | **3.11+**（本项目在 3.11.15 实测） | 3.12 / 3.13 未实测 |
 | 网络 | **首次装依赖需要** | 装完之后 OCR（本地 RapidOCR）与判定全部离线可跑 |
 | 大模型 Key | **可选** | 不填就是模板模式，产品完整可用；填了自动升级为大模型模式 |
 | OCR Key | **不需要** | 默认用本地 RapidOCR（`rapidocr-onnxruntime`），零 Key、零联网 |
@@ -175,7 +175,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 | 用 `&` 起的后台进程会被回收 | 长驻服务需用后台任务方式运行，不要用 `&` |
 | 中文路径 + OpenCV | 本项目自己的读写走 `pathlib` + `PIL`，不碰 OpenCV；但默认 OCR 引擎 rapidocr 内部用 `cv2` 读图，而 `cv2.imread` 对中文路径**静默返回 None**。上传的临时文件由 `tempfile` 生成 ASCII 名，已绕开这个坑；若系统 `%TEMP%` 目录本身含中文，仍有风险（**未实测**） |
 
-### 3.4 端到端验收链路（已跑通，非 TODO）
+### 3.4 端到端验收链路（已跑通，含干净环境复现）
 
 `[x]` 已在 2026-10-21 用**干净环境复现**（全新 clone + 独立 Python 3.11 venv +
 无 Key 模板模式），完整走通下面这条链路：
@@ -190,7 +190,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 | 验证 | 命令 | 规模 |
 |---|---|---|
 | 端到端链路（图 → OCR → 判定 → 红线） | `python tests/test_e2e.py` | 12 份合成样本 / 177 项断言 |
-| 真实报告实测 | `python tests/real_bench.py` | 8 张真实图 / 命中 61-66 行 = 92% |
+| 真实报告实测 | `python tests/real_bench.py` | 8 张真实图 / 解析 66 行、命中 61 行 = 92% |
 | 16 条红线规则逐条对照 | `python tests/redline_bench.py` | 27 条用例 / 293 项断言 |
 
 明细与口径见 [docs/有效性证据.md](docs/有效性证据.md)。
