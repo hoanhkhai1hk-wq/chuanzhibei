@@ -1,24 +1,57 @@
 # Python 依赖
+#
+# 安装：pip install -r requirements.txt
+# 适用：Python 3.11+（本项目在 3.11.15 实测；3.12 / 3.13 未实测）
+#
+# 版本策略：
+#   · 默认链路（启动服务 → 演示模式 → 上传报告 → 判定 → 红线 → 记餐 → 周报）
+#     用到的包一律 pin 死，且都是本机实测跑通的版本，不是猜的；
+#   · 可选 provider（百度 OCR / PaddleOCR）只写在文末注释里，需要时再装；
+#   · 默认链路**不需要任何 Key、不需要联网**（OCR 走本地 RapidOCR）。
 
-# ---- Web 框架（实测已装）----
+# ---- Web 框架 ----
 fastapi==0.143.1
 uvicorn[standard]==0.54.0
-python-multipart==0.0.32
+python-multipart==0.0.32     # 上传文件（UploadFile）必需，漏了服务会起不来
 pydantic==2.14.1
 
-# ---- HTTP 客户端（调 DeepSeek 与 OCR 服务）----
-httpx>=0.27.0
-requests>=2.31.0
+# ---- HTTP 客户端 ----
+httpx==0.28.1                # openai SDK 的传输层，SSE 流式也走它
+requests>=2.31.0             # 仅百度 OCR（可选 provider）用；本机未装、未实测
 
-# ---- DeepSeek API（兼容 OpenAI SDK）----
-openai>=1.40.0
+# ---- 大模型（可选：不配 Key 时走本地模板模式，功能完整）----
+# OpenAI 兼容协议，DeepSeek / 通义 / Kimi 共用一个 SDK
+openai==3.35.1
 
-# ---- 数据处理（实测已装）----
+# ---- OCR：默认本地引擎，零 Key、纯 CPU ----
+# 选它的理由：评委不需要申请任何账号，clone 完装完就能跑。
+# 装这个包会一并带上 onnxruntime / opencv-python / pyclipper / PyYAML /
+# Shapely / six / tqdm / Pillow，所以不必逐个列。
+rapidocr-onnxruntime==1.4.4
+
+# 推理运行时。我们没直接 import 它，但它决定模型跑在哪一版 ONNX 上——
+# 这个项目的输出是「要能对账」的，换版本可能带来数值差异，所以一起 pin。
+onnxruntime==1.31.0
+
+# ---- 图像处理 ----
+Pillow==12.2.0               # 弱图预处理（灰度 / 对比度 / 放大 1.5x）与演示报告绘制
+
+# ---- 数据处理 ----
+# numpy 会被 rapidocr 一并装上；pandas 当前未被任何代码 import（已核查全仓零引用），
+# 保留给分析脚本用。两者都留着，是为了不让 requirements 与「实际装了什么」脱节。
 numpy==2.4.6
 pandas==3.0.3
-Pillow==12.2.0
 
-# ---- OCR ----
-# TODO(Day 5): OCR 选型评测（百度 / 腾讯 / PaddleOCR）完成后在此 pinned
-# - 选百度/腾讯: 走 REST,依赖上面的 requests 即可,无需额外安装
-# - 选 PaddleOCR: 追加 paddlepaddle + paddleocr
+# ============================================================================
+# 可选 provider —— 默认链路不需要
+# ----------------------------------------------------------------------------
+# 百度 OCR（云端，需要自己的 Key，见 .env.example 的 BAIDU_OCR_*）：
+#   pip install requests        # 上面已列
+#   然后把 .env 的 OCR_PROVIDER 改成 baidu
+#
+# PaddleOCR（本地，体积大，约几百 MB）：
+#   pip install paddlepaddle paddleocr
+#   然后把 .env 的 OCR_PROVIDER 改成 paddle
+#
+# 腾讯 OCR：适配器已留位但未接入，见 app/ocr/engine.py 的 ocr_tencent()
+# ============================================================================

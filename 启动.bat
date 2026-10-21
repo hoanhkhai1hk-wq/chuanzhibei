@@ -3,21 +3,52 @@ chcp 936 >nul
 cd /d "%~dp0"
 
 echo ============================================
-echo   体检之后 —— 开发服务器
+echo   体检之后 —— 本地服务器
 echo ============================================
 echo.
 
-set PY=D:\aconda3\envs\hwh_ml\python.exe
+rem ── 找 Python ──────────────────────────────────────────────
+rem 顺序：环境变量 PY（可选，指向你想用的 python.exe）→ PATH 里的 python
+rem 以前这里写死了开发者本机的绝对路径，别人拿到仓库双击必然失败。
+if defined PY goto :have_py
+set "PY=python"
 
-if not exist "%PY%" (
-    echo [错误] 找不到 Python：
-    echo   %PY%
+:have_py
+"%PY%" -c "import sys; print(sys.version.split()[0])" >nul 2>&1
+if errorlevel 1 (
+    echo [错误] 没有找到可用的 Python。
     echo.
-    echo 请用记事本打开本文件，把 PY= 那一行改成你自己的 python.exe 路径。
+    echo   试过：%PY%
+    echo.
+    echo 请先安装 Python 3.11 或更高版本，并勾选 "Add Python to PATH"；
+    echo 或者用记事本打开本文件，在最上面加一行：
+    echo     set PY=你的python.exe完整路径
     echo （conda 环境通常在 ...\envs\环境名\python.exe）
     echo.
     pause
     exit /b 1
+)
+
+rem ── 检查依赖装没装 ────────────────────────────────────────
+rem 只查 uvicorn 和 rapidocr 两个：前者没有服务起不来，
+rem 后者没有则上传报告时会报「未安装 rapidocr-onnxruntime」。
+"%PY%" -c "import uvicorn, rapidocr_onnxruntime" >nul 2>&1
+if errorlevel 1 (
+    echo [提示] 这个 Python 里还缺依赖，现在开始安装...
+    echo         命令：%PY% -m pip install -r requirements.txt
+    echo.
+    "%PY%" -m pip install -r requirements.txt
+    if errorlevel 1 (
+        echo.
+        echo [错误] 依赖安装失败。请检查网络后，手动执行：
+        echo     %PY% -m pip install -r requirements.txt
+        echo.
+        pause
+        exit /b 1
+    )
+    echo.
+    echo 依赖安装完成。
+    echo.
 )
 
 echo 正在启动，请稍候...
