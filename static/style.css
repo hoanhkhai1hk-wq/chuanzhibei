@@ -450,14 +450,17 @@ p { margin: 0; }
    气泡的圆角和背景只会让本来就窄的内容区更挤。
    改用「问」字前缀 + 细线分隔，和逐项结果、红线卡片是同一套语言。 */
 .chat-quick { display: flex; flex-wrap: wrap; gap: var(--btn-gap); }
-/* 快捷问题：和主按钮同形状的方形 —— 3px 圆角、白底、1px 细灰边、黑字、6px 12px 内边距。
-   尺寸由 padding 决定（约 31px 高），比主按钮矮一档，因为它是"建议"不是"动作"。 */
+/* 快捷问题：是个按钮，就按按钮的规格来 —— 36px 高、6px 圆角、白底细灰边。
+   原来由 padding 撑成约 31px、3px 圆角，本来是想做「比主按钮矮一档」的层次，
+   但 5px 的高度差读不出来是层次，只读得出来是没对齐：
+   它下面紧挨着的输入框和「提问」按钮都是 36/6，同一块面板里三样东西两种规格。
+   主次仍然靠「白底描边 vs 实心主色」区分，不靠尺寸。 */
 .chat-ask {
   display: inline-flex; align-items: center;
-  font: inherit; font-size: 13px; font-weight: 400; line-height: 1.3;
-  padding: 6px 12px; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 400; line-height: 1;
+  height: var(--btn-h); padding: 0 14px; cursor: pointer;
   border: 1px solid var(--btn-border); background: #fff;
-  color: var(--btn-text); border-radius: 3px;
+  color: var(--btn-text); border-radius: var(--btn-r);
   transition: border-color .12s, color .12s, background-color .12s;
 }
 .chat-ask:hover:not(:disabled) {
@@ -694,10 +697,16 @@ p { margin: 0; }
 .chart-empty { font-size: 13px; color: var(--ink-3); padding: 8px 0 2px; }
 
 /* ─── 搜索与菜品点选 ─── */
+/* 搜索框是「可输入的控件」，不是「容器」，所以跟按钮同一套规格：
+   高度 --btn-h、圆角 --btn-r、边框 --btn-border。
+   原来是 padding 撑出来的 43px + --r-sm(3px) + --line-2，
+   于是同一页里出现两种输入框：这个 43/3px，问问 AI 那个 36/6px。
+   两种圆角同时出现在「上面一个搜索框、下面一排 6px 菜品格子」里，看得出是漏改而不是设计。 */
 .search {
   width: 100%; font: inherit; font-size: 14px;
-  padding: 9px 13px; border: 1px solid var(--line-2);
-  border-radius: var(--r-sm); outline: none;
+  height: var(--btn-h); padding: 0 13px;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--btn-r); outline: none;
   background: var(--surface-2); color: var(--ink);
   margin-bottom: 12px;
 }
@@ -790,11 +799,14 @@ p { margin: 0; }
   display: flex; flex-direction: column; gap: 6px;
   font-size: 12px; font-weight: 650; letter-spacing: .01em; color: var(--ink-3);
 }
+/* 与搜索框、问答输入框同一套：36px / 6px。
+   原来靠 padding 撑到 41px、3px 圆角，和旁边 36px/6px 的「记录」按钮并排时
+   高度差 5px、圆角差一倍，一眼就能看出不是一个体系。 */
 .num-field input {
   font: inherit; font-size: 14px; font-weight: 700;
   letter-spacing: 0; text-transform: none;
-  padding: 8px 11px; width: 116px;
-  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  height: var(--btn-h); padding: 0 11px; width: 116px;
+  border: 1px solid var(--btn-border); border-radius: var(--btn-r);
   background: var(--surface-2); color: var(--ink); outline: none;
 }
 .num-field input:focus { border-color: var(--primary); background: #fff; }
