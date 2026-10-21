@@ -50,6 +50,21 @@ logger = logging.getLogger(__name__)
 #: 评委现场断网时，少等 8 秒就是少等 8 秒。
 _QA_READ_TIMEOUT = 12.0
 
+#: 解读输出的 token 上限。
+#: 原来是 2048，实测 11 项的报告会被**从中间截断**——
+#: 报错是 `JSONDecodeError: Unterminated string`，也就是 JSON 还没写完就断了。
+#: 截断的后果很隐蔽：它被归进「输出不合规」→ 重跑一次 → 又截断 → 退模板，
+#: 最后标成「模型编了数字」，而实际上模型一个数字都没编，只是话没说完。
+#: 4096 足够覆盖 30 项上下的报告（实测 11 项约 1900 字/800 token 级）。
+_LLM_MAX_TOKENS = 4096
+
+#: 契约允许的顶层字段。模型偶尔会多吐一个 `"type": "json_object"`
+#: （像是把 response_format 参数一起写进了正文），而 LabReport 是 extra="forbid"，
+#: 一个无关字段就能让整份报告校验失败、退回模板。
+#: 处理方式与「模型编出不存在的指标」一致：剔除并记日志，
+#: 而不是放宽契约——嵌套层仍然受 extra="forbid" 保护，噪声照样拦得住。
+_CONTRACT_KEYS = {"summary", "disclaimer", "follow_up_questions", "tests"}
+
 HERE = Path(__file__).parent
 APP = HERE.parent
 DISCLAIMER = (
@@ -463,7 +478,7 @@ class Explainer:
         for attempt in (1, 2):
             try:
                 reply = call_llm(prompt, model, system=_SYSTEM_PROMPT,
-                                 max_tokens=2048, json_mode=True,
+                                 max_tokens=_LLM_MAX_TOKENS, json_mode=True,
                                  timeout=DEFAULT_READ_TIMEOUT)
                 self.last_model_label = reply.model_label
                 self.last_notice = reply.notice
@@ -516,6 +531,14 @@ class Explainer:
                             break
                     kept.append(t)
                 data["tests"] = kept
+
+                # 契约外的顶层字段先剔除。实测模型会吐 `"type": "json_object"`，
+                # 一个无关字段就让整份报告 extra_forbidden 失败，白丢一次生成。
+                stray = set(data) - _CONTRACT_KEYS
+                if stray:
+                    logger.warning("模型输出了契约外的顶层字段，已剔除：%s", sorted(stray))
+                    for k in stray:
+                        data.pop(k, None)
 
                 # 免责声明恒为本地文案。契约里它是必填项，但不能指望模型写对——
                 # 写在校验之后再覆盖就已经晚了，模型漏写这个字段会直接把整份
