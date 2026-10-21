@@ -191,7 +191,13 @@ cp .env.example .env        # Windows: copy .env.example .env
 |---|---|---|
 | 端到端链路（图 → OCR → 判定 → 红线） | `python tests/test_e2e.py` | 12 份合成样本 / 177 项断言 |
 | 真实报告实测 | `python tests/real_bench.py` | 8 张真实图 / 解析 66 行、命中 61 行 = 92% |
-| 16 条红线规则逐条对照 | `python tests/redline_bench.py` | 27 条用例 / 293 项断言 |
+| 16 条红线规则逐条对照 | `python tests/redline_bench.py` | 55 条用例 / 506 项断言 |
+
+> **端到端测试不需要任何前置步骤。** 12 份合成样本图放在 `tests/ocr_bench/samples/`，
+> 该目录被 `.gitignore` 排除（本意是拦住真实报告图，合成图也一并没进仓库）。
+> 所以 `test_e2e.py` 检测到 `synth_*.png` 缺失时，会**自动调用 `tests/ocr_bench/synth.py`
+> 现场生成**再继续跑——全新 clone 之后直接执行即可，不必先跑生成命令。
+> 生成是确定性的（固定 seed），补出来的图与仓库里的 `expected/*.json` 一一对应。
 
 明细与口径见 [docs/有效性证据.md](docs/有效性证据.md)。
 
@@ -300,7 +306,7 @@ cp .env.example .env        # Windows: copy .env.example .env
     ├── test_chat.py         # [x] 问问 AI 53 项断言
     ├── test_provider.py     # [x] 模型出口 43 项断言（回退 / 超时 / 异常归类）
     ├── test_degrade.py      # [x] 降级链路 134 项断言（断网 / 401 / 429 / 编数字）
-    ├── redline_bench.py     # [x] 红线逐条对照 27 条用例 / 293 项断言
+    ├── redline_bench.py     # [x] 红线逐条对照 55 条用例 / 506 项断言
     ├── redline_cases.json   # [x] 上述对照的机器可读用例
     ├── real_bench.py        # [x] 真实报告实测（8 张公开渠道图）
     └── ocr_bench/           # [x] OCR 选型评测 + 合成报告生成器
@@ -442,7 +448,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 | P1 | **多模型切换**（DeepSeek 已接通，通义千问 / Kimi 已预留） | `[x]` `call_llm` 唯一出口，未接通模型自动回落并提示 |
 | P2 | 拍照识别菜品（识别失败自动退回点选） | `[ ]` |
 | P2 | 家人档案（`members` 表切换，无账号） | `[ ]` |
-| —— | **可复现的有效性证据**（不是功能，是佐证） | `[x]` OCR 92%/100%、16 条红线逐条对照 27 用例全过，见 [docs/有效性证据.md](docs/有效性证据.md) |
+| —— | **可复现的有效性证据**（不是功能，是佐证） | `[x]` OCR 92%/100%、16 条红线三类用例共 55 条全过，见 [docs/有效性证据.md](docs/有效性证据.md) |
 
 ### 为什么主输入是「点选」而不是「拍照」
 

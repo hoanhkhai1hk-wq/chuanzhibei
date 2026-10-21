@@ -159,7 +159,12 @@ def audit_case(case: dict, engine: RuleEngine, markers: dict, rules: dict) -> No
 
 
 def audit_coverage(cases: list[dict], rules: dict) -> None:
-    """每条启用的规则至少有一条阳性用例；R03 必须走日常层。"""
+    """每条启用的规则至少有一条阳性用例；R03 必须走日常层。
+
+    另外两类覆盖同样要查——只查阳性，等于只证明"该报的报了"，
+    没证明"不该报的没乱报"。阴性（判正常时不出红线）与边界（恰在阈值上时
+    行为与比较符一致）是两件不同的事，缺任何一类都算覆盖不全。
+    """
     positive_rules: set[str] = set()
     daily_rules: set[str] = set()
     for c in cases:
@@ -180,6 +185,18 @@ def audit_coverage(cases: list[dict], rules: dict) -> None:
           "bp_systolic" in {m["id"] for m in
                             json.loads(MARKERS_F.read_text(encoding="utf-8"))["markers"]},
           False)
+
+    # 阴性 / 边界覆盖：按 target_marker_id 归到对应规则
+    marker2rule = {r["marker_id"]: rid for rid, r in rules.items()
+                   if r.get("enabled", True)}
+    neg_markers = {c["expect"].get("target_marker_id") for c in cases
+                   if c["category"] == "negative"}
+    edge_markers = {c["expect"].get("target_marker_id") for c in cases
+                    if c["category"] == "boundary"}
+    no_neg = sorted(marker2rule[m] for m in marker2rule if m not in neg_markers)
+    no_edge = sorted(marker2rule[m] for m in marker2rule if m not in edge_markers)
+    check(f"自查·每条规则都有阴性用例（缺：{no_neg or '无'}）", no_neg, [])
+    check(f"自查·每条规则都有边界用例（缺：{no_edge or '无'}）", no_edge, [])
 
 
 # ─────────────────────────────── 执行两类用例 ───────────────────────────────

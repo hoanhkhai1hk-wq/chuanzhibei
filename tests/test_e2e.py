@@ -12,10 +12,18 @@
     也是演示时真正要展示的那条线。
 
 注意：本测试需要 rapidocr，且会跑 12 份样本，耗时约 30-60 秒。
+
+关于样本从哪来：
+    12 份合成报告图放在 tests/ocr_bench/samples/，而该目录被 .gitignore 排除
+    （本意是拦住真实体检报告图，合成图也被一并挡住了）。
+    所以全新 clone 之后直接跑本文件**不需要任何手动前置步骤**——
+    检测到 synth_*.png 缺失时，会现场调用 tests/ocr_bench/synth.py 的生成逻辑补齐。
+    生成是确定性的（固定 seed），补出来的图与仓库里 expected/*.json 的标注一一对应。
 """
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -27,9 +35,54 @@ from app.pipeline import Pipeline, redact  # noqa: E402
 
 SAMPLES = ROOT / "tests" / "ocr_bench" / "samples"
 EXPECTED = ROOT / "tests" / "ocr_bench" / "expected"
+SYNTH_PY = ROOT / "tests" / "ocr_bench" / "synth.py"
+
+#: 与 tests/ocr_bench/synth.py 的默认值保持一致；换 seed 会让图与标注对不上
+SYNTH_SEED = 20261016
+SYNTH_DEGRADED = 4
 
 FAILED: list[str] = []
 PASSED = 0
+
+
+def _load_synth():
+    """按文件路径加载 synth.py。
+
+    tests/ocr_bench 不是包（没有 __init__.py），所以不能 `import tests.ocr_bench.synth`。
+    用 spec_from_file_location 加载，避免为此改动目录结构。
+    """
+    spec = importlib.util.spec_from_file_location("ocr_bench_synth", SYNTH_PY)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def ensure_synth_samples() -> None:
+    """确保 samples/ 下的合成图齐备；缺了就现场生成。
+
+    为什么放在测试里而不是写成文档步骤：
+        "先跑一个命令再跑测试"这种前置步骤一定会被跳过——评委、CI、未来的自己都会跳。
+        把补齐动作放进测试本身，才是真正的"可复现"。
+    """
+    expected = sorted(EXPECTED.glob("synth_*.json"))
+    have = {p.stem for p in SAMPLES.glob("synth_*.png")}
+    missing = [f.stem for f in expected if f.stem not in have]
+
+    if not missing:
+        return
+
+    if not SYNTH_PY.exists():
+        print(f"   [警告] 缺少 {len(missing)} 张合成样本图，且找不到生成器 {SYNTH_PY}")
+        return
+
+    print(f"   [准备] samples/ 下缺 {len(missing)} 张合成图"
+          f"（该目录被 .gitignore 排除，合成图不会进仓库）")
+    print(f"   [准备] 正在调用 tests/ocr_bench/synth.py 现场生成，约需数秒…")
+    synth = _load_synth()
+    # expected/*.json 已随仓库提供，是评测的 ground truth，这里只补图、不覆盖标注
+    synth.generate(SYNTH_SEED, len(expected) or 12, SYNTH_DEGRADED,
+                   clean=False, write_expected=not expected)
+    print()
 
 
 def check(label: str, got, want) -> None:
@@ -129,6 +182,7 @@ def main() -> int:
     print("=== 脱敏测试 ===")
     test_redact()
     print("=== 端到端链路测试（12 份合成样本）===")
+    ensure_synth_samples()
     test_pipeline_on_samples()
 
     print()

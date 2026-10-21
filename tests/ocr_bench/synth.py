@@ -50,12 +50,35 @@ HERE = Path(__file__).parent
 SAMPLES = HERE / "samples"
 EXPECTED = HERE / "expected"
 
+#: 候选字体。**顺序有讲究**：Windows 路径放最前，保证 Windows 上的成像与历史基线
+#: 逐像素一致；后面才是 Linux / macOS 的常见中文字体。全部找不到时 load_font()
+#: 会打印明确警告——否则生成的样本图里中文全是方框，而 /api/demo 也会跟着画不出字，
+#: 排查时却只看到"OCR 识别率暴跌"这种表象。
 FONT_CANDIDATES = [
+    # Windows
     "C:/Windows/Fonts/simhei.ttf",   # 黑体，接近报告正文
     "C:/Windows/Fonts/msyh.ttc",     # 微软雅黑
     "C:/Windows/Fonts/simsun.ttc",   # 宋体
     "C:/Windows/Fonts/simkai.ttf",   # 楷体
+    # Linux（Debian/Ubuntu 的 fonts-wqy-zenhei、fonts-noto-cjk）
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
+    # Linux（Fedora / Arch 常见落点）
+    "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc",
+    # macOS
+    "/System/Library/Fonts/PingFang.ttc",
+    "/System/Library/Fonts/STHeiti Light.ttc",
+    "/Library/Fonts/Arial Unicode.ttf",
 ]
+
+#: 是否已经就"找不到中文字体"警告过一次（load_font 会被调用 3 次，别刷屏）
+_FONT_WARNED = False
 
 #: 页面宽度。加宽到 820 是为了让「高密度脂蛋白(HDL-C)」这类长名称不被框线切断。
 PAGE_W = 820
@@ -89,11 +112,28 @@ DEPARTMENTS = ["检验科", "体检中心"]
 
 
 def load_font(size: int) -> ImageFont.FreeTypeFont:
+    """按候选顺序找一个能用的中文字体。
+
+    找不到时**必须出声**：PIL 的默认字体不含中文字形，画出来是方框，
+    而症状会一路漂移成"OCR 识别率骤降""/api/demo 生成的报告读不出字"——
+    没有警告的话，排查方向会被带偏很久。
+    """
+    global _FONT_WARNED
     for p in FONT_CANDIDATES:
         try:
             return ImageFont.truetype(p, size)
         except Exception:
             continue
+    if not _FONT_WARNED:
+        _FONT_WARNED = True
+        print(
+            "[警告] 没有找到任何中文字体，已退回 PIL 默认字体。\n"
+            "       默认字体不含中文字形，生成的样本图里中文很可能显示为方框，\n"
+            "        随之 /api/demo 画出的报告也会无法识别。\n"
+            "       Linux 可装：apt install fonts-wqy-zenhei   （或 fonts-noto-cjk）\n"
+            "       macOS 通常自带 /System/Library/Fonts/PingFang.ttc，若仍失败请检查该文件是否存在。\n"
+            "       Windows 请确认 C:/Windows/Fonts/simhei.ttf 存在。"
+        )
     return ImageFont.load_default()
 
 
@@ -318,7 +358,14 @@ def make_one(seed: int = 7, degraded: bool = False,
     return path
 
 
-def generate(seed: int, count: int, degraded: int, clean: bool) -> int:
+def generate(seed: int, count: int, degraded: int, clean: bool,
+             write_expected: bool = True) -> int:
+    """生成合成样本。
+
+    write_expected=False 时只出图片、不写标注。
+    为什么需要这个开关：tests/test_e2e.py 在全新 clone 上发现图片缺失时会自动补齐，
+    此时 expected/*.json 已经在仓库里了，是评测的 ground truth，不该被覆盖。
+    """
     rng = random.Random(seed)
     SAMPLES.mkdir(parents=True, exist_ok=True)
     EXPECTED.mkdir(parents=True, exist_ok=True)
@@ -350,21 +397,25 @@ def generate(seed: int, count: int, degraded: int, clean: bool) -> int:
 
         stem = f"synth_{i + 1:03d}"
         img.save(SAMPLES / f"{stem}.png")
-        (EXPECTED / f"{stem}.json").write_text(
-            json.dumps({
-                "source": f"合成样本，排版={tpl}，{'已做拍照退化' if is_deg else '清晰件'}",
-                "markers": [{"name": r["name"], "value": r["value"],
-                             "unit": r["unit"], "ref": r["ref"]} for r in rows],
-            }, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        if write_expected:
+            (EXPECTED / f"{stem}.json").write_text(
+                json.dumps({
+                    "source": f"合成样本，排版={tpl}，{'已做拍照退化' if is_deg else '清晰件'}",
+                    "markers": [{"name": r["name"], "value": r["value"],
+                                 "unit": r["unit"], "ref": r["ref"]} for r in rows],
+                }, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
         made.append((stem, tpl, is_deg))
 
     print(f"已生成 {len(made)} 份合成报告：")
     for stem, tpl, deg in made:
         print(f"   {stem}  排版={tpl:8s} {'拍照退化' if deg else '清晰'}")
     print(f"\n图片 -> {SAMPLES}")
-    print(f"标注 -> {EXPECTED}")
+    if write_expected:
+        print(f"标注 -> {EXPECTED}")
+    else:
+        print("标注 -> 未改写（沿用仓库里已有的 expected/*.json）")
     print(f"其中退化样本 {degraded} 份（编号最大的那批）")
     print("\n下一步：python bench.py --provider paddle")
     return 0
