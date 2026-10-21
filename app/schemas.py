@@ -410,6 +410,15 @@ class ChatReply(_Strict):
         description=("非空表示实际用的不是用户选的那个模型"
                      "（如占位模型回落），界面必须原样显示"),
     )
+    degraded: str = Field(
+        default="",
+        description=(
+            "本次是否退回了本地模板，以及为什么："
+            "空=没有降级；unavailable=模型不可用（鉴权/限流/超时/断网）；"
+            "hallucination=模型可用但输出没通过数字回溯校验。"
+            "两者必须分开：前者要查网络与 Key，后者要查 prompt 与校验器"
+        ),
+    )
     validated: bool = Field(
         ..., description="数字是否全部通过回溯校验（模板模式恒为 True）"
     )

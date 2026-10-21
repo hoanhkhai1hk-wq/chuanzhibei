@@ -91,7 +91,8 @@ def test_call_llm_falls_back() -> None:
     calls: list[tuple[str, bool]] = []
     original = provider._chat
 
-    def fake_chat(spec, messages, *, max_tokens, temperature, json_mode):
+    def fake_chat(spec, messages, *, max_tokens, temperature, json_mode,
+                  timeout=provider.DEFAULT_READ_TIMEOUT):
         calls.append((spec.key, json_mode))
         return "模型回复：尿酸 520。"
 

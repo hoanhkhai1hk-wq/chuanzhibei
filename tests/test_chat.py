@@ -55,6 +55,10 @@ class FakeExplainer(Explainer):
         # 最后一条 user 消息就是 prompt，记下来供断言
         self.prompts.append(messages[-1]["content"])
         self.models.append(model)
+        # 剧本发完了就抛 IndexError，而不是静默返回空串：
+        # 以前返回空串会让调用方「以为模型没说话」而悄悄退本地模板，
+        # 于是测试里那条「选 DeepSeek 无提示」其实测的是一条降级路径——
+        # 断言过了，但过的不是它以为的那条路。让它响亮地失败。
         return self.replies.pop(0)
 
 
@@ -197,7 +201,12 @@ def test_prompt_contains_facts_only() -> None:
 def test_model_fallback_reaches_ui() -> None:
     """选了占位的模型：答案照给，但必须告诉界面「实际用的是 DeepSeek」。"""
     an = sample_analysis()
-    fake = FakeExplainer(["你的尿酸是 520，高于参考区间 208-428。"])
+    # 下面要调两次，剧本就得给两句——之前只给了一句，第二次拿到空回复，
+    # 于是「选 DeepSeek 无提示」实际测的是一条悄悄退化的路径。
+    fake = FakeExplainer([
+        "你的尿酸是 520，高于参考区间 208-428。",
+        "你的尿酸是 520，高于参考区间 208-428。",
+    ])
     qa = QaAnswerer(explainer=fake, markers=engine().markers)
 
     r = qa.answer("尿酸高是怎么回事", an, model="qwen")
@@ -207,7 +216,11 @@ def test_model_fallback_reaches_ui() -> None:
     check("选中的 key 透传到调用层", fake.models[-1], "qwen")
 
     r2 = qa.answer("尿酸高是怎么回事", an, model="deepseek")
+    # 这两条一起钉，才能证明第二次确实走了大模型而不是悄悄退了模板
+    check("选 DeepSeek 时模型正确", r2["model"], "DeepSeek V4.1")
+    check("选 DeepSeek 时确为大模型模式", r2["mode"], "llm")
     check("选 DeepSeek 无提示", r2["model_notice"], "")
+    check("选 DeepSeek 未降级", r2["degraded"], "")
 
     # 未登记的模型同样不能让接口挂掉
     r3 = qa.answer("尿酸高是怎么回事", an, model="xxx")

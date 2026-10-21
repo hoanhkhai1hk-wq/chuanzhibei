@@ -42,6 +42,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Optional
 
@@ -54,8 +55,14 @@ from app.llm.explainer import (
     allowed_numbers,
     find_hallucinations,
 )
-from app.llm.provider import resolve_model
+from app.llm.provider import (
+    LLMOutputInvalid,
+    LLMUnavailable,
+    resolve_model,
+)
 from app.pipeline import mask_pii
+
+logger = logging.getLogger(__name__)
 
 #: 问题长度上限。再长也不是在问一件事，只会把事实清单挤出上下文。
 _MAX_QUESTION = 200
@@ -138,16 +145,29 @@ class QaAnswerer:
         validated = True
         attempts = 0
         used_llm = False
+        degraded = ""
 
         if self.explainer.mode == "llm":
             try:
                 text, validated, attempts = self._llm_answer(
                     clean_q, analysis, facts, normal_names, foods, hits, measure, model)
                 used_llm = True
-            except Exception:                       # noqa: BLE001
-                # 大模型不可用（没网 / 超时 / 连续两次编数字）→ 退回本地，并如实标注。
-                # 宁可承认「这次是本地生成的」，也不把没过校验的文本发给用户。
-                text = ""
+            except LLMUnavailable as e:
+                # 模型不可用（没 Key / 鉴权 / 限流 / 超时 / 断网 / 5xx）。
+                # 这类失败重试没有意义，直接退本地。
+                logger.warning("问答时大模型不可用，已退回本地模板：%s", e)
+                degraded = "unavailable"
+            except LLMOutputInvalid as e:
+                # 模型是通的，是它自己编了数字（连续两次都没过校验）。
+                # 与上面的区别必须留住：前者要查网络和 Key，后者要查 prompt 与校验器。
+                logger.warning("问答输出未通过数字回溯校验，已退回本地模板：%s", e)
+                degraded = "hallucination"
+            except Exception as e:                       # noqa: BLE001
+                # 兜底：任何意外都不能让用户看到报错页，但也不能随口赖给
+                # 「模型编了数字」——那是会误导排查方向的。归为不可用并记日志。
+                logger.warning("问答过程异常，已退回本地模板：%s: %s",
+                               type(e).__name__, e)
+                degraded = "unavailable"
 
         if not text:
             text = self._template_answer(clean_q, analysis, focus, foods, hits, measure)
@@ -156,6 +176,10 @@ class QaAnswerer:
 
         # 实际用的模型：选了占位模型时这里会是 DeepSeek，配合 notice 一起显示
         spec, notice = resolve_model(model)
+        if degraded == "unavailable":
+            notice = Explainer.DEGRADE_HINT
+        elif degraded == "hallucination":
+            notice = "AI 输出未通过数字校验，已改用本地模板，判定结果不受影响。"
         return self._reply(
             answer=text,
             validated=validated,
@@ -165,7 +189,10 @@ class QaAnswerer:
             analysis=analysis,
             mode="llm" if used_llm else "template",
             model=spec.label if used_llm else "本地模板",
-            notice=(notice if used_llm else ""),
+            # 未降级时 notice 说的是「实际用的不是你选的模型」；
+            # 降级时它说的是「为什么这次是本地生成的」。两种都是要给用户看的话。
+            notice=notice,
+            degraded=degraded,
             masked=masked,
         )
 
@@ -352,7 +379,7 @@ class QaAnswerer:
                 "\n\n【重写要求】你上次的回答里出现了这些【事实清单】中没有的数字："
                 f"{'、'.join(bad)}。请重写，一个都不要保留。"
             )
-        raise RuntimeError("连续两次输出含无出处数字，已退回本地模板")
+        raise LLMOutputInvalid("连续两次输出含无出处数字，已退回本地模板")
 
     # -------------------------------------------------------------- 本地模板
 
@@ -445,6 +472,7 @@ class QaAnswerer:
     def _reply(self, answer: str, validated: bool, attempts: int,
                facts: list[str], foods: list[str], analysis: dict,
                mode: str, model: str, notice: str = "",
+               degraded: str = "",
                masked: Optional[list[str]] = None) -> dict:
         allowed = allowed_numbers(analysis)
         used = [t for t in dict.fromkeys(_NUM_RE.findall(answer or "")) if t in allowed]
@@ -453,6 +481,7 @@ class QaAnswerer:
             "mode": mode,
             "model": model,
             "model_notice": notice,
+            "degraded": degraded,
             "validated": bool(validated),
             "attempts": int(attempts),
             "facts_used": facts,

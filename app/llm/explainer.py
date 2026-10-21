@@ -35,10 +35,20 @@ import re
 from pathlib import Path
 from typing import Iterator
 
-from app.llm.provider import DEFAULT_MODEL_KEY, MODELS, call_llm
+from app.llm.provider import (
+    DEFAULT_MODEL_KEY,
+    DEFAULT_READ_TIMEOUT,
+    MODELS,
+    LLMUnavailable,
+    call_llm,
+)
 from app.schemas import FamilyMessage, LabReport, LabTest, StreamEvent
 
 logger = logging.getLogger(__name__)
+
+#: 问答的读超时。512 tokens 的回答用不着等解读那份时间，
+#: 评委现场断网时，少等 8 秒就是少等 8 秒。
+_QA_READ_TIMEOUT = 12.0
 
 HERE = Path(__file__).parent
 APP = HERE.parent
@@ -249,6 +259,17 @@ class Explainer:
             ...                              # 或按事件流逐条吐出
     """
 
+    #: 降级原因。供接口与界面如实标注，不含任何服务商原始报文。
+    #:   ""             没降级，正文确实由大模型生成
+    #:   "unavailable"  模型不可用（没 Key / 鉴权 / 限流 / 超时 / 断网 / 5xx）
+    #:   "hallucination" 模型可用，但输出没通过数字回溯校验
+    #: 这两个必须分开：前者重试也没用，后者要先带着「你多写了哪些」重写一次。
+    DEGRADE_UNAVAILABLE = "unavailable"
+    DEGRADE_HALLUCINATION = "hallucination"
+
+    #: 界面上给用户的那句话。判定结果本地出，所以「不受影响」是事实不是安慰。
+    DEGRADE_HINT = "AI 暂不可用，已使用本地模板，判定结果不受影响。"
+
     def __init__(self, api_key: str | None = None, base_url: str | None = None,
                  model: str | None = None) -> None:
         # 显式传入的 api_key 只用于测试与强制模板模式；
@@ -259,6 +280,8 @@ class Explainer:
         #: 最近一次调用的实际模型与回落提示，供上层展示（问答的 meta 行要用）
         self.last_model_label: str = ""
         self.last_notice: str = ""
+        #: 本次是否退到了本地模板，以及为什么。每次 explain 开头清零。
+        self.last_degraded: str = ""
 
     # ------------------------------------------------------------------ 模式
 
@@ -287,8 +310,10 @@ class Explainer:
             else:
                 prompt = m.get("content", "")      # 取最后一条非 system 消息
 
+        # 问答比解读短得多（max_tokens 512），读超时按场景给，别跟着解读等 20 秒
         reply = call_llm(prompt, model, system=system,
-                         max_tokens=max_tokens, temperature=temperature)
+                         max_tokens=max_tokens, temperature=temperature,
+                         timeout=_QA_READ_TIMEOUT)
         self.last_model_label = reply.model_label
         self.last_notice = reply.notice
         return reply.text
@@ -438,11 +463,24 @@ class Explainer:
         for attempt in (1, 2):
             try:
                 reply = call_llm(prompt, model, system=_SYSTEM_PROMPT,
-                                 max_tokens=2048, json_mode=True)
+                                 max_tokens=2048, json_mode=True,
+                                 timeout=DEFAULT_READ_TIMEOUT)
                 self.last_model_label = reply.model_label
                 self.last_notice = reply.notice
                 data = json.loads(reply.text)
+            except LLMUnavailable as e:
+                # 模型不可用：重试没有意义（鉴权错了再试还是错，断网了再试还是断），
+                # 而且每试一次就是一次完整的等待。立刻退模板。
+                logger.warning("大模型不可用，已退回模板模式：%s", e)
+                self.last_degraded = self.DEGRADE_UNAVAILABLE
+                return self._degraded_report(analysis)
+            except Exception as e:                    # noqa: BLE001
+                # 走到这里是「模型回了，但回的不是能用的东西」：
+                # 非 JSON、缺字段、契约不符。归为输出不合规，按现有逻辑再试一次。
+                last_err = f"{type(e).__name__}: {e}"
+                continue
 
+            try:
                 # 数字回溯校验：模型写的每个数字都要有出处
                 prose = " ".join(
                     [data.get("summary", "")]
@@ -494,10 +532,25 @@ class Explainer:
         # 给用户看的是结论，不是堆栈：pydantic 的报错原文只进日志，不进界面。
         if last_err:
             logger.warning("大模型解读未通过校验，已退回模板模式：%s", last_err)
+        self.last_degraded = self.DEGRADE_HALLUCINATION
+        return self._degraded_report(analysis)
+
+    def _degraded_report(self, analysis: dict) -> LabReport:
+        """本地模板报告 + 一句如实说明，说明写进问诊清单末尾。
+
+        文案按降级原因分开：
+            unavailable    → 模型不可用（断网 / 鉴权 / 限流 / 超时）
+            hallucination  → 模型可用，但输出没通过数字回溯校验
+        以前这两种共用一句「输出未通过校验」，等于把断网说成了模型编数字——
+        内部归因错了，排查时就往错的方向查。
+        """
         report = self._template_report(analysis)
-        report.follow_up_questions.append(
-            "（本次大模型输出未通过校验，已改用本地模板解读，结论不受影响）"
+        note = (
+            "（AI 暂不可用，已改用本地模板解读，判定结果不受影响）"
+            if self.last_degraded == self.DEGRADE_UNAVAILABLE
+            else "（本次大模型输出未通过数字校验，已改用本地模板解读，结论不受影响）"
         )
+        report.follow_up_questions.append(note)
         return report
 
     @staticmethod
@@ -554,26 +607,44 @@ class Explainer:
     # ------------------------------------------------------------ 对外接口
 
     def explain(self, analysis: dict, model: str | None = None) -> dict:
-        """一次性生成完整解读。返回 dict，含 mode / model 字段供界面展示。"""
+        """一次性生成完整解读。返回 dict，含 mode / model 字段供界面展示。
+
+        `mode` 与 `model` 说的是**这次正文实际由谁生成**，
+        不是「本来打算由谁生成」。降级之后仍然回 llm 的话，
+        界面上就会挂着「AI 解读 · DeepSeek V4.1」而正文其实是本地模板写的——
+        那不是如实展示，是撒谎。
+        """
         analysis = _with_counts(analysis)
-        # 每次都先清空：last_notice 是实例属性，不清会带着上一次的回落提示串台
+        # 每次都先清空：这几个都是实例属性，不清会带着上一次的回落状态串台
         self.last_notice = ""
         self.last_model_label = ""
+        self.last_degraded = ""
+
         if self.mode == "llm":
             try:
                 report = self._llm_report(analysis, model)
-            except Exception:                       # noqa: BLE001
-                report = self._template_report(analysis)
-                report.follow_up_questions.append("（大模型不可用，已切换本地模板解读）")
+            except LLMUnavailable as e:
+                # _llm_report 内部已经处理过一次，这里是最后一道：
+                # 事实 JSON 构造或模板生成本身出问题时也必须有结果返回。
+                logger.warning("解读过程异常，已退回模板模式：%s", e)
+                self.last_degraded = self.DEGRADE_UNAVAILABLE
+                report = self._degraded_report(analysis)
+            except Exception as e:                       # noqa: BLE001
+                logger.warning("解读过程异常，已退回模板模式：%s", e)
+                self.last_degraded = self.DEGRADE_UNAVAILABLE
+                report = self._degraded_report(analysis)
         else:
             report = self._template_report(analysis)
 
+        degraded = self.last_degraded
         return {
-            "mode": self.mode,
+            # 降级了就是本地模板，不谎报
+            "mode": "template" if degraded else self.mode,
             # 用实际跑的那一个，而不是用户选的那一个：
             # 选了占位模型时这里会是 DeepSeek，界面靠 notice 额外说明
-            "model": self.last_model_label or self.model_name,
-            "model_notice": self.last_notice,
+            "model": "本地模板" if degraded else (self.last_model_label or self.model_name),
+            "model_notice": self.DEGRADE_HINT if degraded else self.last_notice,
+            "degraded": degraded,
             "report": report.model_dump(),
             "family_message": self.family_message(analysis),
             "privacy": analysis.get("privacy", {}),

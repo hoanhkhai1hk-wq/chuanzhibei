@@ -25,6 +25,7 @@
 """
 
 import json
+import logging
 import shutil
 import tempfile
 from pathlib import Path
@@ -47,6 +48,8 @@ from app.schemas import (
     StreamEvent,
 )
 from app.env_loader import load_dotenv_once, status_line  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 # 业务代码读配置只认 os.getenv，而它看不见磁盘上的 .env。
 # 所以在装配 app 之前补一次：把 .env 的键值灌进 os.environ，
@@ -342,8 +345,11 @@ def explain_stream(payload: dict) -> StreamingResponse:
             for ev in _EXPLAINER.stream_events(payload, model=wanted):
                 yield f"data: {ev.model_dump_json()}\n\n"
         except Exception as e:                      # noqa: BLE001
+            # 异常类名与原始报文只进日志。推给前端的是一句人话：
+            # 思考可视化那条日志是给用户看的，不是给开发看的。
+            logger.warning("流式解读异常：%s: %s", type(e).__name__, e)
             err = StreamEvent(type="error", stage="explain",
-                              message=f"解读过程出错：{type(e).__name__}")
+                              message=Explainer.DEGRADE_HINT)
             yield f"data: {err.model_dump_json()}\n\n"
 
     return StreamingResponse(

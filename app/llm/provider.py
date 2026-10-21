@@ -55,6 +55,52 @@ from typing import Optional
 #: 同一个操作产生不同结果，这种不确定性比功能缺失更难排查。
 DEFAULT_MODEL_KEY = "deepseek"
 
+#: ============================== 超时 ==============================
+#: SDK 的默认值是 connect 5s / read 600s / 重试 2 次——
+#: 也就是说一次「连上了但对方不回」最坏能挂 30 分钟。
+#: 评审现场断网时，前端就会对着转圈圈的页面干等，等于白屏。
+#: 这里显式压到"人能忍"的量级：
+#:   解读 max_tokens=2048 → 20s 足够；问答 512 → 12s 足够。
+#: 超时后由上层退本地模板，而不是让用户等。
+DEFAULT_CONNECT_TIMEOUT = 5.0
+DEFAULT_READ_TIMEOUT = 20.0
+#: 传输层**不重试**。SDK 默认是 2 次，实测黑洞地址下一次调用要 9 秒，
+#: 重试一次就是 17 秒——页面干等，评委以为卡死了。
+#: 不重试的理由不是省事：传输层失败之后本来就退本地模板，
+#: 重试成功也只是把「本地模板」换回「大模型措辞」，不值得让用户多等 9 秒。
+#: 真正值得重试的是「模型编了数字」，而那一次重写在**业务层**
+#: （explainer 里带着「你多写了哪些」再跑一次），不在传输层。
+MAX_RETRIES = 0
+
+
+class LLMUnavailable(RuntimeError):
+    """大模型**不可用**：没配 Key、鉴权失败、限流、超时、断网、服务端异常。
+
+    这个类的存在是为了让上层能把两件事分开：
+
+        模型不可用                  → 不必再试，立刻退本地模板
+        模型可用但输出编了数字      → 带着「你多写了哪些」重写一次，再不过才退
+
+    以前这两件事都落到同一个 `except Exception` 里，后果有两个：
+      1. 断网时也会白跑第二次，等待时间翻倍；
+      2. 退回模板后仍对外声称「本次由大模型生成」——界面在撒谎。
+
+    异常信息里只放**归类后的一句话原因**，不放服务商原始报文
+    （里面可能有 request_id、账号片段），原始信息只进日志。
+    """
+
+
+class LLMOutputInvalid(RuntimeError):
+    """模型**有响应**，但响应不合格：数字没有本地出处、不是约定格式。
+
+    与 `LLMUnavailable` 是一对，必须分开：
+        不可用 → 查网络与 Key，重试无意义
+        不合格 → 查 prompt 与校验器，值得带着"你多写了哪些"重写一次
+
+    以前这两种都混在 `except Exception` 里，后果是任何意外
+    （包括代码自己的 bug）都会被归成「模型编了数字」，排查方向直接跑偏。
+    """
+
 
 @dataclass(frozen=True)
 class ModelSpec:
@@ -205,7 +251,8 @@ def call_llm(prompt: str, model: Optional[str] = None, *,
              system: str = "",
              max_tokens: int = 2048,
              temperature: float = 0.3,
-             json_mode: bool = False) -> LLMReply:
+             json_mode: bool = False,
+             timeout: float = DEFAULT_READ_TIMEOUT) -> LLMReply:
     """调大模型。全项目**只有这一个函数**真正发起请求。
 
     参数
@@ -213,13 +260,15 @@ def call_llm(prompt: str, model: Optional[str] = None, *,
         model        用户选的模型 key；缺省或不可用时回落到默认模型
         system       系统提示
         json_mode    要求结构化输出（解读用的 LabReport 契约需要它）
+        timeout      读取超时（秒）。问答比解读短得多，按场景给，别一刀切
 
     返回
         LLMReply，其中 notice 非空表示实际用的不是你选的那个模型。
 
-    为什么不在函数里 catch 异常：
-        调用方（解读 / 问答）都已经有「退回本地模板」的兜底路径，
-        在这里吞掉异常反而会让上层分不清「模型不可用」和「模型编了数字」。
+    失败时抛 `LLMUnavailable`（而不是 openai 的原始异常）：
+        不是把异常吞掉——吞掉会让上层分不清「模型不可用」和「模型编了数字」——
+        而是**归类**：把鉴权/限流/超时/断网/服务端异常统一成一种、
+        并把服务商原始报文留在日志里，只把一句话原因往外传。
     """
     spec, notice = resolve_model(model)
 
@@ -229,7 +278,8 @@ def call_llm(prompt: str, model: Optional[str] = None, *,
     messages.append({"role": "user", "content": prompt})
 
     text = _chat(spec, messages, max_tokens=max_tokens,
-                 temperature=temperature, json_mode=json_mode)
+                 temperature=temperature, json_mode=json_mode,
+                 timeout=timeout)
     return LLMReply(
         text=text,
         model_key=spec.key,
@@ -240,25 +290,66 @@ def call_llm(prompt: str, model: Optional[str] = None, *,
     )
 
 
+def _safe_reason(e: BaseException) -> str:
+    """把服务商的原始异常压成一句能给用户看的话。
+
+    为什么要压：原始报文里有 request_id、账号片段、内网地址，
+    而且「Error code: 401 - {…}」这种东西出现在界面上只会让人更慌。
+    归类只认**异常类名与 HTTP 状态码**，不认报文正文。
+    """
+    code = getattr(e, "status_code", None) or getattr(e, "code", None)
+    name = type(e).__name__
+
+    if code == 401 or code == 403 or "Authentication" in name:
+        return "鉴权失败（API Key 无效或已失效）"
+    if code == 429 or "RateLimit" in name:
+        return "请求过于频繁，已被限流"
+    if code is not None and 500 <= int(code) < 600:
+        return f"模型服务端异常（{code}）"
+    if "Timeout" in name or "timeout" in name.lower():
+        return "请求超时"
+    if "Connection" in name or "Connect" in name:
+        return "网络不可用"
+    if "API" in name and "Error" in name:       # 兜底，仍不吐原始报文
+        return "模型服务不可用"
+    return f"模型不可用（{name}）"
+
+
 def _chat(spec: ModelSpec, messages: list[dict], *, max_tokens: int,
-          temperature: float, json_mode: bool) -> str:
+          temperature: float, json_mode: bool,
+          timeout: float = DEFAULT_READ_TIMEOUT) -> str:
     """真正发请求的地方。三家都走 OpenAI 兼容协议，所以只有一份实现。"""
     try:
         from openai import OpenAI          # 延迟导入：没装依赖也能起服务
     except ImportError as e:               # pragma: no cover
-        raise RuntimeError(
-            f"未安装 openai 依赖，无法调用 {spec.label}。"
-            "执行 pip install openai 后重启，或清空 API Key 使用模板模式。"
+        raise LLMUnavailable(
+            "未安装 openai 依赖，无法调用模型；可清空 API Key 使用本地模板模式"
         ) from e
 
+    if not os.getenv(spec.env_key, ""):
+        # 没 Key 不该把请求发出去：401 要等一个来回，而本地模板是瞬时的。
+        # 正常情况下上层早就用 mode 判断过了，这里是最后一道闸。
+        raise LLMUnavailable(f"未配置 {spec.env_key}")
+
+    # 连接超时单独设短一些：连不上一会儿就知道，等 20 秒纯属浪费。
+    # httpx 是 openai 的既有依赖，不是新增；取不到就退回 float（各阶段同一值）。
+    try:
+        import httpx
+        client_timeout: object = httpx.Timeout(timeout, connect=DEFAULT_CONNECT_TIMEOUT)
+    except ImportError:                    # pragma: no cover
+        client_timeout = timeout
+
     client = OpenAI(api_key=os.getenv(spec.env_key, ""),
-                    base_url=spec.effective_base_url())
+                    base_url=spec.effective_base_url(),
+                    timeout=client_timeout,
+                    max_retries=MAX_RETRIES)
 
     # 每次真发请求都记一行实际模型名。退役名不会报错、服务端会静默改写，
     # 不留下这一行，事后就没法证明"当时发的到底是哪个"。
     # 用 print 而不是 logger：uvicorn 只配了自己的 logger，
     # 模块级 logger 的 INFO 会被丢掉，去日志里查反而查不到。
-    print(f"[调用] {spec.label} → {spec.effective_model_id()}", flush=True)
+    print(f"[调用] {spec.label} → {spec.effective_model_id()} "
+          f"（读超时 {timeout}s）", flush=True)
 
     kwargs: dict = {
         "model": spec.effective_model_id(),
@@ -270,5 +361,13 @@ def _chat(spec: ModelSpec, messages: list[dict], *, max_tokens: int,
         # 不是所有模型都支持 json_object；交给服务端报错，不在这里猜
         kwargs["response_format"] = {"type": "json_object"}
 
-    resp = client.chat.completions.create(**kwargs)
+    try:
+        resp = client.chat.completions.create(**kwargs)
+    except Exception as e:                 # noqa: BLE001
+        reason = _safe_reason(e)
+        # 原始异常只进日志：排查要它，界面不要它
+        print(f"[调用失败] {spec.label} → {reason}｜{type(e).__name__}: {e}",
+              flush=True)
+        raise LLMUnavailable(reason) from e
+
     return (resp.choices[0].message.content or "").strip()

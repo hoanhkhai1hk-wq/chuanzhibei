@@ -155,6 +155,9 @@
 
     showView('progress');
     resetProgress();
+    // 新的一份报告 = 新的一次流程，降级提示重新获得一次机会。
+    // 不重置的话，第一次降级弹过之后这份报告再也不会提示，反而成了静默。
+    degradeHintShown = false;
     $('#progress-title').textContent = '正在解读…';
 
     try {
@@ -232,6 +235,7 @@
   async function runDemo() {
     showView('progress');
     resetProgress();
+    degradeHintShown = false;
     $('#progress-title').textContent = '正在用演示数据跑一遍…';
 
     try {
@@ -335,6 +339,17 @@
     // 前端不再指定模型：用哪个由后端注册表决定，前端传了就多一处会过期的配置
     const body = { ...analysis };
 
+    /* 流式拿不到结果时的兜底：改用一次性请求。
+       结果一致（同一个 explain 函数），只是没有逐字效果。
+       两条路都会走到这里：fetch/读取抛异常，以及流正常结束却没有 done 载荷
+       （服务端推了 error 事件就是这种）——后者以前会直接抛「没有收到解读结果」，
+       页面停在进度条上，等于白屏。 */
+    const fallback = async () => {
+      log('流式通道不可用，已切换普通请求');
+      enterWrite();
+      return postJson('/api/explain', body);
+    };
+
     try {
       const resp = await fetch('/api/explain/stream', {
         method: 'POST',
@@ -376,11 +391,9 @@
           }
         }
       }
+      if (!payload) payload = await fallback();
     } catch (e) {
-      // SSE 被代理缓冲时走这条路，结果一致，只是没有逐字效果
-      log('流式通道不可用，已切换普通请求');
-      enterWrite();
-      payload = await postJson('/api/explain', body);
+      payload = await fallback();
     }
 
     completeStage('write');
@@ -388,23 +401,46 @@
 
     state.explain = payload;
     logExplainFacts(payload);
+    hintDegraded(payload);
     return payload;
   }
 
-  /* 如实汇报表达层的实际情况：走了大模型、还是校验没过退回本地模板。
-     这段日志是「数字不让大模型编」这条铁律在界面上可见的证据。 */
-  function logExplainFacts(payload) {
-    const qs = (payload.report && payload.report.follow_up_questions) || [];
-    const fellBack = qs.some(q => q.includes('本地模板生成') || q.includes('大模型不可用'));
+  /* 如实汇报表达层的实际情况：走了大模型、还是退回了本地模板。
+     这段日志是「数字不让大模型编」这条铁律在界面上可见的证据。
 
-    if (payload.mode !== 'llm') {
-      log('未配置大模型密钥：正文由本地模板生成，数字全部取自本地判定结果');
-    } else if (fellBack) {
+     降级原因由后端 `degraded` 字段直接给出，不再靠问诊清单里的关键词去猜——
+     关键词匹配在文案一改就失灵，而且它会把「断网」误判成「模型编了数字」。 */
+  function logExplainFacts(payload) {
+    if (payload.degraded === 'unavailable') {
+      log('大模型不可用（鉴权 / 限流 / 超时 / 断网）：正文已改用本地模板');
+    } else if (payload.degraded === 'hallucination') {
       log('数字回溯校验未通过：正文已退回本地模板，报告值仍由本地回填');
+    } else if (payload.mode !== 'llm') {
+      log('未配置大模型密钥：正文由本地模板生成，数字全部取自本地判定结果');
     } else {
       log('数字回溯校验通过：正文中的数字都能在本地事实清单里找到出处');
       log(`由 ${payload.model} 改写措辞；报告值由本地回填，未采信模型写的数字`);
     }
+  }
+
+  /* 降级提示：一句话说清「AI 没用上，但判定结果没受影响」。
+     只在**这一页第一次**弹——解读、流式重试、连问三次都可能各自降级，
+     弹三条就是骚扰，而且会让人以为出了三个不同的问题。 */
+  let degradeHintShown = false;
+  function hintDegraded(payload) {
+    if (!payload || payload.degraded !== 'unavailable') return;
+    // 顶栏徽标说的是「配置了什么」，它停在启动时的那一刻。
+    // 这次真的用不上模型了，就把徽标同步成实际情况——
+    // 否则结果页写着「本地模板解读」，顶栏还挂着「AI 解读 · DeepSeek V4.1」，
+    // 同一屏两句话打架，用户只会信那个更好看的。
+    const chip = $('#mode-chip');
+    if (chip) {
+      chip.textContent = '本地模板 · AI 暂不可用';
+      chip.title = '大模型这次没接通（鉴权 / 限流 / 超时 / 断网），已改用本地模板；数字仍由本地判定';
+    }
+    if (degradeHintShown) return;
+    degradeHintShown = true;
+    toast('AI 暂不可用，已使用本地模板，判定结果不受影响。');
   }
 
   /* ─── 报告对比 ─── */
@@ -630,6 +666,9 @@
       a.textContent = reply.answer;      // 纯文本渲染，不解析 markdown
 
       const bits = [];
+      // 降级时 model_notice 说的就是「为什么这次是本地生成的」，照实显示；
+      // 同一页只弹一次 toast，问答这里只用 meta 行，不重复弹。
+      if (reply.degraded === 'unavailable') hintDegraded(reply);
       if (reply.model_notice) bits.push(reply.model_notice);
       if (reply.mode === 'llm') {
         bits.push(`AI 解读 · ${reply.model}`);
