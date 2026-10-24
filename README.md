@@ -1,4 +1,4 @@
-# 体检之后 —— 从体检报告到日常健康的家庭助手
+# 检后有伴 —— 从体检报告到日常健康的家庭助手
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.143-green) ![License](https://img.shields.io/badge/License-MIT-yellow) ![Track](https://img.shields.io/badge/第九届传智杯-AI创新应用挑战赛-lightgrey)
 
