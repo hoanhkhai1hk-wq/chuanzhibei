@@ -1,5 +1,5 @@
 """
-《体检之后》—— FastAPI 入口
+《检后有伴》—— FastAPI 入口
 
 ================================================================================
 当前状态
@@ -73,7 +73,7 @@ print(f"[模型] {_SPEC.label} → {_SPEC.effective_model_id()} @ {_SPEC.effecti
       flush=True)
 
 app = FastAPI(
-    title="体检之后",
+    title="检后有伴",
     description=(
         "从体检报告到日常健康的家庭助手。"
         "体检只占一年中的一天，剩下 364 天才是这个产品的地盘。"
@@ -112,7 +112,7 @@ def list_llm_models() -> dict:
 @app.get("/api/about", summary="项目信息")
 def about() -> dict:
     return {
-        "project": "体检之后",
+        "project": "检后有伴",
         "tagline": "体检只占一年中的一天，剩下 364 天才是这个产品的地盘。",
         "version": "0.2.0",
         "architecture": {
